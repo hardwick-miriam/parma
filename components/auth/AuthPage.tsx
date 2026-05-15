@@ -1,15 +1,25 @@
 'use client'
 
+import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
-export default function AuthPage() {
+export default function AuthPage({ initialError }: { initialError?: string }) {
   const supabase = createClient()
+  const [error, setError] = useState<string | null>(initialError ?? null)
+  const [loading, setLoading] = useState(false)
 
   const signInWithGoogle = async () => {
-    await supabase.auth.signInWithOAuth({
+    setError(null)
+    setLoading(true)
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     })
+    if (error) {
+      setError(error.message)
+      setLoading(false)
+    }
+    // on success the browser redirects — no need to setLoading(false)
   }
 
   return (
@@ -54,14 +64,21 @@ export default function AuthPage() {
 
         <button
           onClick={signInWithGoogle}
+          disabled={loading}
           className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded border text-sm"
-          style={{ background: '#201d1a', borderColor: '#3a3228', color: '#d4cfc8', letterSpacing: '0.04em', fontWeight: 300 }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#6b2737'; e.currentTarget.style.background = '#2d1520' }}
+          style={{ background: '#201d1a', borderColor: '#3a3228', color: loading ? '#5a5048' : '#d4cfc8', letterSpacing: '0.04em', fontWeight: 300, cursor: loading ? 'default' : 'pointer' }}
+          onMouseEnter={(e) => { if (!loading) { e.currentTarget.style.borderColor = '#6b2737'; e.currentTarget.style.background = '#2d1520' } }}
           onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#3a3228'; e.currentTarget.style.background = '#201d1a' }}
         >
           <GoogleIcon />
-          Sign in with Google
+          {loading ? 'Redirecting…' : 'Sign in with Google'}
         </button>
+
+        {error && (
+          <p style={{ color: '#c0504a', fontSize: '0.7rem', marginTop: '1rem', textAlign: 'center', letterSpacing: '0.03em' }}>
+            {error}
+          </p>
+        )}
       </div>
     </div>
   )
