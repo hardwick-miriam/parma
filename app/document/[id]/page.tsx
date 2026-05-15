@@ -1,6 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import EditorClient from '@/components/editor/EditorClient'
+import type { UserSettings } from '@/types'
+
+const DEFAULT_SETTINGS: Omit<UserSettings, 'user_id'> = {
+  stack_style: 'Shuffled',
+  pages_visible: 3,
+  gap: 8,
+  shadow_depth: 12,
+}
 
 export default async function DocumentPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -17,7 +25,6 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
 
   if (!document) notFound()
 
-  // Allow access to the owner or any invited collaborator
   if (document.user_id !== user.id) {
     const { data: collab } = await supabase
       .from('collaborators')
@@ -28,17 +35,13 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
     if (!collab) notFound()
   }
 
-  const { data: folder } = await supabase
-    .from('folders')
-    .select('*')
-    .eq('id', document.folder_id)
-    .single()
+  const [{ data: folder }, { data: worldbuilding }, { data: settings }] = await Promise.all([
+    supabase.from('folders').select('*').eq('id', document.folder_id).single(),
+    supabase.from('worldbuilding_entries').select('*').eq('folder_id', document.folder_id).order('created_at'),
+    supabase.from('user_settings').select('*').eq('user_id', user.id).single(),
+  ])
 
-  const { data: worldbuilding } = await supabase
-    .from('worldbuilding_entries')
-    .select('*')
-    .eq('folder_id', document.folder_id)
-    .order('created_at')
+  const initialSettings: UserSettings = settings ?? { user_id: user.id, ...DEFAULT_SETTINGS }
 
   return (
     <EditorClient
@@ -46,6 +49,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
       folder={folder!}
       initialWorldbuilding={worldbuilding || []}
       userId={user.id}
+      initialSettings={initialSettings}
     />
   )
 }

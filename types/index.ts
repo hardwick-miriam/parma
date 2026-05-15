@@ -84,6 +84,7 @@ export type CharacterRelationship = {
   from_name: string
   to_name: string
   label: string
+  color: string
   created_at: string
 }
 
@@ -93,4 +94,12 @@ export type CharacterPosition = {
   character_name: string
   x_pos: number
   y_pos: number
+}
+
+export type UserSettings = {
+  user_id: string
+  stack_style: 'Shuffled' | 'Aligned' | 'Slipped'
+  pages_visible: number
+  gap: number
+  shadow_depth: number
 }

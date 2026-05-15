@@ -8,7 +8,8 @@ import FolderCard from './FolderCard'
 import NewFolderModal from './NewFolderModal'
 import EditFolderModal from './EditFolderModal'
 import SearchBar from '@/components/search/SearchBar'
-import { Plus, LogOut } from 'lucide-react'
+import { Plus, LogOut, Settings } from 'lucide-react'
+import Link from 'next/link'
 
 type Props = {
   initialFolders: Folder[]
@@ -107,6 +108,16 @@ export default function DashboardClient({ initialFolders, userId }: Props) {
             <SearchBar userId={userId} />
           </div>
 
+          <Link
+            href="/settings"
+            className="flex items-center gap-1.5 text-xs px-2 py-1.5 rounded border flex-shrink-0"
+            style={{ color: '#5a5048', borderColor: '#3a3228', background: 'transparent', letterSpacing: '0.04em' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = '#6b2737'; (e.currentTarget as HTMLElement).style.color = '#9a9088' }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = '#3a3228'; (e.currentTarget as HTMLElement).style.color = '#5a5048' }}
+            title="Settings"
+          >
+            <Settings size={12} />
+          </Link>
           <button
             onClick={signOut}
             className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded border flex-shrink-0"

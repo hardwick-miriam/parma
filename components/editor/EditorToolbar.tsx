@@ -2,7 +2,7 @@
 
 import { useReducer, useEffect } from 'react'
 import type { Editor } from '@tiptap/react'
-import { Bold, Italic, Underline, Maximize, Minimize, Moon, Sun, BookOpen, Share2 } from 'lucide-react'
+import { Bold, Italic, Underline, Maximize, Minimize, Moon, Sun, BookOpen, Share2, Settings } from 'lucide-react'
 
 type Props = {
   editor: Editor | null
@@ -12,11 +12,12 @@ type Props = {
   onToggleDarkMode: () => void
   onReadingMode: () => void
   onShare: () => void
+  onSettings: () => void
 }
 
 export default function EditorToolbar({
   editor, isFullscreen, onToggleFullscreen,
-  darkMode, onToggleDarkMode, onReadingMode, onShare,
+  darkMode, onToggleDarkMode, onReadingMode, onShare, onSettings,
 }: Props) {
   const [, forceUpdate] = useReducer((x: number) => x + 1, 0)
   useEffect(() => {
@@ -31,7 +32,7 @@ export default function EditorToolbar({
     { label: 'Underline', icon: Underline, active: editor?.isActive('underline') ?? false, action: () => editor?.chain().focus().toggleUnderline().run(), shortcut: '⌘U' },
   ]
 
-  const iconBtn = (active = false): React.CSSProperties => ({
+  const btn = (active = false): React.CSSProperties => ({
     background: active ? 'rgba(181,150,78,0.15)' : 'transparent',
     border: active ? '1px solid rgba(181,150,78,0.35)' : '1px solid transparent',
     color: active ? 'var(--brass)' : 'var(--brass-dim)',
@@ -41,56 +42,35 @@ export default function EditorToolbar({
     width: 28, height: 28, cursor: 'pointer',
   })
 
+  const hover = (e: React.MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.color = 'var(--brass)' }
+  const unhover = (e: React.MouseEvent<HTMLButtonElement>, active = false) => {
+    e.currentTarget.style.color = active ? 'var(--brass)' : 'var(--brass-dim)'
+  }
+
   return (
     <div className="flex items-center h-8 justify-between">
-      {/* Format buttons */}
       <div className="flex items-center gap-0.5">
         {formatButtons.map(({ label, icon: Icon, active, action, shortcut }) => (
-          <button key={label} onClick={action} title={`${label} (${shortcut})`} style={iconBtn(active)}>
+          <button key={label} onClick={action} title={`${label} (${shortcut})`} style={btn(active)}>
             <Icon size={12} />
           </button>
         ))}
       </div>
 
-      {/* Right controls */}
       <div className="flex items-center gap-0.5">
-        <button
-          onClick={onShare}
-          title="Share document"
-          style={iconBtn()}
-          onMouseEnter={e => { e.currentTarget.style.color = 'var(--brass)' }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'var(--brass-dim)' }}
-        >
+        <button title="Share document" onClick={onShare} style={btn()} onMouseEnter={hover} onMouseLeave={e => unhover(e)}>
           <Share2 size={12} />
         </button>
-
-        <button
-          onClick={onReadingMode}
-          title="Reading mode"
-          style={iconBtn()}
-          onMouseEnter={e => { e.currentTarget.style.color = 'var(--brass)' }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'var(--brass-dim)' }}
-        >
+        <button title="Reading mode" onClick={onReadingMode} style={btn()} onMouseEnter={hover} onMouseLeave={e => unhover(e)}>
           <BookOpen size={12} />
         </button>
-
-        <button
-          onClick={onToggleDarkMode}
-          title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-          style={iconBtn(darkMode)}
-          onMouseEnter={e => { e.currentTarget.style.color = 'var(--brass)' }}
-          onMouseLeave={e => { e.currentTarget.style.color = darkMode ? 'var(--brass)' : 'var(--brass-dim)' }}
-        >
+        <button title={darkMode ? 'Light mode' : 'Dark mode'} onClick={onToggleDarkMode} style={btn(darkMode)} onMouseEnter={hover} onMouseLeave={e => unhover(e, darkMode)}>
           {darkMode ? <Moon size={12} /> : <Sun size={12} />}
         </button>
-
-        <button
-          onClick={onToggleFullscreen}
-          title={isFullscreen ? 'Exit fullscreen (F11)' : 'Fullscreen (F11)'}
-          style={iconBtn(isFullscreen)}
-          onMouseEnter={e => { e.currentTarget.style.color = 'var(--brass)' }}
-          onMouseLeave={e => { e.currentTarget.style.color = isFullscreen ? 'var(--brass)' : 'var(--brass-dim)' }}
-        >
+        <button title="Page stack settings" onClick={onSettings} style={btn()} onMouseEnter={hover} onMouseLeave={e => unhover(e)}>
+          <Settings size={12} />
+        </button>
+        <button title={isFullscreen ? 'Exit fullscreen (F11)' : 'Fullscreen (F11)'} onClick={onToggleFullscreen} style={btn(isFullscreen)} onMouseEnter={hover} onMouseLeave={e => unhover(e, isFullscreen)}>
           {isFullscreen ? <Minimize size={12} /> : <Maximize size={12} />}
         </button>
       </div>
