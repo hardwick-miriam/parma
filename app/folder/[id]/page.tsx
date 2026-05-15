@@ -20,7 +20,7 @@ export default async function FolderPage({ params }: { params: Promise<{ id: str
 
   const { data: documents } = await supabase
     .from('documents')
-    .select('id, title, created_at, updated_at, folder_id, user_id, content')
+    .select('*')
     .eq('folder_id', id)
     .order('updated_at', { ascending: false })
 

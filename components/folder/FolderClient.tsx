@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Document, Folder } from '@/types'
 import DocumentItem from './DocumentItem'
 import MoveDocumentModal from './MoveDocumentModal'
-import { ArrowLeft, Plus } from 'lucide-react'
+import { ArrowLeft, Plus, GitBranch, Users } from 'lucide-react'
 import { FOLDER_ICONS } from '@/lib/constants'
 import Link from 'next/link'
 
@@ -90,6 +90,26 @@ export default function FolderClient({ folder, initialDocuments, userId }: Props
               {folder.name}
             </span>
           </div>
+          <Link
+            href={`/folder/${folder.id}/timeline`}
+            className="flex items-center gap-1.5 text-xs px-2 py-1.5 rounded border"
+            style={{ borderColor: '#2a2218', color: '#5a5048', letterSpacing: '0.04em' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#9a8a78' }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#5a5048' }}
+          >
+            <GitBranch size={12} />
+            <span className="hidden sm:inline">Timeline</span>
+          </Link>
+          <Link
+            href={`/folder/${folder.id}/characters`}
+            className="flex items-center gap-1.5 text-xs px-2 py-1.5 rounded border"
+            style={{ borderColor: '#2a2218', color: '#5a5048', letterSpacing: '0.04em' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#9a8a78' }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#5a5048' }}
+          >
+            <Users size={12} />
+            <span className="hidden sm:inline">Characters</span>
+          </Link>
           <button
             onClick={createDocument}
             className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded border"

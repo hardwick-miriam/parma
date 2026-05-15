@@ -8,7 +8,7 @@ type Props = {
 
 export default function TipTapEditor({ editor }: Props) {
   return (
-    <div style={{ caretColor: '#2a1f0a' }}>
+    <div style={{ caretColor: 'inherit' }}>
       <EditorContent editor={editor} />
     </div>
   )

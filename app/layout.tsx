@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, EB_Garamond } from 'next/font/google'
 import './globals.css'
 import PWARegister from '@/components/PWARegister'
+import NavigationProgress from '@/components/ui/NavigationProgress'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
       <body className={`${inter.className} min-h-full`}>
+        <NavigationProgress />
         <PWARegister />
         {children}
       </body>

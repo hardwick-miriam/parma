@@ -13,10 +13,20 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
     .from('documents')
     .select('*')
     .eq('id', id)
-    .eq('user_id', user.id)
     .single()
 
   if (!document) notFound()
+
+  // Allow access to the owner or any invited collaborator
+  if (document.user_id !== user.id) {
+    const { data: collab } = await supabase
+      .from('collaborators')
+      .select('id')
+      .eq('document_id', id)
+      .eq('invitee_email', user.email!)
+      .single()
+    if (!collab) notFound()
+  }
 
   const { data: folder } = await supabase
     .from('folders')

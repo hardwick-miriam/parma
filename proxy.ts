@@ -29,13 +29,18 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  if (!user && pathname !== '/' && !pathname.startsWith('/auth')) {
+  // Protect app routes — allow public access to /share/* and auth routes
+  if (
+    !user &&
+    pathname !== '/' &&
+    !pathname.startsWith('/auth') &&
+    !pathname.startsWith('/share')
+  ) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
-  if (user && pathname === '/') {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
+  // NOTE: logged-in users hitting / see the splash screen, which then
+  // navigates them to /dashboard client-side.
 
   return supabaseResponse
 }
