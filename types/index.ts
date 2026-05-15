@@ -5,6 +5,9 @@ export type Folder = {
   color: string
   icon: string
   default_dark_mode: boolean | null
+  status: 'draft' | 'in_progress' | 'complete' | 'on_hold' | null
+  is_public: boolean | null
+  is_featured: boolean | null
   created_at: string
   updated_at: string
 }
@@ -29,6 +32,9 @@ export type WorldbuildingEntry = {
   section: WorldbuildingSection
   name: string
   content: string
+  portrait_url: string | null
+  status: 'alive' | 'dead' | 'unknown' | 'missing' | null
+  faction_id: string | null
   created_at: string
   updated_at: string
 }
@@ -85,6 +91,7 @@ export type CharacterRelationship = {
   to_name: string
   label: string
   color: string
+  type_id: string | null
   created_at: string
 }
 
@@ -96,10 +103,44 @@ export type CharacterPosition = {
   y_pos: number
 }
 
+export type RelationshipType = {
+  id: string
+  folder_id: string
+  user_id: string
+  name: string
+  color: string
+}
+
+export type Faction = {
+  id: string
+  folder_id: string
+  user_id: string
+  name: string
+  color: string
+}
+
+export type DocumentOpen = {
+  id: string
+  user_id: string
+  document_id: string
+  opened_at: string
+}
+
+export type Profile = {
+  user_id: string
+  username: string
+  bio: string
+  avatar_url: string | null
+  banner_url: string | null
+}
+
 export type UserSettings = {
   user_id: string
   stack_style: 'Shuffled' | 'Aligned' | 'Slipped'
   pages_visible: number
   gap: number
   shadow_depth: number
+  theme: 'default' | 'autumn' | 'winter' | 'spring'
+  accent_color: string
+  editor_font: string
 }

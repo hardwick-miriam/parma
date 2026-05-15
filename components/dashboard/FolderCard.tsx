@@ -11,9 +11,17 @@ type Props = {
   onEdit: () => void
 }
 
+const STATUS_LABELS: Record<string, { label: string; color: string }> = {
+  draft: { label: 'Draft', color: '#5a5048' },
+  in_progress: { label: 'In Progress', color: '#9a7a3a' },
+  complete: { label: 'Complete', color: '#3a7a4a' },
+  on_hold: { label: 'On Hold', color: '#5a4a7a' },
+}
+
 export default function FolderCard({ folder, onEdit }: Props) {
   const [hovered, setHovered] = useState(false)
   const IconComponent = FOLDER_ICONS[folder.icon] || FOLDER_ICONS['folder']
+  const statusInfo = folder.status ? STATUS_LABELS[folder.status] : null
 
   return (
     <div
@@ -41,6 +49,14 @@ export default function FolderCard({ folder, onEdit }: Props) {
         >
           {folder.name}
         </p>
+        {statusInfo && (
+          <p className="text-xs mt-1" style={{ color: statusInfo.color, letterSpacing: '0.06em', fontSize: '0.6rem', textTransform: 'uppercase' }}>
+            {statusInfo.label}
+          </p>
+        )}
+        {folder.is_public && (
+          <p className="text-xs mt-0.5" style={{ color: '#3a5a3a', fontSize: '0.58rem', letterSpacing: '0.06em' }}>Public</p>
+        )}
       </Link>
       <button
         onClick={(e) => { e.preventDefault(); onEdit() }}

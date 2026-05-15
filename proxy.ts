@@ -34,7 +34,8 @@ export async function proxy(request: NextRequest) {
     !user &&
     pathname !== '/' &&
     !pathname.startsWith('/auth') &&
-    !pathname.startsWith('/share')
+    !pathname.startsWith('/share') &&
+    !pathname.startsWith('/u/')
   ) {
     return NextResponse.redirect(new URL('/', request.url))
   }

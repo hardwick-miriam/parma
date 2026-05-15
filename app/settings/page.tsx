@@ -8,6 +8,9 @@ const DEFAULT_SETTINGS: Omit<UserSettings, 'user_id'> = {
   pages_visible: 3,
   gap: 8,
   shadow_depth: 12,
+  theme: 'default',
+  accent_color: '#6b2737',
+  editor_font: 'EB Garamond',
 }
 
 export default async function SettingsPage() {

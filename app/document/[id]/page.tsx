@@ -8,6 +8,9 @@ const DEFAULT_SETTINGS: Omit<UserSettings, 'user_id'> = {
   pages_visible: 3,
   gap: 8,
   shadow_depth: 12,
+  theme: 'default',
+  accent_color: '#6b2737',
+  editor_font: 'EB Garamond',
 }
 
 export default async function DocumentPage({ params }: { params: Promise<{ id: string }> }) {
@@ -40,6 +43,9 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
     supabase.from('worldbuilding_entries').select('*').eq('folder_id', document.folder_id).order('created_at'),
     supabase.from('user_settings').select('*').eq('user_id', user.id).single(),
   ])
+
+  // Track document open (fire and forget)
+  supabase.from('document_opens').insert({ user_id: user.id, document_id: id }).then(() => {})
 
   const initialSettings: UserSettings = settings ?? { user_id: user.id, ...DEFAULT_SETTINGS }
 

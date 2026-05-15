@@ -8,15 +8,18 @@ import FolderCard from './FolderCard'
 import NewFolderModal from './NewFolderModal'
 import EditFolderModal from './EditFolderModal'
 import SearchBar from '@/components/search/SearchBar'
-import { Plus, LogOut, Settings } from 'lucide-react'
+import { Plus, LogOut, Settings, Clock } from 'lucide-react'
 import Link from 'next/link'
+
+type RecentDoc = { id: string; title: string; folder_id: string; folder_name: string; opened_at: string }
 
 type Props = {
   initialFolders: Folder[]
   userId: string
+  recentDocs: RecentDoc[]
 }
 
-export default function DashboardClient({ initialFolders, userId }: Props) {
+export default function DashboardClient({ initialFolders, userId, recentDocs }: Props) {
   const [folders, setFolders] = useState<Folder[]>(initialFolders)
   const [showNew, setShowNew] = useState(false)
   const [editingFolder, setEditingFolder] = useState<Folder | null>(null)
@@ -57,18 +60,7 @@ export default function DashboardClient({ initialFolders, userId }: Props) {
 
   return (
     <div className="min-h-screen relative" style={{ backgroundColor: '#1a1a1f' }}>
-      {/* SVG filigree pattern — rendered directly in DOM, no CSS data-uri */}
-      <svg
-        aria-hidden="true"
-        style={{
-          position: 'fixed',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          pointerEvents: 'none',
-          zIndex: 0,
-        }}
-      >
+      <svg aria-hidden="true" style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }}>
         <defs>
           <pattern id="filigree" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
             <g fill="none" stroke="rgba(192,192,192,0.07)" strokeWidth="0.5">
@@ -85,69 +77,70 @@ export default function DashboardClient({ initialFolders, userId }: Props) {
         <rect width="100%" height="100%" fill="url(#filigree)" />
       </svg>
 
-      {/* Header */}
-      <header
-        className="border-b sticky top-0 z-20"
-        style={{
-          background: 'rgba(22,16,12,0.96)',
-          borderColor: '#3a3228',
-          backdropFilter: 'blur(10px)',
-          position: 'relative',
-          zIndex: 20,
-        }}
-      >
+      <header className="border-b sticky top-0 z-20"
+        style={{ background: 'rgba(22,16,12,0.96)', borderColor: '#3a3228', backdropFilter: 'blur(10px)', position: 'relative', zIndex: 20 }}>
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/crest.png"
-            alt="Parma"
-            style={{ height: 48, width: 'auto', objectFit: 'contain', filter: 'grayscale(1) invert(1)', mixBlendMode: 'screen', opacity: 0.78, flexShrink: 0 }}
-          />
-
+          <img src="/crest.png" alt="Parma"
+            style={{ height: 48, width: 'auto', objectFit: 'contain', filter: 'grayscale(1) invert(1)', mixBlendMode: 'screen', opacity: 0.78, flexShrink: 0 }} />
           <div className="flex-1 max-w-xl mx-auto">
             <SearchBar userId={userId} />
           </div>
-
-          <Link
-            href="/settings"
+          <Link href="/settings"
             className="flex items-center gap-1.5 text-xs px-2 py-1.5 rounded border flex-shrink-0"
             style={{ color: '#5a5048', borderColor: '#3a3228', background: 'transparent', letterSpacing: '0.04em' }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = '#6b2737'; (e.currentTarget as HTMLElement).style.color = '#9a9088' }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = '#3a3228'; (e.currentTarget as HTMLElement).style.color = '#5a5048' }}
-            title="Settings"
-          >
+            title="Settings">
             <Settings size={12} />
           </Link>
-          <button
-            onClick={signOut}
+          <button onClick={signOut}
             className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded border flex-shrink-0"
             style={{ color: '#5a5048', borderColor: '#3a3228', background: 'transparent', letterSpacing: '0.04em' }}
             onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#6b2737'; e.currentTarget.style.color = '#9a9088' }}
             onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#3a3228'; e.currentTarget.style.color = '#5a5048' }}
-            title="Sign out"
-          >
+            title="Sign out">
             <LogOut size={12} />
             <span className="hidden sm:inline">Sign out</span>
           </button>
         </div>
       </header>
 
-      {/* Main content — sits above filigree */}
       <main className="max-w-6xl mx-auto px-6 py-8" style={{ position: 'relative', zIndex: 1 }}>
+
+        {/* Recently opened */}
+        {recentDocs.length > 0 && (
+          <div className="mb-10">
+            <h2 className="text-xs uppercase flex items-center gap-2 mb-4"
+              style={{ color: '#5a5048', letterSpacing: '0.18em', fontWeight: 300 }}>
+              <Clock size={11} /> Recently opened
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {recentDocs.map(doc => (
+                <Link key={doc.id} href={`/document/${doc.id}`}
+                  className="block p-3 rounded border"
+                  style={{ background: '#1e1a16', borderColor: '#2a2218' }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = '#3a3228'; (e.currentTarget as HTMLElement).style.background = '#261e18' }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = '#2a2218'; (e.currentTarget as HTMLElement).style.background = '#1e1a16' }}>
+                  <p className="text-xs truncate mb-1" style={{ color: '#d4cfc8', letterSpacing: '0.02em' }}>
+                    {doc.title || 'Untitled'}
+                  </p>
+                  <p className="text-xs" style={{ color: '#5a5048', fontSize: '0.62rem' }}>{doc.folder_name}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between mb-8">
-          <h2
-            className="text-xs uppercase"
-            style={{ color: '#5a5048', letterSpacing: '0.18em', fontWeight: 300 }}
-          >
+          <h2 className="text-xs uppercase" style={{ color: '#5a5048', letterSpacing: '0.18em', fontWeight: 300 }}>
             Folios
           </h2>
-          <button
-            onClick={() => setShowNew(true)}
+          <button onClick={() => setShowNew(true)}
             className="flex items-center gap-2 text-xs px-4 py-2 rounded border"
             style={{ background: '#2d1520', borderColor: '#6b2737', color: '#a8a8b0', letterSpacing: '0.05em' }}
             onMouseEnter={(e) => { e.currentTarget.style.background = '#6b2737'; e.currentTarget.style.color = '#fff' }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = '#2d1520'; e.currentTarget.style.color = '#a8a8b0' }}
-          >
+            onMouseLeave={(e) => { e.currentTarget.style.background = '#2d1520'; e.currentTarget.style.color = '#a8a8b0' }}>
             <Plus size={13} />
             New Folder
           </button>
@@ -162,19 +155,13 @@ export default function DashboardClient({ initialFolders, userId }: Props) {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {folders.map((folder) => (
-              <FolderCard
-                key={folder.id}
-                folder={folder}
-                onEdit={() => setEditingFolder(folder)}
-              />
+              <FolderCard key={folder.id} folder={folder} onEdit={() => setEditingFolder(folder)} />
             ))}
           </div>
         )}
       </main>
 
-      {showNew && (
-        <NewFolderModal onClose={() => setShowNew(false)} onCreate={createFolder} />
-      )}
+      {showNew && <NewFolderModal onClose={() => setShowNew(false)} onCreate={createFolder} />}
       {editingFolder && (
         <EditFolderModal
           folder={editingFolder}
