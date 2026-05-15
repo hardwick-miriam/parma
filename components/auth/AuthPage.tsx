@@ -55,7 +55,7 @@ export default function AuthPage({ initialError }: { initialError?: string }) {
           <img
             src="/crest.png"
             alt="Parma"
-            style={{ height: 68, width: 'auto', filter: 'brightness(0) invert(1)', opacity: 0.72, objectFit: 'contain' }}
+            style={{ height: 68, width: 'auto', filter: 'grayscale(1) invert(1)', mixBlendMode: 'screen', opacity: 0.72, objectFit: 'contain' }}
           />
           <p style={{ color: '#5a5048', fontSize: '0.65rem', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 300 }}>
             Parma

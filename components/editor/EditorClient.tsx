@@ -162,7 +162,7 @@ export default function EditorClient({ document: doc, folder, initialWorldbuildi
             <img
               src="/crest.png"
               alt="Parma"
-              style={{ height: 18, width: 'auto', filter: 'brightness(0) invert(1)', opacity: 0.4, objectFit: 'contain', flexShrink: 0 }}
+              style={{ height: 18, width: 'auto', filter: 'grayscale(1) invert(1)', mixBlendMode: 'screen', opacity: 0.4, objectFit: 'contain', flexShrink: 0 }}
             />
             <span style={{ color: '#4a3f2e', fontSize: '0.7rem', letterSpacing: '0.05em' }}>
               {wordCount} words · {readingTime}

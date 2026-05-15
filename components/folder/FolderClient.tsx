@@ -81,7 +81,7 @@ export default function FolderClient({ folder, initialDocuments, userId }: Props
             <img
               src="/crest.png"
               alt="Parma"
-              style={{ height: 48, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)', opacity: 0.65, flexShrink: 0 }}
+              style={{ height: 48, width: 'auto', objectFit: 'contain', filter: 'grayscale(1) invert(1)', mixBlendMode: 'screen', opacity: 0.65, flexShrink: 0 }}
             />
           </Link>
           <div className="flex items-center gap-2 flex-1">
