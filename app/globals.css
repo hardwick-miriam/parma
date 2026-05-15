@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+:root {
+  --bg-base: #1a1a1f;
+  --bg-surface: #201d1a;
+  --bg-card: #2a2420;
+  --bg-card-hover: #342820;
+  --bg-input: #1e1b18;
+  --border: #3a3228;
+  --border-focus: #6b2737;
+  --text-primary: #d4cfc8;
+  --text-secondary: #9a9088;
+  --text-muted: #5a5048;
+  --accent: #6b2737;
+  --accent-hover: #8a3348;
+  --accent-subtle: #2d1520;
+  --silver: #c0c0c0;
+  --silver-dim: #a8a8b0;
+  --brass: #b5964e;
+  --brass-dim: #8c7138;
+  --danger: #8a3a3a;
+  --danger-hover: #aa4a4a;
+  --parchment: #f5f0e8;
+  --parchment-ink: #2a1f0a;
+  --editor-surround: #1c1510;
+  --font-garamond: 'EB Garamond', Georgia, serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  letter-spacing: 0.03em;
+  -webkit-font-smoothing: antialiased;
+  height: 100%;
+}
+
+/* ── Scrollbars ─────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #3a3228; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #6b2737; }
+
+::selection {
+  background: rgba(107, 39, 55, 0.45);
+  color: #d4cfc8;
+}
+
+/* ── TipTap writing surface ─────────────────────────── */
+.tiptap {
+  outline: none;
+  min-height: 60vh;
+  line-height: 1.9;
+  font-size: 1.125rem;
+  font-family: var(--font-garamond);
+  font-weight: 400;
+  color: #2a1f0a;
+  letter-spacing: 0.015em;
+  caret-color: #2a1f0a;
+}
+
+.tiptap p { margin-bottom: 1.15em; }
+.tiptap p:last-child { margin-bottom: 0; }
+.tiptap strong { font-weight: 600; color: #1a1205; }
+.tiptap em { font-style: italic; }
+
+/* ── Autocorrect mark ───────────────────────────────── */
+.tiptap .autocorrected {
+  position: relative;
+  text-decoration: underline;
+  text-decoration-color: rgba(168, 168, 176, 0.55);
+  text-underline-offset: 3px;
+  cursor: default;
+}
+
+.tiptap .autocorrected::after {
+  content: "was: " attr(data-original);
+  position: absolute;
+  bottom: 1.55em;
+  left: 0;
+  background: #2a2420;
+  color: #c0c0c0;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  padding: 2px 7px 3px;
+  border-radius: 3px;
+  border: 1px solid #3a3228;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.tiptap .autocorrected:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
