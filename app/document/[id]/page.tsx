@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import EditorClient from '@/components/editor/EditorClient'
 import type { UserSettings } from '@/types'
+import { getUserPlan } from '@/lib/plan'
 
 const DEFAULT_SETTINGS: Omit<UserSettings, 'user_id'> = {
   stack_style: 'Shuffled',
@@ -38,10 +39,11 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
     if (!collab) notFound()
   }
 
-  const [{ data: folder }, { data: worldbuilding }, { data: settings }] = await Promise.all([
+  const [{ data: folder }, { data: worldbuilding }, { data: settings }, plan] = await Promise.all([
     supabase.from('folders').select('*').eq('id', document.folder_id).single(),
     supabase.from('worldbuilding_entries').select('*').eq('folder_id', document.folder_id).order('created_at'),
     supabase.from('user_settings').select('*').eq('user_id', user.id).single(),
+    getUserPlan(user.id),
   ])
 
   // Track document open (fire and forget)
@@ -56,6 +58,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
       initialWorldbuilding={worldbuilding || []}
       userId={user.id}
       initialSettings={initialSettings}
+      isPremium={plan === 'premium'}
     />
   )
 }

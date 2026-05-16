@@ -1,15 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
-import AuthPage from '@/components/auth/AuthPage'
-import SplashWrapper from '@/components/splash/SplashWrapper'
+import { redirect } from 'next/navigation'
+import LandingPage from '@/components/landing/LandingPage'
 
-export default async function Home({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+export default async function Home() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const { error } = await searchParams
 
-  return (
-    <SplashWrapper authenticated={!!user}>
-      <AuthPage initialError={error} />
-    </SplashWrapper>
-  )
+  if (user) redirect('/dashboard')
+
+  return <LandingPage />
 }

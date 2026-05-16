@@ -3,6 +3,7 @@ import { redirect, notFound } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import TimelineClient from '@/components/timeline/TimelineClient'
+import { getUserPlan } from '@/lib/plan'
 
 export default async function TimelinePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -10,14 +11,13 @@ export default async function TimelinePage({ params }: { params: Promise<{ id: s
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/')
 
-  const { data: folder } = await supabase
-    .from('folders')
-    .select('*')
-    .eq('id', id)
-    .eq('user_id', user.id)
-    .single()
+  const [{ data: folder }, plan] = await Promise.all([
+    supabase.from('folders').select('*').eq('id', id).eq('user_id', user.id).single(),
+    getUserPlan(user.id),
+  ])
 
   if (!folder) notFound()
+  if (plan !== 'premium') redirect('/subscribe')
 
   const { data: events } = await supabase
     .from('timeline_events')

@@ -28,6 +28,7 @@ type Props = {
   initialWorldbuilding: WorldbuildingEntry[]
   userId: string
   initialSettings: UserSettings
+  isPremium: boolean
 }
 
 const A4_HEIGHT = 1123
@@ -69,7 +70,7 @@ const dimText    = '#3a3228'
 const sidebarBg  = '#110e0b'
 const sidebarBdr = '#2a2218'
 
-export default function EditorClient({ document: doc, folder, initialWorldbuilding, userId, initialSettings }: Props) {
+export default function EditorClient({ document: doc, folder, initialWorldbuilding, userId, initialSettings, isPremium }: Props) {
   const [title, setTitle] = useState(doc.title)
   const [content, setContent] = useState<object>(doc.content || {})
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved')
@@ -133,9 +134,16 @@ export default function EditorClient({ document: doc, folder, initialWorldbuildi
 
   const save = useCallback(async (t: string, c: object) => {
     setSaveStatus('saving')
-    await supabase.from('documents').update({ title: t, content: c, updated_at: new Date().toISOString() }).eq('id', doc.id)
+    const wc = getWordCount(extractPlainText(c))
+    await Promise.all([
+      supabase.from('documents').update({ title: t, content: c, updated_at: new Date().toISOString() }).eq('id', doc.id),
+      supabase.from('profiles').upsert(
+        { user_id: userId, last_active_at: new Date().toISOString(), total_words_written: wc },
+        { onConflict: 'user_id' }
+      ),
+    ])
     setSaveStatus('saved')
-  }, [supabase, doc.id])
+  }, [supabase, doc.id, userId]) // eslint-disable-line
 
   useEffect(() => { setSaveStatus('unsaved'); save(debouncedTitle, debouncedContent) }, [debouncedTitle, debouncedContent]) // eslint-disable-line
 
@@ -182,7 +190,11 @@ export default function EditorClient({ document: doc, folder, initialWorldbuildi
   }, [])
 
   const handleExportPdf = async () => { setExportMenuOpen(false); await exportToPdf(title, content) }
-  const handleExportDocx = async () => { setExportMenuOpen(false); await exportToDocx(title, content) }
+  const handleExportDocx = async () => {
+    setExportMenuOpen(false)
+    if (!isPremium) { window.location.href = '/subscribe'; return }
+    await exportToDocx(title, content)
+  }
 
   return (
     <div
@@ -226,14 +238,18 @@ export default function EditorClient({ document: doc, folder, initialWorldbuildi
                 <Download size={11} /><ChevronDown size={9} />
               </button>
               {exportMenuOpen && (
-                <div className="absolute right-0 top-full mt-1 py-1 rounded border z-30" style={{ background: '#1a1510', borderColor: '#2a2218', boxShadow: '0 8px 24px rgba(0,0,0,0.7)', minWidth: '7rem' }}>
-                  {([['Export PDF', handleExportPdf], ['Export Word', handleExportDocx]] as const).map(([label, fn]) => (
-                    <button key={label} onClick={fn} className="w-full text-left px-3 py-2 text-xs" style={{ color: inputColor, letterSpacing: '0.04em', background: 'transparent' }}
-                      onMouseEnter={e => { e.currentTarget.style.background = '#241e18' }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
-                      {label}
-                    </button>
-                  ))}
+                <div className="absolute right-0 top-full mt-1 py-1 rounded border z-30" style={{ background: '#1a1510', borderColor: '#2a2218', boxShadow: '0 8px 24px rgba(0,0,0,0.7)', minWidth: '8rem' }}>
+                  <button onClick={handleExportPdf} className="w-full text-left px-3 py-2 text-xs" style={{ color: inputColor, letterSpacing: '0.04em', background: 'transparent' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = '#241e18' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
+                    Export PDF
+                  </button>
+                  <button onClick={handleExportDocx} className="w-full text-left px-3 py-2 text-xs flex items-center justify-between" style={{ color: isPremium ? inputColor : '#3a3228', letterSpacing: '0.04em', background: 'transparent' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = '#241e18' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
+                    Export Word
+                    {!isPremium && <span style={{ fontSize: '0.55rem', color: '#5a5048', marginLeft: 6 }}>Premium</span>}
+                  </button>
                 </div>
               )}
             </div>

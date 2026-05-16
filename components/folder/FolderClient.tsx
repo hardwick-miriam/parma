@@ -6,20 +6,23 @@ import { createClient } from '@/lib/supabase/client'
 import type { Document, Folder } from '@/types'
 import DocumentItem from './DocumentItem'
 import MoveDocumentModal from './MoveDocumentModal'
+import { LockBadge } from '@/components/ui/LockGate'
 import { ArrowLeft, Plus, GitBranch, Users, ArrowUpDown, Download } from 'lucide-react'
 import { FOLDER_ICONS } from '@/lib/constants'
 import Link from 'next/link'
 import { exportEpub } from '@/lib/utils/epub'
+import { FREE_LIMITS } from '@/lib/plan-config'
 
 type Props = {
   folder: Folder
   initialDocuments: Document[]
   userId: string
+  isPremium: boolean
 }
 
 type SortKey = 'updated' | 'created' | 'title'
 
-export default function FolderClient({ folder, initialDocuments, userId }: Props) {
+export default function FolderClient({ folder, initialDocuments, userId, isPremium }: Props) {
   const [documents, setDocuments] = useState<Document[]>(initialDocuments)
   const [movingDoc, setMovingDoc] = useState<Document | null>(null)
   const [sortKey, setSortKey] = useState<SortKey>('updated')
@@ -28,6 +31,8 @@ export default function FolderClient({ folder, initialDocuments, userId }: Props
   const supabase = createClient()
   const router = useRouter()
   const IconComponent = FOLDER_ICONS[folder.icon] || FOLDER_ICONS['folder']
+
+  const atDocLimit = !isPremium && documents.length >= FREE_LIMITS.documentsPerFolder
 
   const sorted = useMemo(() => {
     return [...documents].sort((a, b) => {
@@ -45,6 +50,7 @@ export default function FolderClient({ folder, initialDocuments, userId }: Props
   }
 
   const createDocument = async () => {
+    if (atDocLimit) return
     const { data } = await supabase
       .from('documents')
       .insert({ folder_id: folder.id, user_id: userId, title: 'Untitled', content: {} })
@@ -70,6 +76,7 @@ export default function FolderClient({ folder, initialDocuments, userId }: Props
   }
 
   const handleExport = async () => {
+    if (!isPremium) { router.push('/subscribe'); return }
     setExporting(true)
     try {
       await exportEpub(folder.name, documents)
@@ -115,14 +122,17 @@ export default function FolderClient({ folder, initialDocuments, userId }: Props
               {folder.name}
             </span>
           </div>
-          <Link href={`/folder/${folder.id}/timeline`}
-            className="flex items-center gap-1.5 text-xs px-2 py-1.5 rounded border"
-            style={{ borderColor: '#2a2218', color: '#5a5048', letterSpacing: '0.04em' }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#9a8a78' }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#5a5048' }}>
-            <GitBranch size={12} />
-            <span className="hidden sm:inline">Timeline</span>
-          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {!isPremium && <LockBadge title="Timeline — Premium only" />}
+            <Link href={`/folder/${folder.id}/timeline`}
+              className="flex items-center gap-1.5 text-xs px-2 py-1.5 rounded border"
+              style={{ borderColor: '#2a2218', color: '#5a5048', letterSpacing: '0.04em', pointerEvents: isPremium ? 'auto' : 'none', opacity: isPremium ? 1 : 0.4 }}
+              onMouseEnter={(e) => { if (isPremium) (e.currentTarget as HTMLElement).style.color = '#9a8a78' }}
+              onMouseLeave={(e) => { if (isPremium) (e.currentTarget as HTMLElement).style.color = '#5a5048' }}>
+              <GitBranch size={12} />
+              <span className="hidden sm:inline">Timeline</span>
+            </Link>
+          </div>
           <Link href={`/folder/${folder.id}/characters`}
             className="flex items-center gap-1.5 text-xs px-2 py-1.5 rounded border"
             style={{ borderColor: '#2a2218', color: '#5a5048', letterSpacing: '0.04em' }}
@@ -134,22 +144,34 @@ export default function FolderClient({ folder, initialDocuments, userId }: Props
           {documents.length > 0 && (
             <button onClick={handleExport} disabled={exporting}
               className="flex items-center gap-1.5 text-xs px-2 py-1.5 rounded border"
-              style={{ borderColor: '#2a2218', color: '#5a5048', letterSpacing: '0.04em', background: 'none', cursor: 'pointer' }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#9a8a78' }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#5a5048' }}
-              title="Export as epub">
+              style={{ borderColor: '#2a2218', color: isPremium ? '#5a5048' : '#3a3228', letterSpacing: '0.04em', background: 'none', cursor: 'pointer' }}
+              onMouseEnter={(e) => { if (isPremium) (e.currentTarget as HTMLElement).style.color = '#9a8a78' }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = isPremium ? '#5a5048' : '#3a3228' }}
+              title={isPremium ? 'Export as epub' : 'Epub export — Premium only'}>
               <Download size={12} />
               <span className="hidden sm:inline">{exporting ? 'Exporting…' : 'Epub'}</span>
+              {!isPremium && <LockBadge />}
             </button>
           )}
-          <button onClick={createDocument}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded border"
-            style={{ background: '#2d1520', borderColor: '#6b2737', color: '#a8a8b0', letterSpacing: '0.04em' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = '#6b2737'; e.currentTarget.style.color = '#fff' }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = '#2d1520'; e.currentTarget.style.color = '#a8a8b0' }}>
-            <Plus size={12} />
-            <span className="hidden sm:inline">New document</span>
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            {atDocLimit && <LockBadge title={`Free plan: ${FREE_LIMITS.documentsPerFolder} documents per folder`} />}
+            <button
+              onClick={createDocument}
+              disabled={atDocLimit}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded border"
+              style={{
+                background: atDocLimit ? 'transparent' : '#2d1520',
+                borderColor: atDocLimit ? '#2a2218' : '#6b2737',
+                color: atDocLimit ? '#3a3228' : '#a8a8b0',
+                letterSpacing: '0.04em',
+                cursor: atDocLimit ? 'default' : 'pointer',
+              }}
+              onMouseEnter={(e) => { if (!atDocLimit) { e.currentTarget.style.background = '#6b2737'; e.currentTarget.style.color = '#fff' } }}
+              onMouseLeave={(e) => { if (!atDocLimit) { e.currentTarget.style.background = '#2d1520'; e.currentTarget.style.color = '#a8a8b0' } }}>
+              <Plus size={12} />
+              <span className="hidden sm:inline">New document</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -162,7 +184,6 @@ export default function FolderClient({ folder, initialDocuments, userId }: Props
           </div>
         ) : (
           <>
-            {/* Sort controls */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 12, justifyContent: 'flex-end' }}>
               <ArrowUpDown size={10} color="#3a3228" />
               {(['updated', 'created', 'title'] as const).map(k => (

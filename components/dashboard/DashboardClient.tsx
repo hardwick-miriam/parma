@@ -7,24 +7,39 @@ import type { Folder } from '@/types'
 import FolderCard from './FolderCard'
 import NewFolderModal from './NewFolderModal'
 import EditFolderModal from './EditFolderModal'
+import GettingStartedChecklist from '@/components/onboarding/GettingStartedChecklist'
+import OnboardingModal from '@/components/onboarding/OnboardingModal'
 import SearchBar from '@/components/search/SearchBar'
-import { Plus, LogOut, Settings, Clock } from 'lucide-react'
+import { LockBadge } from '@/components/ui/LockGate'
+import { Plus, LogOut, Settings, Clock, X } from 'lucide-react'
 import Link from 'next/link'
+import { FREE_LIMITS, type Plan } from '@/lib/plan-config'
 
 type RecentDoc = { id: string; title: string; folder_id: string; folder_name: string; opened_at: string }
+type Broadcast = { id: string; message: string; created_at: string; expires_at: string | null }
+type ChecklistProps = { folderCount: number; docCount: number; characterCount: number; hasProfile: boolean }
 
 type Props = {
   initialFolders: Folder[]
   userId: string
   recentDocs: RecentDoc[]
+  plan: Plan
+  onboarded: boolean
+  broadcasts: Broadcast[]
+  checklistProps: ChecklistProps
 }
 
-export default function DashboardClient({ initialFolders, userId, recentDocs }: Props) {
+export default function DashboardClient({ initialFolders, userId, recentDocs, plan, onboarded, broadcasts, checklistProps }: Props) {
   const [folders, setFolders] = useState<Folder[]>(initialFolders)
   const [showNew, setShowNew] = useState(false)
   const [editingFolder, setEditingFolder] = useState<Folder | null>(null)
+  const [showOnboarding, setShowOnboarding] = useState(!onboarded)
+  const [dismissedBroadcasts, setDismissedBroadcasts] = useState<Set<string>>(new Set())
   const supabase = createClient()
   const router = useRouter()
+
+  const isPremium = plan === 'premium'
+  const atFolderLimit = !isPremium && folders.length >= FREE_LIMITS.folders
 
   const createFolder = async (name: string, color: string, icon: string) => {
     const { data } = await supabase
@@ -58,6 +73,13 @@ export default function DashboardClient({ initialFolders, userId, recentDocs }: 
     router.push('/')
   }
 
+  const completeOnboarding = async () => {
+    setShowOnboarding(false)
+    await fetch('/api/onboarding/complete', { method: 'POST' })
+  }
+
+  const visibleBroadcasts = broadcasts.filter(b => !dismissedBroadcasts.has(b.id))
+
   return (
     <div className="min-h-screen relative" style={{ backgroundColor: '#1a1a1f' }}>
       <svg aria-hidden="true" style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }}>
@@ -86,6 +108,14 @@ export default function DashboardClient({ initialFolders, userId, recentDocs }: 
           <div className="flex-1 max-w-xl mx-auto">
             <SearchBar userId={userId} />
           </div>
+          {!isPremium && (
+            <Link href="/subscribe"
+              style={{ fontSize: '0.62rem', letterSpacing: '0.1em', color: '#9a6070', border: '1px solid #6b2737', borderRadius: 3, padding: '4px 10px', textDecoration: 'none' }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#2d1520')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+              Upgrade
+            </Link>
+          )}
           <Link href="/settings"
             className="flex items-center gap-1.5 text-xs px-2 py-1.5 rounded border flex-shrink-0"
             style={{ color: '#5a5048', borderColor: '#3a3228', background: 'transparent', letterSpacing: '0.04em' }}
@@ -106,7 +136,20 @@ export default function DashboardClient({ initialFolders, userId, recentDocs }: 
         </div>
       </header>
 
+      {/* Broadcast banners */}
+      {visibleBroadcasts.map(b => (
+        <div key={b.id} style={{ background: '#2d1520', borderBottom: '1px solid #6b2737', padding: '10px 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 10 }}>
+          <p style={{ color: '#d4cfc8', fontSize: '0.75rem' }}>{b.message}</p>
+          <button onClick={() => setDismissedBroadcasts(s => new Set([...s, b.id]))}
+            style={{ background: 'none', border: 'none', color: '#5a5048', cursor: 'pointer', flexShrink: 0, marginLeft: 12, padding: 4 }}>
+            <X size={12} />
+          </button>
+        </div>
+      ))}
+
       <main className="max-w-6xl mx-auto px-6 py-8" style={{ position: 'relative', zIndex: 1 }}>
+
+        <GettingStartedChecklist userId={userId} {...checklistProps} />
 
         {/* Recently opened */}
         {recentDocs.length > 0 && (
@@ -136,14 +179,25 @@ export default function DashboardClient({ initialFolders, userId, recentDocs }: 
           <h2 className="text-xs uppercase" style={{ color: '#5a5048', letterSpacing: '0.18em', fontWeight: 300 }}>
             Folios
           </h2>
-          <button onClick={() => setShowNew(true)}
-            className="flex items-center gap-2 text-xs px-4 py-2 rounded border"
-            style={{ background: '#2d1520', borderColor: '#6b2737', color: '#a8a8b0', letterSpacing: '0.05em' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = '#6b2737'; e.currentTarget.style.color = '#fff' }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = '#2d1520'; e.currentTarget.style.color = '#a8a8b0' }}>
-            <Plus size={13} />
-            New Folder
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {atFolderLimit && <LockBadge title={`Free plan: ${FREE_LIMITS.folders} folios max`} />}
+            <button
+              onClick={() => { if (!atFolderLimit) setShowNew(true) }}
+              disabled={atFolderLimit}
+              className="flex items-center gap-2 text-xs px-4 py-2 rounded border"
+              style={{
+                background: atFolderLimit ? 'transparent' : '#2d1520',
+                borderColor: atFolderLimit ? '#2a2218' : '#6b2737',
+                color: atFolderLimit ? '#3a3228' : '#a8a8b0',
+                letterSpacing: '0.05em',
+                cursor: atFolderLimit ? 'default' : 'pointer',
+              }}
+              onMouseEnter={(e) => { if (!atFolderLimit) { e.currentTarget.style.background = '#6b2737'; e.currentTarget.style.color = '#fff' } }}
+              onMouseLeave={(e) => { if (!atFolderLimit) { e.currentTarget.style.background = '#2d1520'; e.currentTarget.style.color = '#a8a8b0' } }}>
+              <Plus size={13} />
+              New Folder
+            </button>
+          </div>
         </div>
 
         {folders.length === 0 ? (
@@ -161,6 +215,7 @@ export default function DashboardClient({ initialFolders, userId, recentDocs }: 
         )}
       </main>
 
+      {showOnboarding && <OnboardingModal onComplete={completeOnboarding} />}
       {showNew && <NewFolderModal onClose={() => setShowNew(false)} onCreate={createFolder} />}
       {editingFolder && (
         <EditFolderModal

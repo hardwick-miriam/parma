@@ -3,13 +3,14 @@
 import { useState, useCallback, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { UserSettings } from '@/types'
-import { ArrowLeft, Check } from 'lucide-react'
+import { ArrowLeft, Check, Lock } from 'lucide-react'
 import Link from 'next/link'
 import { loadGoogleFont } from '@/components/ui/ThemeApplier'
 
 type Props = {
   userId: string
   initialSettings: UserSettings
+  isPremium: boolean
 }
 
 const STYLES: Array<UserSettings['stack_style']> = ['Shuffled', 'Aligned', 'Slipped']
@@ -36,10 +37,12 @@ const EDITOR_FONTS = [
   'Spectral',
 ]
 
-export default function SettingsPageClient({ userId, initialSettings }: Props) {
+export default function SettingsPageClient({ userId, initialSettings, isPremium }: Props) {
   const supabase = createClient()
   const [settings, setSettings] = useState<UserSettings>(initialSettings)
   const [saved, setSaved] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
+  const [cancelled, setCancelled] = useState(false)
 
   const save = useCallback(async (s: UserSettings) => {
     await supabase.from('user_settings').upsert({ ...s, user_id: userId }, { onConflict: 'user_id' })
@@ -80,6 +83,14 @@ export default function SettingsPageClient({ userId, initialSettings }: Props) {
     }
   }, [settings.editor_font])
 
+  const cancelSubscription = async () => {
+    if (!confirm('Cancel your subscription? You\'ll keep Premium access until the end of your billing period.')) return
+    setCancelling(true)
+    await fetch('/api/stripe/cancel-subscription', { method: 'POST' })
+    setCancelled(true)
+    setCancelling(false)
+  }
+
   const bdr = '#2a2218'
   const ink = '#d4cfc8'
   const dim = '#5a5048'
@@ -113,26 +124,38 @@ export default function SettingsPageClient({ userId, initialSettings }: Props) {
 
         {/* Theme */}
         <div style={section}>
-          <p style={{ ...lbl, marginBottom: '1rem' }}>Theme</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '1rem' }}>
+            <p style={lbl}>Theme</p>
+            {!isPremium && <span style={{ color: '#5a5048', fontSize: '0.58rem', letterSpacing: '0.06em' }}>— seasonal themes require Premium</span>}
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            {THEMES.map(t => (
-              <button key={t.key} onClick={() => applyTheme(t.key)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '0.75rem 1rem', borderRadius: 3, cursor: 'pointer', textAlign: 'left',
-                  background: settings.theme === t.key ? t.bg : 'transparent',
-                  border: `1px solid ${settings.theme === t.key ? t.accent : bdr}`,
-                }}>
-                <div style={{ display: 'flex', flexShrink: 0, flexDirection: 'column', gap: 2 }}>
-                  <div style={{ width: 20, height: 12, borderRadius: 2, background: t.bg, border: '1px solid #3a3228' }} />
-                  <div style={{ width: 20, height: 5, borderRadius: 1, background: t.accent }} />
-                </div>
-                <div>
-                  <p style={{ color: ink, fontSize: '0.72rem', fontWeight: 300, marginBottom: 2 }}>{t.label}</p>
-                  <p style={{ color: dim, fontSize: '0.6rem' }}>{t.desc}</p>
-                </div>
-              </button>
-            ))}
+            {THEMES.map(t => {
+              const locked = !isPremium && t.key !== 'default'
+              return (
+                <button key={t.key}
+                  onClick={() => { if (!locked) applyTheme(t.key) }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '0.75rem 1rem', borderRadius: 3, cursor: locked ? 'default' : 'pointer', textAlign: 'left',
+                    background: settings.theme === t.key ? t.bg : 'transparent',
+                    border: `1px solid ${settings.theme === t.key ? t.accent : bdr}`,
+                    opacity: locked ? 0.45 : 1,
+                    position: 'relative',
+                  }}>
+                  <div style={{ display: 'flex', flexShrink: 0, flexDirection: 'column', gap: 2 }}>
+                    <div style={{ width: 20, height: 12, borderRadius: 2, background: t.bg, border: '1px solid #3a3228' }} />
+                    <div style={{ width: 20, height: 5, borderRadius: 1, background: t.accent }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ color: ink, fontSize: '0.72rem', fontWeight: 300, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 5 }}>
+                      {t.label}
+                      {locked && <Lock size={9} color="#c0c0c0" />}
+                    </p>
+                    <p style={{ color: dim, fontSize: '0.6rem' }}>{t.desc}</p>
+                  </div>
+                </button>
+              )
+            })}
           </div>
         </div>
 
@@ -234,7 +257,40 @@ export default function SettingsPageClient({ userId, initialSettings }: Props) {
           </div>
         </div>
 
-        <p style={{ color: '#3a3228', fontSize: '0.62rem', letterSpacing: '0.06em' }}>
+        {/* Subscription */}
+        <div style={{ borderTop: `1px solid ${bdr}`, paddingTop: '1.5rem', marginTop: '0.5rem' }}>
+          <p style={{ ...lbl, marginBottom: '1rem' }}>Subscription</p>
+          {isPremium ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <p style={{ color: '#9a6070', fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <Check size={11} /> Parma Premium
+                </p>
+                <p style={{ color: dim, fontSize: '0.6rem', marginTop: 4 }}>
+                  {cancelled ? 'Your subscription has been cancelled. Access continues until the period ends.' : 'Full access — cancel any time.'}
+                </p>
+              </div>
+              {!cancelled && (
+                <button onClick={cancelSubscription} disabled={cancelling}
+                  style={{ padding: '6px 14px', background: 'none', border: `1px solid ${bdr}`, borderRadius: 3, color: dim, fontSize: '0.65rem', cursor: cancelling ? 'default' : 'pointer' }}>
+                  {cancelling ? 'Cancelling…' : 'Cancel subscription'}
+                </button>
+              )}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <p style={{ color: dim, fontSize: '0.72rem' }}>Free plan</p>
+              <Link href="/subscribe"
+                style={{ padding: '6px 14px', background: '#2d1520', border: '1px solid #6b2737', borderRadius: 3, color: '#d4cfc8', fontSize: '0.65rem', textDecoration: 'none' }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#6b2737')}
+                onMouseLeave={e => (e.currentTarget.style.background = '#2d1520')}>
+                Upgrade to Premium
+              </Link>
+            </div>
+          )}
+        </div>
+
+        <p style={{ color: '#3a3228', fontSize: '0.62rem', letterSpacing: '0.06em', marginTop: '1.5rem' }}>
           Settings are saved automatically.
         </p>
       </main>
