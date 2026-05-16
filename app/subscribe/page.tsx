@@ -5,6 +5,8 @@ import Link from 'next/link'
 import SubscribeClient from '@/components/subscribe/SubscribeClient'
 import Wordmark from '@/components/ui/Wordmark'
 
+export const dynamic = 'force-dynamic'
+
 export default async function SubscribePage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
