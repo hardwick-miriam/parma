@@ -42,6 +42,18 @@ const PARSE_TOOL: Anthropic.Tool = {
       injury_description: { type: 'string', description: 'Brief description of the injury (e.g. sprained ankle, sore knee)' },
       injury_estimated_days: { type: 'number', description: 'Estimated days until recovery from injury, if mentioned' },
       notes: { type: 'string', description: 'Anything that does not fit another field' },
+      injury_checkin: {
+        type: 'object',
+        description: 'Use ONLY when the person describes how an existing injury feels today — not for reporting a brand-new injury. Extract check-in details.',
+        properties: {
+          body_part: { type: 'string', description: 'Body part affected, e.g. ankle, knee, shoulder, back' },
+          feeling_pct: { type: 'number', description: 'How recovered the injury feels, 0–100 (0=worst ever, 100=fully healed). E.g. "felt 80%" → 80, "much better" → ~75, "still bad" → ~25' },
+          activity: { type: 'string', description: 'Any activity done with the injured area, e.g. went for a walk, light jog, stretching' },
+          notes: { type: 'string' },
+        },
+        required: ['feeling_pct'],
+        additionalProperties: false,
+      },
     },
     additionalProperties: false,
   },

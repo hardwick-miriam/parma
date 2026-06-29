@@ -16,7 +16,8 @@ export function LogFlow() {
   }
 
   async function handleConfirm(edited: ParsedLog) {
-    const result = await saveLog(edited)
+    if (!pending) return
+    const result = await saveLog(pending.text, edited)
     if (result.error) {
       setSaveError(result.error)
     } else {

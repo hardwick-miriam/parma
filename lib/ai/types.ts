@@ -5,6 +5,13 @@ export interface ParsedWorkout {
   exercises?: string[]
 }
 
+export interface ParsedInjuryCheckin {
+  body_part?: string
+  feeling_pct: number
+  activity?: string
+  notes?: string
+}
+
 export interface ParsedLog {
   calories?: number
   protein_g?: number
@@ -22,6 +29,7 @@ export interface ParsedLog {
   injured?: boolean
   injury_description?: string
   injury_estimated_days?: number
+  injury_checkin?: ParsedInjuryCheckin
 }
 
 export interface AIProvider {

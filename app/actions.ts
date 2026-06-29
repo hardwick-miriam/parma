@@ -2,42 +2,100 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { upsertDailyStats, upsertHealthStatus, insertWorkout } from '@/lib/db/queries'
+import {
+  upsertDailyStats,
+  upsertHealthStatus,
+  insertWorkout,
+  insertLogEntry,
+  getActiveInjuries,
+  createInjury,
+  insertInjuryCheckin,
+} from '@/lib/db/queries'
 import type { ParsedLog } from '@/lib/ai/types'
 
-export async function saveLog(parsed: ParsedLog): Promise<{ error?: string }> {
+export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ error?: string }> {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
-
   if (authError || !user) return { error: 'Not authenticated' }
 
   try {
-    await upsertDailyStats(user.id, {
-      calories: parsed.calories,
-      protein_g: parsed.protein_g,
-      steps: parsed.steps,
-      water_ml: parsed.water_ml,
-      mood: parsed.mood,
-      sleep_hours: parsed.sleep_hours,
-      weight_kg: parsed.weight_kg,
-      supplements: parsed.supplements,
-      habits_done: parsed.habits_done,
-      notes: parsed.notes,
-    })
+    await Promise.all([
+      upsertDailyStats(user.id, {
+        calories: parsed.calories,
+        protein_g: parsed.protein_g,
+        steps: parsed.steps,
+        water_ml: parsed.water_ml,
+        mood: parsed.mood,
+        sleep_hours: parsed.sleep_hours,
+        weight_kg: parsed.weight_kg,
+        supplements: parsed.supplements,
+        habits_done: parsed.habits_done,
+        notes: parsed.notes,
+      }),
+      insertLogEntry(user.id, rawText, parsed),
+    ])
 
     if (parsed.workouts?.length) {
       await Promise.all(parsed.workouts.map((w) => insertWorkout(user.id, w)))
     }
 
-    const hasHealthUpdate = parsed.sick !== undefined || parsed.injured !== undefined
-    if (hasHealthUpdate) {
+    if (parsed.sick !== undefined) {
       await upsertHealthStatus(user.id, {
         sick: parsed.sick,
         sick_estimated_days: parsed.sick_estimated_days,
-        injured: parsed.injured,
+      })
+    }
+
+    if (parsed.injury_checkin) {
+      const { body_part, feeling_pct, activity, notes } = parsed.injury_checkin
+      const activeInjuries = await getActiveInjuries(user.id)
+
+      let matchedId: string | undefined
+      if (body_part) {
+        const bp = body_part.toLowerCase()
+        const match = activeInjuries.find(
+          (inj) =>
+            (inj.body_part?.toLowerCase().includes(bp) ?? false) ||
+            bp.includes(inj.body_part?.toLowerCase() ?? '')
+        )
+        matchedId = match?.id
+      } else {
+        matchedId = activeInjuries[0]?.id
+      }
+
+      if (!matchedId) {
+        const created = await createInjury(
+          user.id,
+          body_part ?? 'injury',
+          body_part ?? null,
+          null
+        )
+        matchedId = created.id
+      }
+
+      await insertInjuryCheckin(matchedId, user.id, feeling_pct, activity ?? null, notes ?? null)
+    }
+
+    if (parsed.injured === true && !parsed.injury_checkin) {
+      await upsertHealthStatus(user.id, {
+        injured: true,
         injury_description: parsed.injury_description,
         injury_estimated_days: parsed.injury_estimated_days,
       })
+      const activeInjuries = await getActiveInjuries(user.id)
+      const desc = parsed.injury_description ?? 'Injury'
+      const alreadyExists = activeInjuries.some(
+        (inj) =>
+          inj.description.toLowerCase().includes(desc.toLowerCase()) ||
+          desc.toLowerCase().includes(inj.description.toLowerCase())
+      )
+      if (!alreadyExists) {
+        await createInjury(user.id, desc, null, parsed.injury_estimated_days ?? null)
+      }
+    }
+
+    if (parsed.injured === false) {
+      await upsertHealthStatus(user.id, { injured: false })
     }
 
     revalidatePath('/')

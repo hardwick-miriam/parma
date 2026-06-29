@@ -209,3 +209,128 @@ export async function insertWorkout(
 
   if (error) throw error
 }
+
+export interface LogEntry {
+  id: string
+  user_id: string
+  raw_text: string
+  parsed_json: unknown
+  logged_at: string
+}
+
+export async function insertLogEntry(
+  userId: string,
+  rawText: string,
+  parsedJson: unknown
+): Promise<void> {
+  const supabase = await createClient()
+  const { error } = await supabase.from('log_entries').insert({
+    user_id: userId,
+    raw_text: rawText,
+    parsed_json: parsedJson,
+  })
+  if (error) throw error
+}
+
+export async function getTodayLogEntries(userId: string): Promise<LogEntry[]> {
+  const supabase = await createClient()
+  const today = new Date().toISOString().split('T')[0]
+  const { data, error } = await supabase
+    .from('log_entries')
+    .select('id, user_id, raw_text, parsed_json, logged_at')
+    .eq('user_id', userId)
+    .gte('logged_at', `${today}T00:00:00`)
+    .order('logged_at', { ascending: false })
+  if (error) throw error
+  return data ?? []
+}
+
+export interface Injury {
+  id: string
+  user_id: string
+  description: string
+  body_part: string | null
+  started_on: string
+  estimated_days: number | null
+  resolved_on: string | null
+  created_at: string
+}
+
+export interface InjuryCheckin {
+  id: string
+  injury_id: string
+  user_id: string
+  feeling_pct: number
+  activity: string | null
+  notes: string | null
+  logged_at: string
+  date: string
+}
+
+export interface InjuryWithCheckins extends Injury {
+  checkins: InjuryCheckin[]
+}
+
+export async function getActiveInjuries(userId: string): Promise<Injury[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('injuries')
+    .select('*')
+    .eq('user_id', userId)
+    .is('resolved_on', null)
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function createInjury(
+  userId: string,
+  description: string,
+  bodyPart: string | null,
+  estimatedDays: number | null
+): Promise<Injury> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('injuries')
+    .insert({ user_id: userId, description, body_part: bodyPart, estimated_days: estimatedDays })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function insertInjuryCheckin(
+  injuryId: string,
+  userId: string,
+  feelingPct: number,
+  activity: string | null,
+  notes: string | null
+): Promise<void> {
+  const supabase = await createClient()
+  const { error } = await supabase.from('injury_checkins').insert({
+    injury_id: injuryId,
+    user_id: userId,
+    feeling_pct: feelingPct,
+    activity,
+    notes,
+    date: new Date().toISOString().split('T')[0],
+  })
+  if (error) throw error
+}
+
+export async function getInjuriesWithCheckins(userId: string): Promise<InjuryWithCheckins[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('injuries')
+    .select('*, checkins:injury_checkins(*)')
+    .eq('user_id', userId)
+    .is('resolved_on', null)
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  return (data ?? []).map((inj) => ({
+    ...inj,
+    checkins: ((inj.checkins ?? []) as InjuryCheckin[]).sort(
+      (a, b) => new Date(a.logged_at).getTime() - new Date(b.logged_at).getTime()
+    ),
+  }))
+}

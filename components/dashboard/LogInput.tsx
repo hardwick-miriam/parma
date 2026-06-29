@@ -9,71 +9,78 @@ interface LogInputProps {
 
 export function LogInput({ onParsed }: LogInputProps) {
   const [text, setText] = useState('')
-  const [listening, setListening] = useState(false)
+  const [recording, setRecording] = useState(false)
+  const [transcribing, setTranscribing] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recognitionRef = useRef<any>(null)
-  const listeningRef = useRef(false)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const chunksRef = useRef<Blob[]>([])
 
-  function startListening() {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const w = window as any
-    const SR = w.SpeechRecognition || w.webkitSpeechRecognition
+  async function startRecording() {
+    setError(null)
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
 
-    if (!SR) {
-      setError('Speech recognition is not supported in this browser — try Chrome or Safari')
-      return
-    }
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm')
+        ? 'audio/webm'
+        : ''
 
-    const recognition = new SR()
-    recognition.continuous = true
-    recognition.interimResults = true
-    recognition.lang = 'en-US'
+      const recorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream)
 
-    recognition.onresult = (event: any) => {
-      let transcript = ''
-      for (let i = 0; i < event.results.length; i++) {
-        transcript += event.results[i][0].transcript
+      chunksRef.current = []
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data)
       }
-      setText(transcript)
-    }
 
-    recognition.onerror = (event: any) => {
-      if (event.error === 'not-allowed') {
-        setError('Microphone permission was denied — allow access and try again')
-        listeningRef.current = false
-        setListening(false)
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop())
+
+        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' })
+        chunksRef.current = []
+
+        setTranscribing(true)
+        try {
+          const form = new FormData()
+          form.append('audio', blob, 'audio.webm')
+
+          const res = await fetch('/api/transcribe', { method: 'POST', body: form })
+          const data = await res.json()
+          if (!res.ok) throw new Error(data.error ?? 'Transcription failed')
+          if (data.text) {
+            setText((prev) => (prev ? `${prev} ${data.text}` : data.text))
+          }
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'Transcription failed')
+        } finally {
+          setTranscribing(false)
+        }
       }
-      // Other errors (network, no-speech, audio-capture) are transient;
-      // let onend handle the restart.
-    }
 
-    // Chrome fires onend after every utterance even in continuous mode.
-    // Auto-restart while listeningRef is true so the button stays active.
-    recognition.onend = () => {
-      if (listeningRef.current) {
-        try { recognition.start() } catch { /* already started */ }
+      mediaRecorderRef.current = recorder
+      recorder.start()
+      setRecording(true)
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'NotAllowedError') {
+        setError('Microphone permission denied — allow access and try again')
       } else {
-        setListening(false)
+        setError('Could not access microphone')
       }
     }
-
-    recognitionRef.current = recognition
-    listeningRef.current = true
-    setListening(true)
-    recognition.start()
   }
 
-  function stopListening() {
-    listeningRef.current = false
-    setListening(false)
-    recognitionRef.current?.stop()
+  function stopRecording() {
+    mediaRecorderRef.current?.stop()
+    setRecording(false)
   }
 
   async function handleSubmit() {
-    if (!text.trim()) return
-    if (listening) stopListening()
+    if (!text.trim() || loading || transcribing) return
+    if (recording) stopRecording()
     setLoading(true)
     setError(null)
 
@@ -96,6 +103,8 @@ export function LogInput({ onParsed }: LogInputProps) {
     }
   }
 
+  const micBusy = recording || transcribing
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex gap-2">
@@ -111,15 +120,21 @@ export function LogInput({ onParsed }: LogInputProps) {
         />
         <button
           type="button"
-          onClick={listening ? stopListening : startListening}
-          className={`self-end p-3 rounded-xl border transition-colors ${
-            listening
-              ? 'bg-accent text-bg border-accent'
+          onClick={recording ? stopRecording : startRecording}
+          disabled={transcribing}
+          className={`self-end p-3 rounded-xl border transition-colors disabled:opacity-40 ${
+            recording
+              ? 'bg-red-500 text-white border-red-500'
               : 'bg-surface-elevated border-border text-text-muted hover:border-border-strong'
           }`}
-          title={listening ? 'Stop recording' : 'Start voice input'}
+          title={recording ? 'Stop recording' : 'Start voice recording'}
         >
-          {listening ? (
+          {transcribing ? (
+            <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          ) : recording ? (
             <svg className="w-5 h-5 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
               <rect x="5" y="5" width="10" height="10" rx="2" />
             </svg>
@@ -132,12 +147,21 @@ export function LogInput({ onParsed }: LogInputProps) {
         </button>
       </div>
 
+      {recording && (
+        <p className="text-red-400 text-xs flex items-center gap-2">
+          <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+          Recording — click to stop
+        </p>
+      )}
+      {transcribing && (
+        <p className="text-text-muted text-xs">Transcribing…</p>
+      )}
       {error && <p className="text-red-400 text-xs">{error}</p>}
 
       <button
         type="button"
         onClick={handleSubmit}
-        disabled={!text.trim() || loading}
+        disabled={!text.trim() || loading || micBusy}
         className="self-end px-5 py-2 rounded-xl bg-accent text-bg text-sm font-semibold disabled:opacity-40 hover:opacity-90 transition-opacity"
       >
         {loading ? 'Parsing…' : 'Log it ⌘↵'}
