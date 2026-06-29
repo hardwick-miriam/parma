@@ -12,8 +12,8 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   const [stats, workouts] = await Promise.all([
-    user ? getTodayStats(user.id) : null,
-    user ? getTodayWorkouts(user.id) : [],
+    user ? getTodayStats(user.id).catch(() => null) : null,
+    user ? getTodayWorkouts(user.id).catch(() => []) : [],
   ])
 
   const today = new Date().toLocaleDateString('en-US', {
