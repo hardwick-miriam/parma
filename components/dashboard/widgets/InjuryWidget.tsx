@@ -79,7 +79,7 @@ function InjuryTooltip({
       }}
     >
       <p style={{ color: 'rgba(240,240,242,0.45)', marginBottom: 2 }}>{label}</p>
-      <p style={{ color: '#a3e635', fontWeight: 600 }}>{feeling}%</p>
+      <p style={{ color: 'var(--accent)', fontWeight: 600 }}>{feeling}%</p>
       <p style={{ color: 'rgba(240,240,242,0.45)' }}>{activity}</p>
     </div>
   )
@@ -154,9 +154,9 @@ function RecoveryChart({ checkins }: { checkins: InjuryCheckin[] }) {
         <Line
           type="monotone"
           dataKey="feeling"
-          stroke="#a3e635"
+          stroke="var(--accent)"
           strokeWidth={2}
-          dot={{ fill: '#a3e635', r: 3, strokeWidth: 0 }}
+          dot={{ fill: 'var(--accent)', r: 3, strokeWidth: 0 }}
           activeDot={{ r: 4 }}
         />
       </LineChart>
