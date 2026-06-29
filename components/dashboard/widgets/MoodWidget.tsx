@@ -12,7 +12,7 @@ export function MoodWidget({ mood }: { mood: string | null }) {
   const config = mood ? MOOD_CONFIG[mood] : null
 
   return (
-    <div className="rounded-2xl bg-surface p-6 flex flex-col gap-3">
+    <div className="rounded-2xl bg-surface border border-border p-6 flex flex-col gap-3 h-full" style={{ boxShadow: 'var(--shadow-md)' }}>
       <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest">Mood</h2>
       {config ? (
         <div className="flex flex-col items-center gap-1 py-2">

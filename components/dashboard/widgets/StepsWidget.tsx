@@ -11,7 +11,7 @@ export function StepsWidget({ steps, target = 10000 }: StepsWidgetProps) {
   const pct = Math.round(Math.min((steps / target) * 100, 100))
 
   return (
-    <div className="rounded-2xl bg-surface p-6 flex flex-col gap-4">
+    <div className="rounded-2xl bg-surface border border-border p-6 flex flex-col gap-4 h-full" style={{ boxShadow: 'var(--shadow-md)' }}>
       <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest">
         Steps
       </h2>

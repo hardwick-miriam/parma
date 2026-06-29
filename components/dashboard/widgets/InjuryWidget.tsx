@@ -191,7 +191,7 @@ function InjuryCard({ injury }: { injury: InjuryWithCheckins }) {
   const checkinsSorted = [...injury.checkins].reverse()
 
   return (
-    <div className="rounded-2xl bg-surface border border-orange-500/20 p-6 flex flex-col gap-4">
+    <div className="rounded-2xl bg-surface border border-orange-500/20 p-6 flex flex-col gap-4" style={{ boxShadow: 'var(--shadow-md)' }}>
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold text-orange-400 uppercase tracking-widest mb-1">
@@ -378,7 +378,7 @@ function PastInjuriesSection({ injuries }: { injuries: InjuryWithCheckins[] }) {
   if (injuries.length === 0) return null
 
   return (
-    <div className="rounded-2xl bg-surface border border-border p-6 flex flex-col gap-4">
+    <div className="rounded-2xl bg-surface border border-border p-6 flex flex-col gap-4" style={{ boxShadow: 'var(--shadow-md)' }}>
       <button
         onClick={() => setOpen((v) => !v)}
         className="flex items-center justify-between w-full text-left"

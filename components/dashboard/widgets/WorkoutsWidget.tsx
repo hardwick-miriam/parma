@@ -32,7 +32,7 @@ export function WorkoutsWidget({ workouts }: { workouts: WorkoutSession[] }) {
   }
 
   return (
-    <div className="rounded-2xl bg-surface p-6 flex flex-col gap-4">
+    <div className="rounded-2xl bg-surface border border-border p-6 flex flex-col gap-4 h-full" style={{ boxShadow: 'var(--shadow-md)' }}>
       <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest">
         Workouts
       </h2>

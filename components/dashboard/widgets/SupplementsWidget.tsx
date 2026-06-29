@@ -16,7 +16,7 @@ export function SupplementsWidget({ supplements }: { supplements: string[] | nul
   }
 
   return (
-    <div className="rounded-2xl bg-surface p-6 flex flex-col gap-4">
+    <div className="rounded-2xl bg-surface border border-border p-6 flex flex-col gap-4 h-full" style={{ boxShadow: 'var(--shadow-md)' }}>
       <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest">Supplements</h2>
       {list.length > 0 ? (
         <ul className="flex flex-wrap gap-2">

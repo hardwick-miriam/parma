@@ -32,7 +32,7 @@ export function TimelineWidget({ entries }: { entries: LogEntry[] }) {
   }
 
   return (
-    <div className="rounded-2xl bg-surface p-6 flex flex-col gap-4">
+    <div className="rounded-2xl bg-surface border border-border p-6 flex flex-col gap-4" style={{ boxShadow: 'var(--shadow-md)' }}>
       <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest">Today's Log</h2>
       {entries.length === 0 ? (
         <p className="text-text-subtle text-sm">Nothing logged yet — speak or type below</p>
