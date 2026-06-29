@@ -20,27 +20,26 @@ export default async function DashboardLayout({
         <SignOutButton />
       </div>
 
-      {/* Scrollable content — padded so it clears the bottom log bar */}
+      {/* Scrollable content — padded to clear the floating log bar */}
       <main
         className="max-w-5xl mx-auto px-4 pt-6"
-        style={{ paddingBottom: 'calc(var(--log-bar-height) + 32px)' }}
+        style={{ paddingBottom: '120px' }}
       >
         {children}
       </main>
 
-      {/* Fixed floating log bar */}
+      {/* Fixed floating log bar — auto-height, grows with textarea */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-50"
+        className="fixed bottom-0 left-0 right-0 z-50 py-3"
         style={{
-          height: 'var(--log-bar-height)',
-          background: 'rgba(17,17,19,0.88)',
+          background: 'rgba(17,17,19,0.92)',
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
           borderTop: '1px solid rgba(255,255,255,0.08)',
-          boxShadow: '0 -8px 32px rgba(0,0,0,0.5)',
+          boxShadow: '0 -4px 24px rgba(0,0,0,0.5)',
         }}
       >
-        <div className="max-w-5xl mx-auto px-4 h-full flex items-center">
+        <div className="max-w-5xl mx-auto px-4">
           <LogFlow />
         </div>
       </div>

@@ -90,15 +90,18 @@ body {
   display: grid;
   gap: 10px;
   grid-template-columns: repeat(2, 1fr);
+  align-items: start;
 }
 
 @media (min-width: 1024px) {
   .bento-grid {
     grid-template-columns: repeat(6, 1fr);
+    /* No row-spanning — every card sizes to its own content */
     grid-template-areas:
       "nutr  nutr  steps steps sleep  mood"
-      "nutr  nutr  hydra wt    work   work"
-      "hab   hab   hab   supp  supp   supp";
+      "hydra wt    work  work  hab    hab"
+      "supp  supp  supp  supp  supp   supp";
+    align-items: start;
   }
   .bento-nutr  { grid-area: nutr; }
   .bento-steps { grid-area: steps; }

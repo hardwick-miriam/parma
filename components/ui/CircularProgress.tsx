@@ -13,6 +13,8 @@ interface CircularProgressProps {
   showTargetGlow?: boolean
   /** Animate the number counting up from 0 on mount */
   countUp?: boolean
+  /** Decimal places shown in the centre number (default 0) */
+  decimals?: number
 }
 
 function easeOut(t: number) {
@@ -62,6 +64,7 @@ export function CircularProgress({
   color,
   showTargetGlow,
   countUp = false,
+  decimals = 0,
 }: CircularProgressProps) {
   const radius = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * radius
@@ -105,7 +108,13 @@ export function CircularProgress({
       </svg>
       <div className="absolute flex flex-col items-center leading-none gap-0.5">
         <span className="text-2xl font-bold text-text tabular-nums">
-          {countUp ? Math.round(animatedValue).toLocaleString() : value.toLocaleString()}
+          {countUp
+            ? decimals > 0
+              ? animatedValue.toFixed(decimals)
+              : Math.round(animatedValue).toLocaleString()
+            : decimals > 0
+            ? value.toFixed(decimals)
+            : value.toLocaleString()}
         </span>
         {unit && <span className="text-[11px] text-text-muted">{unit}</span>}
         {label && <span className="text-[10px] text-text-subtle">{label}</span>}
