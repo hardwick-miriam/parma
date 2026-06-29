@@ -15,6 +15,13 @@ export interface ParsedLog {
   sleep_hours?: number
   supplements?: string[]
   notes?: string
+  weight_kg?: number
+  habits_done?: string[]
+  sick?: boolean
+  sick_estimated_days?: number
+  injured?: boolean
+  injury_description?: string
+  injury_estimated_days?: number
 }
 
 export interface AIProvider {

@@ -12,45 +12,68 @@ export function LogInput({ onParsed }: LogInputProps) {
   const [listening, setListening] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const recognitionRef = useRef<{ stop: () => void } | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null)
+  const listeningRef = useRef(false)
 
   function startListening() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const w = window as any
-    const SpeechRecognition = w.SpeechRecognition || w.webkitSpeechRecognition
+    const SR = w.SpeechRecognition || w.webkitSpeechRecognition
 
-    if (!SpeechRecognition) {
-      setError('Speech recognition not supported in this browser')
+    if (!SR) {
+      setError('Speech recognition is not supported in this browser — try Chrome or Safari')
       return
     }
 
-    const recognition = new SpeechRecognition()
+    const recognition = new SR()
     recognition.continuous = true
     recognition.interimResults = true
     recognition.lang = 'en-US'
 
-    recognition.onresult = (event: { results: { [n: number]: { [n: number]: { transcript: string } } } }) => {
-      const transcript = Array.from(Object.values(event.results) as { [n: number]: { transcript: string } }[])
-        .map((r) => r[0].transcript)
-        .join('')
+    recognition.onresult = (event: any) => {
+      let transcript = ''
+      for (let i = 0; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript
+      }
       setText(transcript)
     }
 
-    recognition.onerror = () => setListening(false)
-    recognition.onend = () => setListening(false)
+    recognition.onerror = (event: any) => {
+      if (event.error === 'not-allowed') {
+        setError('Microphone permission was denied — allow access and try again')
+        listeningRef.current = false
+        setListening(false)
+      }
+      // Other errors (network, no-speech, audio-capture) are transient;
+      // let onend handle the restart.
+    }
+
+    // Chrome fires onend after every utterance even in continuous mode.
+    // Auto-restart while listeningRef is true so the button stays active.
+    recognition.onend = () => {
+      if (listeningRef.current) {
+        try { recognition.start() } catch { /* already started */ }
+      } else {
+        setListening(false)
+      }
+    }
 
     recognitionRef.current = recognition
-    recognition.start()
+    listeningRef.current = true
     setListening(true)
+    recognition.start()
   }
 
   function stopListening() {
-    recognitionRef.current?.stop()
+    listeningRef.current = false
     setListening(false)
+    recognitionRef.current?.stop()
   }
 
   async function handleSubmit() {
     if (!text.trim()) return
+    if (listening) stopListening()
     setLoading(true)
     setError(null)
 
@@ -79,7 +102,7 @@ export function LogInput({ onParsed }: LogInputProps) {
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Had oatmeal for breakfast (300 cal, 10g protein), went for a 5km run…"
+          placeholder="Took creatine and vitamin D, slept 7 hours, drank 2 litres, weight 84kg, feeling good…"
           rows={3}
           className="flex-1 resize-none rounded-xl bg-surface-elevated border border-border text-text placeholder:text-text-subtle text-sm p-3 focus:outline-none focus:border-border-strong"
           onKeyDown={(e) => {
