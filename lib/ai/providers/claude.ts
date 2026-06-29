@@ -38,13 +38,13 @@ const PARSE_TOOL: Anthropic.Tool = {
       },
       sick: { type: 'boolean', description: 'True if the person is currently sick or ill. False if they explicitly say they have recovered.' },
       sick_estimated_days: { type: 'number', description: 'Estimated number of days the illness will last, if mentioned' },
-      injured: { type: 'boolean', description: 'True if the person has a current injury. False if they say the injury is healed.' },
-      injury_description: { type: 'string', description: 'Brief description of the injury (e.g. sprained ankle, sore knee)' },
-      injury_estimated_days: { type: 'number', description: 'Estimated days until recovery from injury, if mentioned' },
+      injured: { type: 'boolean', description: 'True if the person is reporting a NEW injury they have just sustained. Do NOT set this when they describe an existing injury healing — use injury_resolved for that.' },
+      injury_description: { type: 'string', description: 'Brief description of a new injury (e.g. sprained ankle, sore knee)' },
+      injury_estimated_days: { type: 'number', description: 'Estimated days until recovery from a new injury, if mentioned' },
       notes: { type: 'string', description: 'Anything that does not fit another field' },
       injury_checkin: {
         type: 'object',
-        description: 'Use ONLY when the person describes how an existing injury feels today — not for reporting a brand-new injury. Extract check-in details.',
+        description: 'Use ONLY when the person describes how an existing injury feels today — not for a new injury and not when they say it is healed. Extract check-in details.',
         properties: {
           body_part: { type: 'string', description: 'Body part affected, e.g. ankle, knee, shoulder, back' },
           feeling_pct: { type: 'number', description: 'How recovered the injury feels, 0–100 (0=worst ever, 100=fully healed). E.g. "felt 80%" → 80, "much better" → ~75, "still bad" → ~25' },
@@ -52,6 +52,14 @@ const PARSE_TOOL: Anthropic.Tool = {
           notes: { type: 'string' },
         },
         required: ['feeling_pct'],
+        additionalProperties: false,
+      },
+      injury_resolved: {
+        type: 'object',
+        description: 'Use when the person says an injury is healed, recovered, better, fixed, gone, or no longer bothering them. E.g. "my ankle\'s fully healed", "shoulder\'s better now", "knee is fine". Do NOT use for partial improvement — only for fully healed/resolved.',
+        properties: {
+          body_part: { type: 'string', description: 'The body part that has healed, e.g. ankle, knee, shoulder' },
+        },
         additionalProperties: false,
       },
     },

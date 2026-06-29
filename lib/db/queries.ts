@@ -456,6 +456,17 @@ export async function removeHabitFromToday(userId: string, habit: string): Promi
     .eq('date', today)
 }
 
+export async function resolveInjuryById(userId: string, injuryId: string): Promise<void> {
+  const supabase = await createClient()
+  const today = new Date().toISOString().split('T')[0]
+  const { error } = await supabase
+    .from('injuries')
+    .update({ resolved_on: today })
+    .eq('id', injuryId)
+    .eq('user_id', userId)
+  if (error) throw error
+}
+
 export async function getInjuriesWithCheckins(userId: string): Promise<InjuryWithCheckins[]> {
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -464,6 +475,25 @@ export async function getInjuriesWithCheckins(userId: string): Promise<InjuryWit
     .eq('user_id', userId)
     .is('resolved_on', null)
     .order('created_at', { ascending: true })
+  if (error) throw error
+  return (data ?? []).map((inj) => ({
+    ...inj,
+    checkins: ((inj.checkins ?? []) as InjuryCheckin[]).sort(
+      (a, b) => new Date(a.logged_at).getTime() - new Date(b.logged_at).getTime()
+    ),
+  }))
+}
+
+export async function getResolvedInjuriesWithCheckins(
+  userId: string
+): Promise<InjuryWithCheckins[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('injuries')
+    .select('*, checkins:injury_checkins(*)')
+    .eq('user_id', userId)
+    .not('resolved_on', 'is', null)
+    .order('resolved_on', { ascending: false })
   if (error) throw error
   return (data ?? []).map((inj) => ({
     ...inj,

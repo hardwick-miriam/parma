@@ -7,6 +7,7 @@ import {
   getHealthStatus,
   getTodayLogEntries,
   getInjuriesWithCheckins,
+  getResolvedInjuriesWithCheckins,
 } from '@/lib/db/queries'
 import { NutritionWidget } from '@/components/dashboard/widgets/NutritionWidget'
 import { StepsWidget } from '@/components/dashboard/widgets/StepsWidget'
@@ -26,12 +27,13 @@ export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const [stats, workouts, health, logEntries, injuries] = await Promise.all([
+  const [stats, workouts, health, logEntries, injuries, pastInjuries] = await Promise.all([
     user ? getTodayStats(user.id).catch(() => null) : null,
     user ? getTodayWorkouts(user.id).catch(() => []) : [],
     user ? getHealthStatus(user.id).catch(() => null) : null,
     user ? getTodayLogEntries(user.id).catch(() => []) : [],
     user ? getInjuriesWithCheckins(user.id).catch(() => []) : [],
+    user ? getResolvedInjuriesWithCheckins(user.id).catch(() => []) : [],
   ])
 
   const today = new Date().toLocaleDateString('en-US', {
@@ -46,7 +48,7 @@ export default async function DashboardPage() {
       </div>
 
       <HealthStatusWidget status={health} />
-      <InjuryWidget injuries={injuries ?? []} />
+      <InjuryWidget injuries={injuries ?? []} pastInjuries={pastInjuries ?? []} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <NutritionWidget calories={stats?.calories ?? 0} protein_g={stats?.protein_g ?? 0} />

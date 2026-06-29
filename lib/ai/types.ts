@@ -12,6 +12,10 @@ export interface ParsedInjuryCheckin {
   notes?: string
 }
 
+export interface ParsedInjuryResolved {
+  body_part?: string
+}
+
 export interface ParsedLog {
   calories?: number
   protein_g?: number
@@ -30,6 +34,7 @@ export interface ParsedLog {
   injury_description?: string
   injury_estimated_days?: number
   injury_checkin?: ParsedInjuryCheckin
+  injury_resolved?: ParsedInjuryResolved
 }
 
 export interface AIProvider {

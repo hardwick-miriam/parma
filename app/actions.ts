@@ -16,6 +16,7 @@ import {
   deleteInjuryCheckinById,
   removeSupplementFromToday,
   removeHabitFromToday,
+  resolveInjuryById,
 } from '@/lib/db/queries'
 import type { ParsedLog } from '@/lib/ai/types'
 
@@ -100,8 +101,31 @@ export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ err
       }
     }
 
-    if (parsed.injured === false) {
-      await upsertHealthStatus(user.id, { injured: false })
+    if (parsed.injury_resolved) {
+      const { body_part } = parsed.injury_resolved
+      const activeInjuries = await getActiveInjuries(user.id)
+
+      let matchedInjury = activeInjuries[0]
+      if (body_part && activeInjuries.length > 0) {
+        const bp = body_part.toLowerCase()
+        const found = activeInjuries.find(
+          (inj) =>
+            (inj.body_part?.toLowerCase().includes(bp) ?? false) ||
+            bp.includes(inj.body_part?.toLowerCase() ?? '') ||
+            inj.description.toLowerCase().includes(bp) ||
+            bp.includes(inj.description.toLowerCase())
+        )
+        if (found) matchedInjury = found
+      }
+
+      if (matchedInjury) {
+        await resolveInjuryById(user.id, matchedInjury.id)
+        // If no more active injuries remain, clear health_status.injured
+        const remaining = await getActiveInjuries(user.id)
+        if (remaining.length === 0) {
+          await upsertHealthStatus(user.id, { injured: false })
+        }
+      }
     }
 
     revalidatePath('/')
@@ -181,5 +205,23 @@ export async function removeHabit(habit: string): Promise<{ error?: string }> {
     return {}
   } catch {
     return { error: 'Delete failed' }
+  }
+}
+
+export async function markInjuryHealed(injuryId: string): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  try {
+    await resolveInjuryById(user.id, injuryId)
+    const remaining = await getActiveInjuries(user.id)
+    if (remaining.length === 0) {
+      await upsertHealthStatus(user.id, { injured: false })
+    }
+    revalidatePath('/')
+    return {}
+  } catch {
+    return { error: 'Failed to mark as healed' }
   }
 }
