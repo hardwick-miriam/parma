@@ -32,11 +32,22 @@ export interface ParsedLog {
   sick_estimated_days?: number
   injured?: boolean
   injury_description?: string
+  injury_body_part?: string
   injury_estimated_days?: number
   injury_checkin?: ParsedInjuryCheckin
   injury_resolved?: ParsedInjuryResolved
 }
 
+export interface InjuryContext {
+  id: string
+  description: string
+  body_part: string | null
+}
+
+export interface ParseContext {
+  activeInjuries?: InjuryContext[]
+}
+
 export interface AIProvider {
-  parseLog(text: string): Promise<ParsedLog>
+  parseLog(text: string, context?: ParseContext): Promise<ParsedLog>
 }

@@ -19,6 +19,37 @@ import {
   resolveInjuryById,
 } from '@/lib/db/queries'
 import type { ParsedLog } from '@/lib/ai/types'
+import type { Injury } from '@/lib/db/queries'
+
+function matchInjury(activeInjuries: Injury[], target: string): Injury | undefined {
+  const t = target.toLowerCase().trim()
+  if (!t) return undefined
+
+  // 1. Exact body_part match
+  const exact = activeInjuries.find((inj) => inj.body_part?.toLowerCase() === t)
+  if (exact) return exact
+
+  // 2. body_part contained in target or vice-versa (only when body_part is set)
+  const bpPartial = activeInjuries.find(
+    (inj) =>
+      inj.body_part &&
+      (inj.body_part.toLowerCase().includes(t) || t.includes(inj.body_part.toLowerCase()))
+  )
+  if (bpPartial) return bpPartial
+
+  // 3. description contains target word
+  const descContains = activeInjuries.find((inj) =>
+    inj.description.toLowerCase().includes(t)
+  )
+  if (descContains) return descContains
+
+  // 4. Any word in target (>3 chars) appears in description
+  const targetWords = t.split(/\s+/).filter((w) => w.length > 3)
+  const wordMatch = activeInjuries.find((inj) =>
+    targetWords.some((w) => inj.description.toLowerCase().includes(w))
+  )
+  return wordMatch
+}
 
 export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ error?: string }> {
   const supabase = await createClient()
@@ -57,30 +88,16 @@ export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ err
       const { body_part, feeling_pct, activity, notes } = parsed.injury_checkin
       const activeInjuries = await getActiveInjuries(user.id)
 
-      let matchedId: string | undefined
-      if (body_part) {
-        const bp = body_part.toLowerCase()
-        const match = activeInjuries.find(
-          (inj) =>
-            (inj.body_part?.toLowerCase().includes(bp) ?? false) ||
-            bp.includes(inj.body_part?.toLowerCase() ?? '')
-        )
-        matchedId = match?.id
-      } else {
-        matchedId = activeInjuries[0]?.id
+      let matched = body_part
+        ? matchInjury(activeInjuries, body_part)
+        : activeInjuries[0]
+
+      if (!matched) {
+        // No existing injury found — create one from the check-in body part
+        matched = await createInjury(user.id, body_part ?? 'injury', body_part ?? null, null)
       }
 
-      if (!matchedId) {
-        const created = await createInjury(
-          user.id,
-          body_part ?? 'injury',
-          body_part ?? null,
-          null
-        )
-        matchedId = created.id
-      }
-
-      await insertInjuryCheckin(matchedId, user.id, feeling_pct, activity ?? null, notes ?? null)
+      await insertInjuryCheckin(matched.id, user.id, feeling_pct, activity ?? null, notes ?? null)
     }
 
     if (parsed.injured === true && !parsed.injury_checkin) {
@@ -91,13 +108,15 @@ export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ err
       })
       const activeInjuries = await getActiveInjuries(user.id)
       const desc = parsed.injury_description ?? 'Injury'
-      const alreadyExists = activeInjuries.some(
-        (inj) =>
-          inj.description.toLowerCase().includes(desc.toLowerCase()) ||
-          desc.toLowerCase().includes(inj.description.toLowerCase())
-      )
+      // Only create a new injury record if there isn't already one that matches
+      const alreadyExists = matchInjury(activeInjuries, desc) != null
       if (!alreadyExists) {
-        await createInjury(user.id, desc, null, parsed.injury_estimated_days ?? null)
+        await createInjury(
+          user.id,
+          desc,
+          parsed.injury_body_part ?? null,  // now stores body_part explicitly
+          parsed.injury_estimated_days ?? null
+        )
       }
     }
 
@@ -105,22 +124,21 @@ export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ err
       const { body_part } = parsed.injury_resolved
       const activeInjuries = await getActiveInjuries(user.id)
 
-      let matchedInjury = activeInjuries[0]
-      if (body_part && activeInjuries.length > 0) {
-        const bp = body_part.toLowerCase()
-        const found = activeInjuries.find(
-          (inj) =>
-            (inj.body_part?.toLowerCase().includes(bp) ?? false) ||
-            bp.includes(inj.body_part?.toLowerCase() ?? '') ||
-            inj.description.toLowerCase().includes(bp) ||
-            bp.includes(inj.description.toLowerCase())
-        )
-        if (found) matchedInjury = found
-      }
+      // If no active injuries, nothing to resolve
+      if (activeInjuries.length === 0) {
+        // No-op — injury may have already been resolved
+      } else if (!body_part && activeInjuries.length > 1) {
+        // Ambiguous — multiple active injuries, can't tell which one
+        revalidatePath('/')
+        return {
+          error: `You have ${activeInjuries.length} active injuries (${activeInjuries.map((i) => i.description).join(', ')}). Please say which one is healed, or use the "Mark as healed" button on the injury card.`,
+        }
+      } else {
+        const matched = body_part
+          ? (matchInjury(activeInjuries, body_part) ?? activeInjuries[0])
+          : activeInjuries[0]
 
-      if (matchedInjury) {
-        await resolveInjuryById(user.id, matchedInjury.id)
-        // If no more active injuries remain, clear health_status.injured
+        await resolveInjuryById(user.id, matched.id)
         const remaining = await getActiveInjuries(user.id)
         if (remaining.length === 0) {
           await upsertHealthStatus(user.id, { injured: false })
