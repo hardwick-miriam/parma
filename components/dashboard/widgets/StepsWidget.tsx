@@ -16,7 +16,7 @@ export function StepsWidget({ steps, target = 10000 }: StepsWidgetProps) {
         Steps
       </h2>
       <div className="flex flex-col items-center gap-2">
-        <CircularProgress value={steps} max={target} size={140} unit="steps" />
+        <CircularProgress value={steps} max={target} size={140} unit="steps" countUp />
         <span className="text-xs text-text-muted">{pct}% of {target.toLocaleString()}</span>
       </div>
     </div>

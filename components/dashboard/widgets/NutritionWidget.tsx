@@ -22,11 +22,11 @@ export function NutritionWidget({
       </h2>
       <div className="flex justify-around gap-4">
         <div className="flex flex-col items-center gap-2">
-          <CircularProgress value={calories} max={calorieTarget} size={120} label="kcal" />
+          <CircularProgress value={calories} max={calorieTarget} size={120} label="kcal" countUp />
           <span className="text-xs text-text-muted">{calorieTarget} target</span>
         </div>
         <div className="flex flex-col items-center gap-2">
-          <CircularProgress value={protein_g} max={proteinTarget} size={120} label="protein" unit="g" />
+          <CircularProgress value={protein_g} max={proteinTarget} size={120} label="protein" unit="g" countUp />
           <span className="text-xs text-text-muted">{proteinTarget}g target</span>
         </div>
       </div>
