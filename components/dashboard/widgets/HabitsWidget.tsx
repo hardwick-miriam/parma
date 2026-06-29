@@ -1,38 +1,67 @@
 'use client'
 
-const DEFAULT_HABITS = [
-  'shower', 'walk', 'exercise', 'meditate', 'journaling',
-  'saw friends', 'read', 'healthy meal', 'stretched', 'cold shower',
-  'no alcohol', 'no caffeine',
-]
+import { useState, useTransition } from 'react'
+import { removeHabit } from '@/app/actions'
 
 export function HabitsWidget({ habits_done }: { habits_done: string[] | null }) {
-  const done = new Set((habits_done ?? []).map((h) => h.toLowerCase()))
-
-  // Show done habits first, then remaining defaults that weren't done
   const doneHabits = (habits_done ?? []).filter(Boolean)
+  const [confirmItem, setConfirmItem] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
 
-  // Any done habits not in the default list (AI-detected custom ones)
-  const extraDone = doneHabits.filter((h) => !DEFAULT_HABITS.includes(h.toLowerCase()))
+  function handleRemove(h: string) {
+    startTransition(async () => {
+      await removeHabit(h)
+      setConfirmItem(null)
+    })
+  }
 
   return (
     <div className="rounded-2xl bg-surface p-6 flex flex-col gap-4">
       <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest">Habits</h2>
-      {done.size === 0 ? (
+      {doneHabits.length === 0 ? (
         <p className="text-text-subtle text-sm">None logged today</p>
       ) : (
-        <ul className="flex flex-col gap-2">
-          {[...doneHabits].map((h) => (
-            <li key={h} className="flex items-center gap-2 text-sm">
-              <span className="text-accent font-bold">✓</span>
-              <span className="text-text capitalize">{h}</span>
+        <ul className="flex flex-col divide-y divide-border">
+          {doneHabits.map((h) => (
+            <li key={h} className="group flex items-center py-2.5 first:pt-0 last:pb-0">
+              {confirmItem === h ? (
+                <div className="flex items-center gap-2 w-full">
+                  <span className="flex-1 text-sm text-text-muted capitalize">{h}</span>
+                  <span className="text-xs text-text-muted">Remove?</span>
+                  <button
+                    onClick={() => handleRemove(h)}
+                    disabled={isPending}
+                    className="text-xs text-red-400 font-medium hover:text-red-300 disabled:opacity-50"
+                  >
+                    Yes
+                  </button>
+                  <button
+                    onClick={() => setConfirmItem(null)}
+                    className="text-xs text-text-subtle hover:text-text-muted"
+                  >
+                    No
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <span className="text-accent font-bold mr-2">✓</span>
+                  <span className="flex-1 text-sm text-text capitalize">{h}</span>
+                  <button
+                    onClick={() => setConfirmItem(h)}
+                    className="opacity-0 group-hover:opacity-100 text-text-subtle hover:text-red-400 transition-opacity text-base leading-none px-1"
+                    title="Remove habit"
+                  >
+                    ×
+                  </button>
+                </>
+              )}
             </li>
           ))}
         </ul>
       )}
-      {done.size > 0 && (
+      {doneHabits.length > 0 && (
         <p className="text-xs text-text-subtle">
-          {done.size} habit{done.size !== 1 ? 's' : ''} done
+          {doneHabits.length} habit{doneHabits.length !== 1 ? 's' : ''} done
         </p>
       )}
     </div>

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import type { ParsedLog } from '@/lib/ai/types'
 
 export interface DailyStats {
   id: string
@@ -316,6 +317,143 @@ export async function insertInjuryCheckin(
     date: new Date().toISOString().split('T')[0],
   })
   if (error) throw error
+}
+
+export async function recomputeDailyStats(userId: string, date: string): Promise<void> {
+  const supabase = await createClient()
+
+  const { data: entries } = await supabase
+    .from('log_entries')
+    .select('parsed_json')
+    .eq('user_id', userId)
+    .gte('logged_at', `${date}T00:00:00`)
+    .lte('logged_at', `${date}T23:59:59.999`)
+    .order('logged_at', { ascending: true })
+
+  let calories = 0, protein_g = 0, steps = 0, water_ml = 0
+  let mood: string | null = null
+  let sleep_hours: number | null = null
+  let weight_kg: number | null = null
+  let notes: string | null = null
+  const supplements = new Set<string>()
+  const habits_done = new Set<string>()
+
+  for (const entry of entries ?? []) {
+    const p = entry.parsed_json as ParsedLog
+    if (p.calories) calories += p.calories
+    if (p.protein_g) protein_g += p.protein_g
+    if (p.steps != null) steps = Math.max(steps, p.steps)
+    if (p.water_ml) water_ml += p.water_ml
+    if (p.mood) mood = p.mood
+    if (p.sleep_hours != null) sleep_hours = p.sleep_hours
+    if (p.weight_kg != null) weight_kg = p.weight_kg
+    if (p.notes) notes = p.notes
+    p.supplements?.forEach((s) => supplements.add(s))
+    p.habits_done?.forEach((h) => habits_done.add(h))
+  }
+
+  await supabase.from('daily_stats').upsert(
+    {
+      user_id: userId,
+      date,
+      calories,
+      protein_g,
+      steps,
+      water_ml,
+      mood,
+      sleep_hours,
+      weight_kg,
+      notes,
+      supplements: supplements.size > 0 ? [...supplements] : null,
+      habits_done: habits_done.size > 0 ? [...habits_done] : null,
+    },
+    { onConflict: 'user_id,date' }
+  )
+}
+
+export async function deleteLogEntryById(
+  userId: string,
+  entryId: string
+): Promise<{ date: string } | null> {
+  const supabase = await createClient()
+  const { data: entry } = await supabase
+    .from('log_entries')
+    .select('logged_at')
+    .eq('id', entryId)
+    .eq('user_id', userId)
+    .maybeSingle()
+  if (!entry) return null
+  const { error } = await supabase
+    .from('log_entries')
+    .delete()
+    .eq('id', entryId)
+    .eq('user_id', userId)
+  if (error) throw error
+  return { date: entry.logged_at.split('T')[0] }
+}
+
+export async function deleteWorkoutById(userId: string, workoutId: string): Promise<void> {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('workout_sessions')
+    .delete()
+    .eq('id', workoutId)
+    .eq('user_id', userId)
+  if (error) throw error
+}
+
+export async function deleteInjuryCheckinById(
+  userId: string,
+  checkinId: string
+): Promise<void> {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('injury_checkins')
+    .delete()
+    .eq('id', checkinId)
+    .eq('user_id', userId)
+  if (error) throw error
+}
+
+export async function removeSupplementFromToday(
+  userId: string,
+  supplement: string
+): Promise<void> {
+  const supabase = await createClient()
+  const today = new Date().toISOString().split('T')[0]
+  const { data } = await supabase
+    .from('daily_stats')
+    .select('supplements')
+    .eq('user_id', userId)
+    .eq('date', today)
+    .maybeSingle()
+  const updated = (data?.supplements ?? []).filter(
+    (s: string) => s.toLowerCase() !== supplement.toLowerCase()
+  )
+  await supabase
+    .from('daily_stats')
+    .update({ supplements: updated.length > 0 ? updated : null })
+    .eq('user_id', userId)
+    .eq('date', today)
+}
+
+export async function removeHabitFromToday(userId: string, habit: string): Promise<void> {
+  const supabase = await createClient()
+  const today = new Date().toISOString().split('T')[0]
+  const { data } = await supabase
+    .from('daily_stats')
+    .select('habits_done')
+    .eq('user_id', userId)
+    .eq('date', today)
+    .maybeSingle()
+  const updated = (data?.habits_done ?? []).filter(
+    (h: string) => h.toLowerCase() !== habit.toLowerCase()
+  )
+  await supabase
+    .from('daily_stats')
+    .update({ habits_done: updated.length > 0 ? updated : null })
+    .eq('user_id', userId)
+    .eq('date', today)
 }
 
 export async function getInjuriesWithCheckins(userId: string): Promise<InjuryWithCheckins[]> {

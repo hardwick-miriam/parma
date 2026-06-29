@@ -10,6 +10,12 @@ import {
   getActiveInjuries,
   createInjury,
   insertInjuryCheckin,
+  recomputeDailyStats,
+  deleteLogEntryById,
+  deleteWorkoutById,
+  deleteInjuryCheckinById,
+  removeSupplementFromToday,
+  removeHabitFromToday,
 } from '@/lib/db/queries'
 import type { ParsedLog } from '@/lib/ai/types'
 
@@ -103,5 +109,77 @@ export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ err
   } catch (err) {
     console.error('saveLog error:', err)
     return { error: 'Failed to save log' }
+  }
+}
+
+export async function deleteLogEntry(entryId: string): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  try {
+    const result = await deleteLogEntryById(user.id, entryId)
+    if (!result) return { error: 'Entry not found' }
+    await recomputeDailyStats(user.id, result.date)
+    revalidatePath('/')
+    return {}
+  } catch {
+    return { error: 'Delete failed' }
+  }
+}
+
+export async function deleteWorkout(workoutId: string): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  try {
+    await deleteWorkoutById(user.id, workoutId)
+    revalidatePath('/')
+    return {}
+  } catch {
+    return { error: 'Delete failed' }
+  }
+}
+
+export async function deleteInjuryCheckin(checkinId: string): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  try {
+    await deleteInjuryCheckinById(user.id, checkinId)
+    revalidatePath('/')
+    return {}
+  } catch {
+    return { error: 'Delete failed' }
+  }
+}
+
+export async function removeSupplement(supplement: string): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  try {
+    await removeSupplementFromToday(user.id, supplement)
+    revalidatePath('/')
+    return {}
+  } catch {
+    return { error: 'Delete failed' }
+  }
+}
+
+export async function removeHabit(habit: string): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  try {
+    await removeHabitFromToday(user.id, habit)
+    revalidatePath('/')
+    return {}
+  } catch {
+    return { error: 'Delete failed' }
   }
 }

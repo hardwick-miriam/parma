@@ -17,6 +17,13 @@ export async function POST(req: NextRequest) {
   const mime = audio.type
   const ext = mime.includes('mp4') ? 'm4a' : mime.includes('ogg') ? 'ogg' : 'webm'
 
+  if (!process.env.GROQ_API_KEY) {
+    return NextResponse.json(
+      { error: 'Voice transcription not configured — add GROQ_API_KEY to Vercel env vars' },
+      { status: 503 }
+    )
+  }
+
   const groqForm = new FormData()
   groqForm.append('file', audio, `audio.${ext}`)
   groqForm.append('model', 'whisper-large-v3')
@@ -30,9 +37,14 @@ export async function POST(req: NextRequest) {
   })
 
   if (!res.ok) {
-    const err = await res.text()
-    console.error('Groq transcription error:', err)
-    return NextResponse.json({ error: 'Transcription failed' }, { status: 500 })
+    const body = await res.text()
+    console.error('Groq transcription error:', body)
+    let userMsg = 'Transcription failed'
+    try {
+      const parsed = JSON.parse(body)
+      if (parsed.error?.message) userMsg = `Transcription failed: ${parsed.error.message}`
+    } catch {}
+    return NextResponse.json({ error: userMsg }, { status: 500 })
   }
 
   const { text } = await res.json()
