@@ -15,6 +15,7 @@ import { HealthStatusWidget } from './widgets/HealthStatusWidget'
 import { TimelineWidget } from './widgets/TimelineWidget'
 import { InjuryWidget } from './widgets/InjuryWidget'
 import { MounjaroWidget } from './widgets/MounjaroWidget'
+import { WeatherWidget } from './widgets/WeatherWidget'
 import { Nudges } from './Nudges'
 import { SummaryCard } from './SummaryCard'
 import { DetailViewRouter } from './DetailView'
@@ -271,6 +272,10 @@ export function DashboardGrid({
 
           <div className="bento-work">
             <WorkoutsWidget workouts={workouts} />
+          </div>
+
+          <div className="bento-weather">
+            <WeatherWidget />
           </div>
 
           <div className="bento-hab">

@@ -124,21 +124,22 @@ body {
   .bento-grid {
     grid-template-columns: repeat(6, 1fr);
     grid-template-areas:
-      "nutr  nutr  steps steps sleep  mood"
-      "hydra wt    work  work  hab    hab"
-      "supp  supp  supp  supp  supp   supp";
+      "nutr    nutr    steps   steps   sleep   mood"
+      "hydra   wt      work    work    weather hab"
+      "supp    supp    supp    supp    supp    supp";
     align-items: start;
   }
   /* Named areas override the tablet spans above */
-  .bento-nutr  { grid-column: unset; grid-area: nutr; }
-  .bento-steps { grid-area: steps; }
-  .bento-sleep { grid-area: sleep; }
-  .bento-mood  { grid-area: mood; }
-  .bento-hydra { grid-area: hydra; }
-  .bento-wt    { grid-area: wt; }
-  .bento-work  { grid-area: work; }
-  .bento-hab   { grid-area: hab; }
-  .bento-supp  { grid-column: unset; grid-area: supp; }
+  .bento-nutr    { grid-column: unset; grid-area: nutr; }
+  .bento-steps   { grid-area: steps; }
+  .bento-sleep   { grid-area: sleep; }
+  .bento-mood    { grid-area: mood; }
+  .bento-hydra   { grid-area: hydra; }
+  .bento-wt      { grid-area: wt; }
+  .bento-work    { grid-area: work; }
+  .bento-weather { grid-area: weather; }
+  .bento-hab     { grid-area: hab; }
+  .bento-supp    { grid-column: unset; grid-area: supp; }
 }
 
 /* Breathing glow on accent elements */
