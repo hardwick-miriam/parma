@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import {
   getTodayStats,
   getTodayWorkouts,
+  getRecentWorkouts,
   getHealthStatus,
   getTodayLogEntries,
   getInjuriesWithCheckins,
@@ -19,9 +20,10 @@ export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const [stats, workouts, health, logEntries, injuries, pastInjuries, history, prefs] = await Promise.all([
+  const [stats, workouts, recentWorkouts, health, logEntries, injuries, pastInjuries, history, prefs] = await Promise.all([
     user ? getTodayStats(user.id).catch(() => null) : null,
     user ? getTodayWorkouts(user.id).catch(() => []) : [],
+    user ? getRecentWorkouts(user.id, 90).catch(() => []) : [],
     user ? getHealthStatus(user.id).catch(() => null) : null,
     user ? getTodayLogEntries(user.id).catch(() => []) : [],
     user ? getInjuriesWithCheckins(user.id).catch(() => []) : [],
@@ -37,7 +39,8 @@ export default async function DashboardPage() {
     user && mounjaroEnabled ? getMounjaroEffects(user.id, 90).catch(() => []) : [],
   ])
 
-  const streaks = calculateStreaks(history ?? [])
+  const workoutDates = new Set((recentWorkouts ?? []).map((w) => w.date))
+  const streaks = calculateStreaks(history ?? [], workoutDates)
 
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long', month: 'long', day: 'numeric',

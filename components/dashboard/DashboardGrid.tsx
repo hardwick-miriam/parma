@@ -271,7 +271,7 @@ export function DashboardGrid({
           </div>
 
           <div className="bento-work">
-            <WorkoutsWidget workouts={workouts} />
+            <WorkoutsWidget workouts={workouts} streak={streaks.workouts} />
           </div>
 
           <div className="bento-weather">

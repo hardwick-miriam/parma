@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { deleteWorkout } from '@/app/actions'
+import { StreakBadge } from '@/components/ui/StreakBadge'
 import type { WorkoutSession } from '@/lib/db/queries'
 
 const feelingEmoji: Record<string, string> = {
@@ -20,7 +21,7 @@ function TrashIcon() {
   )
 }
 
-export function WorkoutsWidget({ workouts }: { workouts: WorkoutSession[] }) {
+export function WorkoutsWidget({ workouts, streak = 0 }: { workouts: WorkoutSession[]; streak?: number }) {
   const [confirmId, setConfirmId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
@@ -33,9 +34,10 @@ export function WorkoutsWidget({ workouts }: { workouts: WorkoutSession[] }) {
 
   return (
     <div className="rounded-2xl bg-surface border border-border p-6 flex flex-col gap-4 h-full" style={{ boxShadow: 'var(--shadow-md)' }}>
-      <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest">
-        Workouts
-      </h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest">Workouts</h2>
+        <StreakBadge count={streak} label="day streak" />
+      </div>
       {workouts.length === 0 ? (
         <p className="text-text-subtle text-sm">No workouts logged today</p>
       ) : (
