@@ -65,7 +65,11 @@ html {
   background: var(--bg);
   color: var(--text);
   height: 100%;
-  overflow-x: hidden; /* prevent horizontal scroll from overflow content */
+  width: 100%;
+  max-width: 100%;
+  /* clip prevents horizontal scroll without creating a scroll container —
+     more effective than "hidden" on iOS Safari where hidden is ignored */
+  overflow-x: clip;
 }
 
 body {
@@ -75,7 +79,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100%;
-  overflow-x: hidden;
+  width: 100%;
+  overflow-x: clip;
 }
 
 ::selection {
@@ -97,6 +102,11 @@ body {
   /* Single column on phones — 140px rings need full width */
   grid-template-columns: 1fr;
   align-items: start;
+}
+
+/* Grid children must not overflow their cell */
+.bento-grid > * {
+  min-width: 0;
 }
 
 /* Tablet: 2-column layout */

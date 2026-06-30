@@ -105,7 +105,7 @@ function DetailShell({ title, onClose, children }: DetailShellProps) {
           background: 'var(--surface)',
           border: '1px solid var(--border-strong)',
           boxShadow: 'var(--shadow-lg), 0 0 60px rgba(139,92,246,0.12)',
-          maxHeight: '85vh',
+          maxHeight: '85dvh',
         }}
         initial={{ y: 40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}

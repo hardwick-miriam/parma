@@ -163,7 +163,7 @@ export function SettingsClient({ initialPrefs }: Props) {
         {token && (
           <div className="rounded-xl bg-surface-elevated border border-border p-4 flex flex-col gap-3 text-xs text-text-muted">
             <p className="font-semibold text-text text-sm">iPhone Shortcuts setup</p>
-            <ol className="flex flex-col gap-1.5 pl-3 list-decimal marker:text-text-subtle">
+            <ol className="flex flex-col gap-1.5 pl-3 list-decimal marker:text-text-subtle" style={{ wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
               <li>Open the <strong className="text-text">Shortcuts</strong> app on your iPhone</li>
               <li>Tap <strong className="text-text">+</strong> → add action → search <strong className="text-text">Get Contents of URL</strong></li>
               <li>Set URL to: <code className="text-accent bg-accent/10 px-1 py-0.5 rounded">https://parma-seven.vercel.app/api/shortcuts/log</code></li>

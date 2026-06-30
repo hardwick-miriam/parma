@@ -12,7 +12,7 @@ export default async function DashboardLayout({
   const { data: { user } } = await supabase.auth.getUser()
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="min-h-screen bg-bg" style={{ overflowX: 'hidden', width: '100%' }}>
       {/* Top nav bar */}
       <header
         className="fixed top-0 left-0 right-0 z-40"
@@ -47,7 +47,7 @@ export default async function DashboardLayout({
 
       {/* Scrollable content */}
       <main
-        className="max-w-5xl mx-auto px-4 pt-16"
+        className="max-w-5xl mx-auto px-4 pt-16 w-full min-w-0"
         style={{ paddingBottom: '120px' }}
       >
         {children}
