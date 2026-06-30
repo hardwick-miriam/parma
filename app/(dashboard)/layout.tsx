@@ -13,7 +13,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-bg" style={{ overflowX: 'hidden', width: '100%' }}>
-      {/* Top nav bar */}
+      {/* Top nav bar — padding-top respects iOS status bar via safe-area-inset-top */}
       <header
         className="fixed top-0 left-0 right-0 z-40"
         style={{
@@ -21,6 +21,7 @@ export default async function DashboardLayout({
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
+          paddingTop: 'env(safe-area-inset-top)',
         }}
       >
         <div className="max-w-5xl mx-auto px-4 h-11 flex items-center gap-2 min-w-0">
@@ -45,23 +46,28 @@ export default async function DashboardLayout({
         </div>
       </header>
 
-      {/* Scrollable content */}
+      {/* Scrollable content — top padding clears the header + status bar */}
       <main
-        className="max-w-5xl mx-auto px-4 pt-16 w-full min-w-0"
-        style={{ paddingBottom: '120px' }}
+        className="max-w-5xl mx-auto px-4 w-full min-w-0"
+        style={{
+          paddingTop: 'calc(2.75rem + env(safe-area-inset-top))',
+          paddingBottom: 'calc(7.5rem + env(safe-area-inset-bottom))',
+        }}
       >
         {children}
       </main>
 
-      {/* Fixed floating log bar */}
+      {/* Fixed floating log bar — padding-bottom clears the iOS home indicator */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 py-3"
+        className="fixed bottom-0 left-0 right-0 z-50"
         style={{
           background: 'rgba(17,17,19,0.92)',
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
           borderTop: '1px solid rgba(255,255,255,0.08)',
           boxShadow: '0 -4px 24px rgba(0,0,0,0.5)',
+          paddingTop: '0.75rem',
+          paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))',
         }}
       >
         <div className="max-w-5xl mx-auto px-4">
