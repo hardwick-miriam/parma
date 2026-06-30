@@ -1,11 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { saveSettings, generateToken, addPlace, removePlace, changePassword } from './actions'
+import { saveSettings, generateToken, addPlace, removePlace, changeEmail, changePassword } from './actions'
 import type { SavedPlace } from '@/lib/db/preferences'
 
 interface Props {
   userId: string
+  currentEmail: string
   initialPrefs: {
     weightGoal: number | null
     token: string | null
@@ -23,7 +24,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-export function SettingsClient({ initialPrefs }: Props) {
+export function SettingsClient({ currentEmail, initialPrefs }: Props) {
   const [weightGoal, setWeightGoal] = useState(initialPrefs.weightGoal?.toString() ?? '')
   const [mounjaroEnabled, setMounjaroEnabled] = useState(initialPrefs.mounjaroEnabled)
   const [token, setToken] = useState(initialPrefs.token)
@@ -34,6 +35,10 @@ export function SettingsClient({ initialPrefs }: Props) {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [tokenCopied, setTokenCopied] = useState(false)
+  const [newEmail, setNewEmail] = useState('')
+  const [confirmEmail, setConfirmEmail] = useState('')
+  const [emailSaving, setEmailSaving] = useState(false)
+  const [emailStatus, setEmailStatus] = useState<{ ok?: boolean; pending?: boolean; msg?: string } | null>(null)
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [passwordSaving, setPasswordSaving] = useState(false)
@@ -79,6 +84,36 @@ export function SettingsClient({ initialPrefs }: Props) {
   async function handleRemovePlace(id: string) {
     await removePlace(id)
     setPlaces((prev) => prev.filter((p) => p.id !== id))
+  }
+
+  async function handleChangeEmail() {
+    if (!newEmail.includes('@')) {
+      setEmailStatus({ msg: 'Enter a valid email address' })
+      return
+    }
+    if (newEmail !== confirmEmail) {
+      setEmailStatus({ msg: 'Email addresses do not match' })
+      return
+    }
+    setEmailSaving(true)
+    setEmailStatus(null)
+    const result = await changeEmail(newEmail)
+    setEmailSaving(false)
+    if (result.error) {
+      setEmailStatus({ ok: false, msg: result.error })
+    } else if (result.pending) {
+      setEmailStatus({
+        ok: true,
+        pending: true,
+        msg: 'Check your inbox — click the confirmation link to complete the change',
+      })
+      setNewEmail('')
+      setConfirmEmail('')
+    } else {
+      setEmailStatus({ ok: true, msg: 'Email updated' })
+      setNewEmail('')
+      setConfirmEmail('')
+    }
   }
 
   async function handleChangePassword() {
@@ -246,6 +281,44 @@ export function SettingsClient({ initialPrefs }: Props) {
               Add place
             </button>
           </div>
+        </div>
+      </Section>
+
+      {/* Change email */}
+      <Section title="Change email">
+        <p className="text-xs text-text-subtle">
+          Current: <span className="text-text-muted">{currentEmail}</span>
+        </p>
+        <div className="flex flex-col gap-3">
+          <input
+            type="email"
+            placeholder="New email address"
+            value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value)}
+            autoComplete="email"
+            className="rounded-lg bg-surface-elevated border border-border text-text text-sm px-3 py-2 focus:outline-none focus:border-accent placeholder:text-text-subtle"
+          />
+          <input
+            type="email"
+            placeholder="Confirm new email"
+            value={confirmEmail}
+            onChange={(e) => setConfirmEmail(e.target.value)}
+            autoComplete="email"
+            onKeyDown={(e) => { if (e.key === 'Enter') handleChangeEmail() }}
+            className="rounded-lg bg-surface-elevated border border-border text-text text-sm px-3 py-2 focus:outline-none focus:border-accent placeholder:text-text-subtle"
+          />
+          {emailStatus && (
+            <p className={`text-xs ${emailStatus.ok ? 'text-positive' : 'text-negative'}`}>
+              {emailStatus.msg}
+            </p>
+          )}
+          <button
+            onClick={handleChangeEmail}
+            disabled={emailSaving || !newEmail || !confirmEmail}
+            className="self-start px-4 py-1.5 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 disabled:opacity-50 transition-colors"
+          >
+            {emailSaving ? 'Updating…' : 'Update email'}
+          </button>
         </div>
       </Section>
 

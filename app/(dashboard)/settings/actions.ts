@@ -46,6 +46,24 @@ export async function removePlace(id: string): Promise<void> {
   await upsertUserPreferences(user.id, { saved_places: updated })
 }
 
+export async function changeEmail(
+  newEmail: string
+): Promise<{ error?: string; pending?: boolean }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not signed in' }
+
+  const { data, error } = await supabase.auth.updateUser(
+    { email: newEmail },
+    { emailRedirectTo: 'https://parma-seven.vercel.app/auth/callback' }
+  )
+  if (error) return { error: error.message }
+
+  // If Supabase requires confirmation, the returned user email stays as the old one
+  const immediate = data.user?.email === newEmail
+  return { pending: !immediate }
+}
+
 export async function changePassword(
   newPassword: string
 ): Promise<{ error?: string }> {

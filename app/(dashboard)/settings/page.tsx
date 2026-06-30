@@ -14,6 +14,7 @@ export default async function SettingsPage() {
   return (
     <SettingsClient
       userId={user.id}
+      currentEmail={user.email ?? ''}
       initialPrefs={{
         weightGoal: prefs?.weight_goal_kg ?? null,
         token: prefs?.shortcuts_token ?? null,
