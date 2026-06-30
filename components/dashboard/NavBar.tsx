@@ -13,7 +13,7 @@ const ITEMS = [
 export function NavBar() {
   const pathname = usePathname()
   return (
-    <nav className="flex items-center gap-0.5">
+    <nav className="flex items-center gap-0.5 whitespace-nowrap">
       {ITEMS.map(({ href, label }) => {
         const active = href === '/' ? pathname === '/' : pathname.startsWith(href)
         return (

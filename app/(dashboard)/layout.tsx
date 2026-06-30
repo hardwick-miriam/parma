@@ -23,10 +23,20 @@ export default async function DashboardLayout({
           borderBottom: '1px solid rgba(255,255,255,0.06)',
         }}
       >
-        <div className="max-w-5xl mx-auto px-4 h-11 flex items-center gap-3">
-          <span className="font-bold text-accent text-sm tracking-tight">parma</span>
-          <NavBar />
-          <div className="ml-auto flex items-center gap-3">
+        <div className="max-w-5xl mx-auto px-4 h-11 flex items-center gap-2 min-w-0">
+          {/* Brand — never shrinks */}
+          <span className="font-bold text-accent text-sm tracking-tight shrink-0 pr-1">parma</span>
+
+          {/* Nav — scrollable on mobile so nothing clips */}
+          <div
+            className="nav-scroller flex-1 min-w-0 overflow-x-auto"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            <NavBar />
+          </div>
+
+          {/* Right actions — never shrinks */}
+          <div className="shrink-0 flex items-center gap-2 pl-1">
             {user?.email && (
               <span className="text-xs text-text-subtle hidden sm:block">{user.email}</span>
             )}

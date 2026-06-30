@@ -30,16 +30,16 @@ export function NutritionWidget({
         <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest">Nutrition</h2>
         <StreakBadge count={proteinStreak} label="protein days" />
       </div>
-      <div className="flex justify-around gap-4">
-        <div className="flex flex-col items-center gap-2">
-          <CircularProgress value={calories} max={calorieTarget} size={120} label="kcal" countUp />
+      <div className="flex flex-col sm:flex-row justify-around gap-5 sm:gap-4">
+        <div className="flex sm:flex-col items-center gap-4 sm:gap-2">
+          <CircularProgress value={calories} max={calorieTarget} size={110} label="kcal" countUp />
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-text-muted">{calorieTarget} target</span>
             {calorieComp && <ComparisonBadge change={calorieComp.change} />}
           </div>
         </div>
-        <div className="flex flex-col items-center gap-2">
-          <CircularProgress value={protein_g} max={proteinTarget} size={120} label="protein" unit="g" countUp />
+        <div className="flex sm:flex-col items-center gap-4 sm:gap-2">
+          <CircularProgress value={protein_g} max={proteinTarget} size={110} label="protein" unit="g" countUp />
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-text-muted">{proteinTarget}g target</span>
             {proteinComp && <ComparisonBadge change={proteinComp.change} />}

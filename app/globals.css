@@ -65,6 +65,7 @@ html {
   background: var(--bg);
   color: var(--text);
   height: 100%;
+  overflow-x: hidden; /* prevent horizontal scroll from overflow content */
 }
 
 body {
@@ -74,6 +75,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100%;
+  overflow-x: hidden;
 }
 
 ::selection {
@@ -85,25 +87,40 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
 
-/* Bento grid */
+/* Hide scrollbar on nav scroller while keeping it scrollable */
+.nav-scroller::-webkit-scrollbar { display: none; }
+
+/* Bento grid — mobile first */
 .bento-grid {
   display: grid;
   gap: 10px;
-  grid-template-columns: repeat(2, 1fr);
+  /* Single column on phones — 140px rings need full width */
+  grid-template-columns: 1fr;
   align-items: start;
 }
 
+/* Tablet: 2-column layout */
+@media (min-width: 640px) {
+  .bento-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  /* Wide cards span both columns on tablet */
+  .bento-nutr  { grid-column: span 2; }
+  .bento-supp  { grid-column: span 2; }
+}
+
+/* Desktop: full 6-column named-area layout */
 @media (min-width: 1024px) {
   .bento-grid {
     grid-template-columns: repeat(6, 1fr);
-    /* No row-spanning — every card sizes to its own content */
     grid-template-areas:
       "nutr  nutr  steps steps sleep  mood"
       "hydra wt    work  work  hab    hab"
       "supp  supp  supp  supp  supp   supp";
     align-items: start;
   }
-  .bento-nutr  { grid-area: nutr; }
+  /* Named areas override the tablet spans above */
+  .bento-nutr  { grid-column: unset; grid-area: nutr; }
   .bento-steps { grid-area: steps; }
   .bento-sleep { grid-area: sleep; }
   .bento-mood  { grid-area: mood; }
@@ -111,7 +128,7 @@ body {
   .bento-wt    { grid-area: wt; }
   .bento-work  { grid-area: work; }
   .bento-hab   { grid-area: hab; }
-  .bento-supp  { grid-area: supp; }
+  .bento-supp  { grid-column: unset; grid-area: supp; }
 }
 
 /* Breathing glow on accent elements */
