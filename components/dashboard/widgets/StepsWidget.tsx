@@ -2,14 +2,17 @@
 
 import { CircularProgress } from '@/components/ui/CircularProgress'
 import { StreakBadge } from '@/components/ui/StreakBadge'
+import { ComparisonBadge } from '@/components/ui/ComparisonBadge'
+import type { PeriodComparison } from '@/lib/comparison'
 
 interface StepsWidgetProps {
   steps: number
   target?: number
   streak?: number
+  comp?: PeriodComparison | null
 }
 
-export function StepsWidget({ steps, target = 10000, streak = 0 }: StepsWidgetProps) {
+export function StepsWidget({ steps, target = 10000, streak = 0, comp }: StepsWidgetProps) {
   const pct = Math.round(Math.min((steps / target) * 100, 100))
 
   return (
@@ -20,7 +23,10 @@ export function StepsWidget({ steps, target = 10000, streak = 0 }: StepsWidgetPr
       </div>
       <div className="flex flex-col items-center gap-2">
         <CircularProgress value={steps} max={target} size={140} unit="steps" countUp />
-        <span className="text-xs text-text-muted">{pct}% of {target.toLocaleString()}</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-text-muted">{pct}% of {target.toLocaleString()}</span>
+          {comp && <ComparisonBadge change={comp.change} />}
+        </div>
       </div>
     </div>
   )

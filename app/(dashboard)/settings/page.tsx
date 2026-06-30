@@ -1,0 +1,25 @@
+export const dynamic = 'force-dynamic'
+
+import { createClient } from '@/lib/supabase/server'
+import { getUserPreferences } from '@/lib/db/preferences'
+import { SettingsClient } from './SettingsClient'
+
+export default async function SettingsPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const prefs = await getUserPreferences(user.id).catch(() => null)
+
+  return (
+    <SettingsClient
+      userId={user.id}
+      initialPrefs={{
+        weightGoal: prefs?.weight_goal_kg ?? null,
+        token: prefs?.shortcuts_token ?? null,
+        savedPlaces: prefs?.saved_places ?? [],
+        mounjaroEnabled: prefs?.mounjaro_enabled ?? false,
+      }}
+    />
+  )
+}

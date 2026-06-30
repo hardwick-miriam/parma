@@ -8,6 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
+  ReferenceLine,
 } from 'recharts'
 
 interface DataPoint {
@@ -21,6 +22,8 @@ interface MetricAreaChartProps {
   unit?: string
   height?: number
   formatValue?: (v: number) => string
+  referenceLine?: number
+  referenceLabel?: string
 }
 
 function CustomTooltip({
@@ -63,6 +66,8 @@ export function MetricAreaChart({
   unit,
   height = 160,
   formatValue,
+  referenceLine,
+  referenceLabel,
 }: MetricAreaChartProps) {
   const gradientId = `gradient-${color.replace(/[^a-z0-9]/gi, '')}`
 
@@ -116,6 +121,20 @@ export function MetricAreaChart({
           activeDot={{ r: 4, fill: color, strokeWidth: 0 }}
           connectNulls
         />
+        {referenceLine !== undefined && (
+          <ReferenceLine
+            y={referenceLine}
+            stroke="var(--positive)"
+            strokeWidth={1.5}
+            strokeDasharray="5 4"
+            label={referenceLabel ? {
+              value: referenceLabel,
+              position: 'insideTopRight',
+              fill: 'var(--positive)',
+              fontSize: 10,
+            } : undefined}
+          />
+        )}
       </AreaChart>
     </ResponsiveContainer>
   )

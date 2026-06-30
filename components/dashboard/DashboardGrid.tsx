@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { NutritionWidget } from './widgets/NutritionWidget'
 import { StepsWidget } from './widgets/StepsWidget'
@@ -14,9 +14,14 @@ import { HabitsWidget } from './widgets/HabitsWidget'
 import { HealthStatusWidget } from './widgets/HealthStatusWidget'
 import { TimelineWidget } from './widgets/TimelineWidget'
 import { InjuryWidget } from './widgets/InjuryWidget'
+import { MounjaroWidget } from './widgets/MounjaroWidget'
 import { Nudges } from './Nudges'
 import { SummaryCard } from './SummaryCard'
 import { DetailViewRouter } from './DetailView'
+import { RecoveryWidget } from './RecoveryWidget'
+import { MilestoneToast } from './MilestoneToast'
+import { detectMilestones } from '@/lib/milestones'
+import { weekOverWeek } from '@/lib/comparison'
 import type { MetricId } from './DetailView'
 import type {
   DailyStats,
@@ -27,6 +32,7 @@ import type {
 } from '@/lib/db/queries'
 import type { StreakData } from '@/lib/streaks'
 import type { ParsedLog } from '@/lib/ai/types'
+import type { MounjaroDose, MounjaroEffect } from '@/lib/db/mounjaro'
 
 // ---- Helpers ----------------------------------------------------------------
 
@@ -117,6 +123,10 @@ interface DashboardGridProps {
   today: string
   streaks: StreakData
   history: DailyStats[]
+  mounjaroEnabled: boolean
+  mounjaroDoses: MounjaroDose[]
+  mounjaroEffects: MounjaroEffect[]
+  weightGoal: number | null
 }
 
 // ---- Component --------------------------------------------------------------
@@ -131,6 +141,10 @@ export function DashboardGrid({
   today,
   streaks,
   history,
+  mounjaroEnabled,
+  mounjaroDoses,
+  mounjaroEffects,
+  weightGoal,
 }: DashboardGridProps) {
   const [activeMetric, setActiveMetric] = useState<MetricId | null>(null)
   const [detailHistory, setDetailHistory] = useState<DailyStats[]>(history)
@@ -154,6 +168,20 @@ export function DashboardGrid({
 
   const { supTimes, habitTimes } = buildEntryTimestamps(logEntries)
 
+  // Comparison badges (week over week)
+  const calorieComp = useMemo(() => weekOverWeek(history, (d) => d.calories), [history])
+  const proteinComp = useMemo(() => weekOverWeek(history, (d) => d.protein_g), [history])
+  const stepsComp = useMemo(() => weekOverWeek(history, (d) => d.steps), [history])
+  const hydraComp = useMemo(() => weekOverWeek(history, (d) => d.water_ml ?? 0), [history])
+
+  // Milestones
+  const todayInHistory = history.find((d) => d.date === new Date().toISOString().split('T')[0]) ?? stats
+  const milestones = useMemo(
+    () => detectMilestones(todayInHistory ?? null, history, streaks),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [todayInHistory?.date, history.length, streaks.logging]
+  )
+
   return (
     <>
       <motion.div
@@ -166,6 +194,11 @@ export function DashboardGrid({
         <motion.div variants={itemVariants} className="pb-1">
           <h1 className="text-2xl font-bold text-text">{greeting()}</h1>
           <p className="text-sm text-text-muted mt-0.5">{today}</p>
+        </motion.div>
+
+        {/* Recovery / readiness score */}
+        <motion.div variants={itemVariants}>
+          <RecoveryWidget stats={stats} health={health} />
         </motion.div>
 
         {/* Evening/weekly summary */}
@@ -200,13 +233,15 @@ export function DashboardGrid({
                 calories={stats?.calories ?? 0}
                 protein_g={stats?.protein_g ?? 0}
                 proteinStreak={streaks.protein}
+                calorieComp={calorieComp}
+                proteinComp={proteinComp}
               />
             </WidgetWrapper>
           </div>
 
           <div className="bento-steps">
             <WidgetWrapper metricId="steps" onOpen={openMetric}>
-              <StepsWidget steps={stats?.steps ?? 0} streak={streaks.steps} />
+              <StepsWidget steps={stats?.steps ?? 0} streak={streaks.steps} comp={stepsComp} />
             </WidgetWrapper>
           </div>
 
@@ -224,13 +259,13 @@ export function DashboardGrid({
 
           <div className="bento-hydra">
             <WidgetWrapper metricId="hydration" onOpen={openMetric}>
-              <HydrationWidget water_ml={stats?.water_ml ?? 0} streak={streaks.hydration} />
+              <HydrationWidget water_ml={stats?.water_ml ?? 0} streak={streaks.hydration} comp={hydraComp} />
             </WidgetWrapper>
           </div>
 
           <div className="bento-wt">
             <WidgetWrapper metricId="weight" onOpen={openMetric}>
-              <WeightWidget weight_kg={stats?.weight_kg ?? null} />
+              <WeightWidget weight_kg={stats?.weight_kg ?? null} goalWeight={weightGoal} />
             </WidgetWrapper>
           </div>
 
@@ -254,6 +289,13 @@ export function DashboardGrid({
           </div>
         </motion.div>
 
+        {/* Mounjaro widget (optional) */}
+        {mounjaroEnabled && (
+          <motion.div variants={itemVariants}>
+            <MounjaroWidget doses={mounjaroDoses} effects={mounjaroEffects} />
+          </motion.div>
+        )}
+
         {/* Timeline */}
         <motion.div variants={itemVariants}>
           <TimelineWidget entries={logEntries} />
@@ -265,7 +307,12 @@ export function DashboardGrid({
         metric={activeMetric}
         history={detailHistory}
         onClose={closeMetric}
+        weightGoal={weightGoal}
+        todayStats={stats}
       />
+
+      {/* Milestone toasts */}
+      <MilestoneToast milestones={milestones} />
     </>
   )
 }

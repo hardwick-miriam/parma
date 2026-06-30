@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { DailyStats } from '@/lib/db/queries'
 import { MetricAreaChart } from '@/components/ui/MetricAreaChart'
@@ -137,6 +137,8 @@ function DetailShell({ title, onClose, children }: DetailShellProps) {
 interface MetricDetailProps {
   history: DailyStats[]
   onClose: () => void
+  goalWeight?: number | null
+  todayStats?: DailyStats | null
 }
 
 function computeStats(values: number[]) {
@@ -150,7 +152,69 @@ function computeStats(values: number[]) {
   return { avg, max, min, avg7, count: values.length }
 }
 
-export function NutritionDetail({ history, onClose }: MetricDetailProps) {
+// ---- What to eat button -----------------------------------------------------
+
+function WhatToEat({ calories, protein_g }: { calories: number; protein_g: number }) {
+  const [suggestion, setSuggestion] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  const calRemaining = Math.max(0, 2000 - calories)
+  const protRemaining = Math.max(0, 150 - protein_g)
+
+  async function getSuggestion() {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/suggest-food', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ calories, protein_g }),
+      })
+      const data = await res.json()
+      setSuggestion(data.suggestion)
+    } catch {
+      setSuggestion('Failed to get suggestions — try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs text-text-subtle uppercase tracking-widest">Remaining today</p>
+          <p className="text-sm text-text-muted mt-0.5">
+            {calRemaining > 0 ? `${calRemaining} kcal` : 'calories hit ✓'}
+            {' · '}
+            {protRemaining > 0 ? `${protRemaining}g protein` : 'protein hit ✓'}
+          </p>
+        </div>
+        <button
+          onClick={getSuggestion}
+          disabled={loading || (calRemaining < 50 && protRemaining < 10)}
+          className="px-3 py-1.5 rounded-lg bg-accent/15 text-accent text-xs font-medium hover:bg-accent/25 disabled:opacity-40 transition-colors shrink-0"
+        >
+          {loading ? 'Thinking…' : 'What to eat?'}
+        </button>
+      </div>
+      <AnimatePresence>
+        {suggestion && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="rounded-xl bg-surface-elevated border border-border px-4 py-3"
+          >
+            <p className="text-xs text-text-subtle uppercase tracking-widest mb-2">Suggestions</p>
+            <p className="text-sm text-text leading-relaxed whitespace-pre-line">{suggestion}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+export function NutritionDetail({ history, onClose, todayStats }: MetricDetailProps) {
   const calData = history.map((d) => ({ date: shortDate(d.date), value: d.calories || null }))
   const protData = history.map((d) => ({ date: shortDate(d.date), value: d.protein_g || null }))
   const calVals = history.map((d) => d.calories).filter(Boolean) as number[]
@@ -160,6 +224,9 @@ export function NutritionDetail({ history, onClose }: MetricDetailProps) {
 
   return (
     <DetailShell title="Nutrition" onClose={onClose}>
+      {todayStats && (
+        <WhatToEat calories={todayStats.calories ?? 0} protein_g={todayStats.protein_g ?? 0} />
+      )}
       <div>
         <p className="text-xs text-text-subtle uppercase tracking-widest mb-3">Calories</p>
         <MetricAreaChart data={calData} unit="kcal" height={140} />
@@ -265,19 +332,124 @@ export function HydrationDetail({ history, onClose }: MetricDetailProps) {
   )
 }
 
-export function WeightDetail({ history, onClose }: MetricDetailProps) {
-  const data = history.map((d) => ({ date: shortDate(d.date), value: d.weight_kg }))
-  const vals = history.map((d) => d.weight_kg).filter((v): v is number => v !== null)
+// ---- Linear regression for weight projection --------------------------------
+
+function linearProjection(vals: { x: number; y: number }[]) {
+  if (vals.length < 3) return null
+  const n = vals.length
+  const sumX = vals.reduce((s, p) => s + p.x, 0)
+  const sumY = vals.reduce((s, p) => s + p.y, 0)
+  const sumXY = vals.reduce((s, p) => s + p.x * p.y, 0)
+  const sumX2 = vals.reduce((s, p) => s + p.x * p.x, 0)
+  const denom = n * sumX2 - sumX * sumX
+  if (Math.abs(denom) < 1e-10) return null
+  const slope = (n * sumXY - sumX * sumY) / denom
+  const intercept = (sumY - slope * sumX) / n
+  return { slope, intercept }
+}
+
+interface WeightDetailProps extends MetricDetailProps {
+  goalWeight?: number | null
+}
+
+export function WeightDetail({ history, onClose, goalWeight: initialGoal }: WeightDetailProps) {
+  const [range, setRange] = useState<Range>('30')
+  const [goalInput, setGoalInput] = useState(initialGoal?.toString() ?? '')
+  const [goal, setGoal] = useState<number | null>(initialGoal ?? null)
+
+  // Save goal to localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('parma-weight-goal')
+    if (saved && !initialGoal) {
+      setGoal(parseFloat(saved))
+      setGoalInput(saved)
+    }
+  }, [initialGoal])
+
+  function applyGoal() {
+    const v = parseFloat(goalInput)
+    if (!isNaN(v) && v > 0) {
+      setGoal(v)
+      localStorage.setItem('parma-weight-goal', String(v))
+    }
+  }
+
+  const days = range === '7' ? 7 : range === '30' ? 30 : 180
+  const slice = history.slice(-days)
+
+  const data = slice.map((d) => ({ date: shortDate(d.date), value: d.weight_kg }))
+  const vals = slice.map((d) => d.weight_kg).filter((v): v is number => v !== null)
   const stats = computeStats(vals)
+
+  // Projection
+  const indexedVals = slice
+    .map((d, i) => ({ x: i, y: d.weight_kg }))
+    .filter((p): p is { x: number; y: number } => p.y !== null)
+
+  const reg = linearProjection(indexedVals)
+  let projectionDays: number | null = null
+  let projectionDate: string | null = null
+
+  if (reg && goal !== null && vals.length >= 3) {
+    const lastX = indexedVals[indexedVals.length - 1].x
+    const lastY = indexedVals[indexedVals.length - 1].y
+    const daysToGoal = reg.slope !== 0 ? (goal - lastY) / reg.slope : null
+    if (daysToGoal !== null && daysToGoal > 0 && daysToGoal < 730) {
+      projectionDays = Math.round(daysToGoal)
+      const d = new Date()
+      d.setDate(d.getDate() + projectionDays)
+      projectionDate = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    }
+  }
 
   return (
     <DetailShell title="Weight" onClose={onClose}>
+      <div className="flex items-center justify-between">
+        <RangeToggle value={range} onChange={setRange} />
+      </div>
+
       <MetricAreaChart
         data={data}
         height={160}
         unit="kg"
         formatValue={(v) => v.toFixed(1)}
+        referenceLine={goal ?? undefined}
+        referenceLabel={goal ? `Goal: ${goal} kg` : undefined}
       />
+
+      {/* Goal setter */}
+      <div className="flex items-center gap-2">
+        <input
+          type="number"
+          value={goalInput}
+          onChange={(e) => setGoalInput(e.target.value)}
+          onBlur={applyGoal}
+          onKeyDown={(e) => e.key === 'Enter' && applyGoal()}
+          placeholder="Set goal weight (kg)"
+          step="0.1"
+          className="flex-1 rounded-lg bg-surface-elevated border border-border text-text text-sm px-3 py-2 focus:outline-none focus:border-accent placeholder:text-text-subtle"
+        />
+        <button
+          onClick={applyGoal}
+          className="px-3 py-2 rounded-lg bg-accent/15 text-accent text-sm font-medium hover:bg-accent/25 transition-colors"
+        >
+          Set
+        </button>
+      </div>
+
+      {/* Projection */}
+      {projectionDate && reg && (
+        <div className="rounded-xl bg-accent-dim border border-accent/20 px-4 py-3">
+          <p className="text-xs text-text-subtle mb-0.5">At current trajectory</p>
+          <p className="text-sm font-semibold text-text">
+            Reach {goal} kg by <span className="text-accent">{projectionDate}</span>
+          </p>
+          <p className="text-xs text-text-subtle mt-0.5">
+            ~{Math.abs(reg.slope).toFixed(2)} kg/day · {projectionDays} days away
+          </p>
+        </div>
+      )}
+
       {stats && (
         <div>
           <p className="text-xs text-text-subtle uppercase tracking-widest mb-2">Stats</p>
@@ -287,8 +459,11 @@ export function WeightDetail({ history, onClose }: MetricDetailProps) {
           {vals.length >= 2 && (
             <StatRow
               label="Change"
-              value={`${(vals[vals.length - 1] - vals[0] >= 0 ? '+' : '')}${(vals[vals.length - 1] - vals[0]).toFixed(1)} kg`}
+              value={`${vals[vals.length - 1] - vals[0] >= 0 ? '+' : ''}${(vals[vals.length - 1] - vals[0]).toFixed(1)} kg`}
             />
+          )}
+          {goal !== null && stats && (
+            <StatRow label="To goal" value={`${(stats.avg - goal).toFixed(1)} kg`} />
           )}
           <StatRow label="Days logged" value={String(stats.count)} />
         </div>
@@ -360,16 +535,18 @@ export interface DetailViewProps {
   metric: MetricId | null
   history: DailyStats[]
   onClose: () => void
+  weightGoal?: number | null
+  todayStats?: DailyStats | null
 }
 
-export function DetailViewRouter({ metric, history, onClose }: DetailViewProps) {
+export function DetailViewRouter({ metric, history, onClose, weightGoal, todayStats }: DetailViewProps) {
   return (
     <AnimatePresence>
-      {metric === 'nutrition' && <NutritionDetail key="nutrition" history={history} onClose={onClose} />}
+      {metric === 'nutrition' && <NutritionDetail key="nutrition" history={history} onClose={onClose} todayStats={todayStats} />}
       {metric === 'steps' && <StepsDetail key="steps" history={history} onClose={onClose} />}
       {metric === 'sleep' && <SleepDetail key="sleep" history={history} onClose={onClose} />}
       {metric === 'hydration' && <HydrationDetail key="hydration" history={history} onClose={onClose} />}
-      {metric === 'weight' && <WeightDetail key="weight" history={history} onClose={onClose} />}
+      {metric === 'weight' && <WeightDetail key="weight" history={history} onClose={onClose} goalWeight={weightGoal} />}
       {metric === 'mood' && <MoodDetail key="mood" history={history} onClose={onClose} />}
     </AnimatePresence>
   )

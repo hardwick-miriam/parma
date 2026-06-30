@@ -43,6 +43,25 @@ const PARSE_TOOL: Anthropic.Tool = {
       injury_body_part: { type: 'string', description: 'The specific body part of a new injury, isolated (e.g. "ankle", "hamstring", "wrist", "knee")' },
       injury_estimated_days: { type: 'number', description: 'Estimated days until recovery from a new injury, if mentioned' },
       notes: { type: 'string', description: 'Anything that does not fit another field' },
+      mounjaro_dose_mg: {
+        type: 'number',
+        description: 'Mounjaro (tirzepatide) dose in mg if the user logged taking their injection. Common doses: 2.5, 5, 7.5, 10, 12.5, 15. E.g. "took my Mounjaro, 5mg" → 5',
+      },
+      mounjaro_feeling: {
+        type: 'string',
+        description: 'How the user felt after taking Mounjaro, if mentioned (e.g. "fine", "a bit nauseous", "great")',
+      },
+      mounjaro_side_effects: {
+        type: 'object',
+        description: 'Mounjaro side effects if the user describes them in the context of their medication. Use when they mention nausea, appetite, or energy changes in relation to Mounjaro.',
+        properties: {
+          nausea: { type: 'integer', description: 'Nausea severity 0-10 (0=none, 10=severe)' },
+          appetite: { type: 'integer', description: 'Appetite level 0-10 (0=no appetite, 10=completely normal)' },
+          energy: { type: 'integer', description: 'Energy level 0-10 (0=exhausted, 10=great)' },
+          notes: { type: 'string' },
+        },
+        additionalProperties: false,
+      },
       injury_checkin: {
         type: 'object',
         description: 'Use ONLY when the person gives a progress update on an existing injury — not a new injury and not when it is healed. E.g. "ankle is feeling 70% today after a walk".',

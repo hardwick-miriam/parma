@@ -2,6 +2,8 @@
 
 import { CircularProgress } from '@/components/ui/CircularProgress'
 import { StreakBadge } from '@/components/ui/StreakBadge'
+import { ComparisonBadge } from '@/components/ui/ComparisonBadge'
+import type { PeriodComparison } from '@/lib/comparison'
 
 interface NutritionWidgetProps {
   calories: number
@@ -9,6 +11,8 @@ interface NutritionWidgetProps {
   calorieTarget?: number
   proteinTarget?: number
   proteinStreak?: number
+  calorieComp?: PeriodComparison | null
+  proteinComp?: PeriodComparison | null
 }
 
 export function NutritionWidget({
@@ -17,6 +21,8 @@ export function NutritionWidget({
   calorieTarget = 2000,
   proteinTarget = 150,
   proteinStreak = 0,
+  calorieComp,
+  proteinComp,
 }: NutritionWidgetProps) {
   return (
     <div className="rounded-2xl bg-surface border border-border p-6 flex flex-col gap-4 h-full" style={{ boxShadow: 'var(--shadow-md)' }}>
@@ -27,11 +33,17 @@ export function NutritionWidget({
       <div className="flex justify-around gap-4">
         <div className="flex flex-col items-center gap-2">
           <CircularProgress value={calories} max={calorieTarget} size={120} label="kcal" countUp />
-          <span className="text-xs text-text-muted">{calorieTarget} target</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-text-muted">{calorieTarget} target</span>
+            {calorieComp && <ComparisonBadge change={calorieComp.change} />}
+          </div>
         </div>
         <div className="flex flex-col items-center gap-2">
           <CircularProgress value={protein_g} max={proteinTarget} size={120} label="protein" unit="g" countUp />
-          <span className="text-xs text-text-muted">{proteinTarget}g target</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-text-muted">{proteinTarget}g target</span>
+            {proteinComp && <ComparisonBadge change={proteinComp.change} />}
+          </div>
         </div>
       </div>
     </div>

@@ -18,6 +18,7 @@ import {
   removeHabitFromToday,
   resolveInjuryById,
 } from '@/lib/db/queries'
+import { insertMounjaroDose, upsertMounjaroEffects } from '@/lib/db/mounjaro'
 import type { ParsedLog } from '@/lib/ai/types'
 import type { Injury } from '@/lib/db/queries'
 
@@ -118,6 +119,14 @@ export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ err
           parsed.injury_estimated_days ?? null
         )
       }
+    }
+
+    if (parsed.mounjaro_dose_mg != null) {
+      await insertMounjaroDose(user.id, parsed.mounjaro_dose_mg, parsed.mounjaro_feeling ?? null, null)
+    }
+
+    if (parsed.mounjaro_side_effects) {
+      await upsertMounjaroEffects(user.id, parsed.mounjaro_side_effects)
     }
 
     if (parsed.injury_resolved) {

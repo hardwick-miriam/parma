@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { SignOutButton } from '@/components/dashboard/SignOutButton'
 import { LogFlow } from '@/components/dashboard/LogFlow'
+import { NavBar } from '@/components/dashboard/NavBar'
 
 export default async function DashboardLayout({
   children,
@@ -12,23 +13,37 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-bg">
-      {/* Sign-out — fixed top-right, unobtrusive */}
-      <div className="fixed top-3 right-4 z-40 flex items-center gap-3">
-        {user?.email && (
-          <span className="text-xs text-text-subtle hidden sm:block">{user.email}</span>
-        )}
-        <SignOutButton />
-      </div>
+      {/* Top nav bar */}
+      <header
+        className="fixed top-0 left-0 right-0 z-40"
+        style={{
+          background: 'rgba(17,17,19,0.92)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+        }}
+      >
+        <div className="max-w-5xl mx-auto px-4 h-11 flex items-center gap-3">
+          <span className="font-bold text-accent text-sm tracking-tight">parma</span>
+          <NavBar />
+          <div className="ml-auto flex items-center gap-3">
+            {user?.email && (
+              <span className="text-xs text-text-subtle hidden sm:block">{user.email}</span>
+            )}
+            <SignOutButton />
+          </div>
+        </div>
+      </header>
 
-      {/* Scrollable content — padded to clear the floating log bar */}
+      {/* Scrollable content */}
       <main
-        className="max-w-5xl mx-auto px-4 pt-6"
+        className="max-w-5xl mx-auto px-4 pt-16"
         style={{ paddingBottom: '120px' }}
       >
         {children}
       </main>
 
-      {/* Fixed floating log bar — auto-height, grows with textarea */}
+      {/* Fixed floating log bar */}
       <div
         className="fixed bottom-0 left-0 right-0 z-50 py-3"
         style={{

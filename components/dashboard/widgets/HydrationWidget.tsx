@@ -2,8 +2,17 @@
 
 import { CircularProgress } from '@/components/ui/CircularProgress'
 import { StreakBadge } from '@/components/ui/StreakBadge'
+import { ComparisonBadge } from '@/components/ui/ComparisonBadge'
+import type { PeriodComparison } from '@/lib/comparison'
 
-export function HydrationWidget({ water_ml, target = 2000, streak = 0 }: { water_ml: number; target?: number; streak?: number }) {
+interface HydrationWidgetProps {
+  water_ml: number
+  target?: number
+  streak?: number
+  comp?: PeriodComparison | null
+}
+
+export function HydrationWidget({ water_ml, target = 2000, streak = 0, comp }: HydrationWidgetProps) {
   const litres = water_ml / 1000
   const targetLitres = target / 1000
 
@@ -22,7 +31,10 @@ export function HydrationWidget({ water_ml, target = 2000, streak = 0 }: { water
           decimals={1}
           countUp
         />
-        <span className="text-xs text-text-muted">{targetLitres.toFixed(1)}L target</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-text-muted">{targetLitres.toFixed(1)}L target</span>
+          {comp && <ComparisonBadge change={comp.change} />}
+        </div>
       </div>
     </div>
   )
