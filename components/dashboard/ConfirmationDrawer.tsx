@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import type { ParsedLog } from '@/lib/ai/types'
 
 interface ConfirmationDrawerProps {
@@ -30,6 +31,9 @@ const TEXT_FIELDS = [
 export function ConfirmationDrawer({ rawText, parsed, onConfirm, onDiscard }: ConfirmationDrawerProps) {
   const [edited, setEdited] = useState<ParsedLog>({ ...parsed })
   const [saving, setSaving] = useState(false)
+  // Portal needs document — wait for client mount to avoid SSR mismatch
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
 
   function setNum(key: keyof ParsedLog, val: string) {
     setEdited((p) => ({ ...p, [key]: val === '' ? undefined : Number(val) }))
@@ -61,12 +65,30 @@ export function ConfirmationDrawer({ rawText, parsed, onConfirm, onDiscard }: Co
     setSaving(false)
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-      {/* Panel: flex-col with header + scrollable body + sticky footer */}
+  if (!mounted) return null
+
+  // Render via portal so the modal escapes the fixed bottom bar's
+  // backdrop-filter containing block (which hijacks position:fixed).
+  return createPortal(
+    <div
+      className="fixed inset-0 flex items-center justify-center px-4"
+      style={{ zIndex: 9999 }}
+    >
+      {/* Dimmed backdrop — clicking it discards */}
       <div
-        className="w-full max-w-lg bg-surface rounded-2xl flex flex-col shadow-2xl"
-        style={{ maxHeight: '90dvh', boxShadow: 'var(--shadow-lg), 0 0 60px rgba(139,92,246,0.15)' }}
+        className="absolute inset-0 bg-black/70"
+        style={{ backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}
+        onClick={onDiscard}
+      />
+
+      {/* Modal panel */}
+      <div
+        className="relative w-full max-w-lg bg-surface rounded-2xl flex flex-col"
+        style={{
+          maxHeight: '85dvh',
+          boxShadow: 'var(--shadow-lg), 0 0 60px rgba(139,92,246,0.18)',
+          border: '1px solid var(--border-strong)',
+        }}
       >
         {/* Header — always visible */}
         <div className="px-6 pt-6 pb-4 shrink-0">
@@ -74,13 +96,12 @@ export function ConfirmationDrawer({ rawText, parsed, onConfirm, onDiscard }: Co
           <p className="text-xs text-text-muted mt-1 line-clamp-2">{rawText}</p>
         </div>
 
-        {/* Scrollable content */}
+        {/* Scrollable fields */}
         <div className="flex-1 overflow-y-auto min-h-0 px-6 pb-2 flex flex-col gap-5">
           {!hasAnything && (
             <p className="text-text-subtle text-sm">Nothing was detected. Try being more specific.</p>
           )}
 
-          {/* Number fields */}
           {presentNumbers.length > 0 && (
             <div className="grid grid-cols-2 gap-3">
               {presentNumbers.map(({ key, label }) => (
@@ -97,7 +118,6 @@ export function ConfirmationDrawer({ rawText, parsed, onConfirm, onDiscard }: Co
             </div>
           )}
 
-          {/* Text fields */}
           {presentText.length > 0 && (
             <div className="grid grid-cols-2 gap-3">
               {presentText.map(({ key, label }) => (
@@ -114,7 +134,6 @@ export function ConfirmationDrawer({ rawText, parsed, onConfirm, onDiscard }: Co
             </div>
           )}
 
-          {/* Boolean toggles */}
           {(edited.sick != null || edited.injured != null) && (
             <div className="flex gap-4">
               {edited.sick != null && (
@@ -142,7 +161,6 @@ export function ConfirmationDrawer({ rawText, parsed, onConfirm, onDiscard }: Co
             </div>
           )}
 
-          {/* Supplements */}
           {edited.supplements?.length ? (
             <label className="flex flex-col gap-1">
               <span className="text-xs text-text-muted">Supplements (comma-separated)</span>
@@ -155,7 +173,6 @@ export function ConfirmationDrawer({ rawText, parsed, onConfirm, onDiscard }: Co
             </label>
           ) : null}
 
-          {/* Habits */}
           {edited.habits_done?.length ? (
             <label className="flex flex-col gap-1">
               <span className="text-xs text-text-muted">Habits done (comma-separated)</span>
@@ -168,7 +185,6 @@ export function ConfirmationDrawer({ rawText, parsed, onConfirm, onDiscard }: Co
             </label>
           ) : null}
 
-          {/* Workouts */}
           {edited.workouts?.length ? (
             <div>
               <p className="text-xs text-text-muted mb-2">Workouts detected</p>
@@ -183,7 +199,7 @@ export function ConfirmationDrawer({ rawText, parsed, onConfirm, onDiscard }: Co
           ) : null}
         </div>
 
-        {/* Footer — always visible, Save never scrolls out of reach */}
+        {/* Footer — pinned, always visible */}
         <div className="px-6 py-4 shrink-0 border-t border-border flex gap-3">
           <button
             type="button"
@@ -202,6 +218,7 @@ export function ConfirmationDrawer({ rawText, parsed, onConfirm, onDiscard }: Co
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
