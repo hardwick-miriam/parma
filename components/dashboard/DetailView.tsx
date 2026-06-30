@@ -441,16 +441,31 @@ export function WeightDetail({ history, onClose, goalWeight: initialGoal }: Weig
   const reg = linearProjection(indexedVals)
   let projectionDays: number | null = null
   let projectionDate: string | null = null
+  let projectionNote: string | null = null
 
-  if (reg && goal !== null && vals.length >= 3) {
-    const lastX = indexedVals[indexedVals.length - 1].x
-    const lastY = indexedVals[indexedVals.length - 1].y
-    const daysToGoal = reg.slope !== 0 ? (goal - lastY) / reg.slope : null
-    if (daysToGoal !== null && daysToGoal > 0 && daysToGoal < 730) {
-      projectionDays = Math.round(daysToGoal)
-      const d = new Date()
-      d.setDate(d.getDate() + projectionDays)
-      projectionDate = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  if (goal !== null) {
+    if (vals.length < 3) {
+      projectionNote = 'Log at least 3 days of weight to see a projection'
+    } else if (reg) {
+      const lastY = indexedVals[indexedVals.length - 1]?.y ?? 0
+      const nearGoal = Math.abs(goal - lastY) < 0.2
+      if (nearGoal) {
+        projectionNote = 'You\'re essentially at your goal weight'
+      } else if (Math.abs(reg.slope) < 0.001) {
+        projectionNote = 'No clear trend yet — keep logging'
+      } else {
+        const daysToGoal = (goal - lastY) / reg.slope
+        if (daysToGoal <= 0) {
+          projectionNote = 'Current trend is moving away from your goal'
+        } else if (daysToGoal >= 730) {
+          projectionNote = 'At this pace it would take over 2 years'
+        } else {
+          projectionDays = Math.round(daysToGoal)
+          const d = new Date()
+          d.setDate(d.getDate() + projectionDays)
+          projectionDate = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+        }
+      }
     }
   }
 
@@ -499,6 +514,11 @@ export function WeightDetail({ history, onClose, goalWeight: initialGoal }: Weig
           <p className="text-xs text-text-subtle mt-0.5">
             ~{Math.abs(reg.slope).toFixed(2)} kg/day · {projectionDays} days away
           </p>
+        </div>
+      )}
+      {projectionNote && (
+        <div className="rounded-xl bg-surface-elevated border border-border px-4 py-3">
+          <p className="text-xs text-text-subtle">{projectionNote}</p>
         </div>
       )}
 
