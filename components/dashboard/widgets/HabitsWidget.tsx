@@ -2,8 +2,15 @@
 
 import { useState, useTransition } from 'react'
 import { removeHabit } from '@/app/actions'
+import { StreakBadge } from '@/components/ui/StreakBadge'
 
-export function HabitsWidget({ habits_done }: { habits_done: string[] | null }) {
+interface HabitsWidgetProps {
+  habits_done: string[] | null
+  loggedTimes?: Record<string, string>  // habit name → ISO timestamp
+  streak?: number
+}
+
+export function HabitsWidget({ habits_done, loggedTimes = {}, streak = 0 }: HabitsWidgetProps) {
   const doneHabits = (habits_done ?? []).filter(Boolean)
   const [confirmItem, setConfirmItem] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -17,7 +24,10 @@ export function HabitsWidget({ habits_done }: { habits_done: string[] | null }) 
 
   return (
     <div className="rounded-2xl bg-surface border border-border p-6 flex flex-col gap-4 h-full" style={{ boxShadow: 'var(--shadow-md)' }}>
-      <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest">Habits</h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest">Habits</h2>
+        <StreakBadge count={streak} label="day streak" />
+      </div>
       {doneHabits.length === 0 ? (
         <p className="text-text-subtle text-sm">None logged today</p>
       ) : (
@@ -46,6 +56,11 @@ export function HabitsWidget({ habits_done }: { habits_done: string[] | null }) 
                 <>
                   <span className="text-accent font-bold mr-2">✓</span>
                   <span className="flex-1 text-sm text-text capitalize">{h}</span>
+                  {loggedTimes[h.toLowerCase()] && (
+                    <span className="text-[10px] text-text-subtle tabular-nums mr-1">
+                      {new Date(loggedTimes[h.toLowerCase()]).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                    </span>
+                  )}
                   <button
                     onClick={() => setConfirmItem(h)}
                     className="opacity-0 group-hover:opacity-100 text-text-subtle hover:text-red-400 transition-opacity text-base leading-none px-1"

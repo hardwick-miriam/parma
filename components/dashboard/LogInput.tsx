@@ -3,8 +3,16 @@
 import { useState, useRef } from 'react'
 import type { ParsedLog } from '@/lib/ai/types'
 
+const QUESTION_RE = /^(how|when|what|show|tell|did|have i|am i|do i|can you|list|give me|which|is my|was my|are my|how many|how much|what's|what is|when did|when was)/i
+
+function looksLikeQuestion(text: string): boolean {
+  const t = text.trim()
+  return t.endsWith('?') || QUESTION_RE.test(t)
+}
+
 interface LogInputProps {
   onParsed: (text: string, parsed: ParsedLog) => void
+  onQuestion?: (text: string) => void
 }
 
 function MicIcon() {
@@ -41,7 +49,7 @@ function SpinnerIcon() {
   )
 }
 
-export function LogInput({ onParsed }: LogInputProps) {
+export function LogInput({ onParsed, onQuestion }: LogInputProps) {
   const [text, setText] = useState('')
   const [recording, setRecording] = useState(false)
   const [transcribing, setTranscribing] = useState(false)
@@ -121,6 +129,16 @@ export function LogInput({ onParsed }: LogInputProps) {
   async function handleSubmit() {
     if (!text.trim() || loading || transcribing) return
     if (recording) stopRecording()
+
+    // Route questions to Q&A handler instead of parse flow
+    if (onQuestion && looksLikeQuestion(text)) {
+      const q = text.trim()
+      setText('')
+      if (textareaRef.current) textareaRef.current.style.height = 'auto'
+      onQuestion(q)
+      return
+    }
+
     setLoading(true)
     setError(null)
     try {
@@ -178,7 +196,7 @@ export function LogInput({ onParsed }: LogInputProps) {
           ref={textareaRef}
           value={text}
           onChange={handleChange}
-          placeholder="Log food, sleep, steps, mood, workouts…"
+          placeholder="Log food, sleep, steps, mood… or ask a question"
           rows={1}
           className="flex-1 resize-none bg-transparent text-text text-sm placeholder:text-text-subtle focus:outline-none leading-relaxed"
           style={{ maxHeight: '120px', overflowY: 'auto' }}

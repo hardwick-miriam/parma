@@ -3,7 +3,12 @@
 import { useState, useTransition } from 'react'
 import { removeSupplement } from '@/app/actions'
 
-export function SupplementsWidget({ supplements }: { supplements: string[] | null }) {
+interface SupplementsWidgetProps {
+  supplements: string[] | null
+  loggedTimes?: Record<string, string>  // supplement name → ISO timestamp
+}
+
+export function SupplementsWidget({ supplements, loggedTimes = {} }: SupplementsWidgetProps) {
   const list = supplements?.filter(Boolean) ?? []
   const [confirmItem, setConfirmItem] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -40,13 +45,20 @@ export function SupplementsWidget({ supplements }: { supplements: string[] | nul
                   </button>
                 </div>
               ) : (
-                <button
-                  onClick={() => setConfirmItem(s)}
-                  className="group flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent-dim border border-accent/20 text-accent text-xs font-medium hover:border-red-500/30 transition-colors"
-                >
-                  {s}
-                  <span className="text-accent/40 group-hover:text-red-400 transition-colors">×</span>
-                </button>
+                <div className="flex flex-col items-start gap-0.5">
+                  <button
+                    onClick={() => setConfirmItem(s)}
+                    className="group flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent-dim border border-accent/20 text-accent text-xs font-medium hover:border-red-500/30 transition-colors"
+                  >
+                    {s}
+                    <span className="text-accent/40 group-hover:text-red-400 transition-colors">×</span>
+                  </button>
+                  {loggedTimes[s.toLowerCase()] && (
+                    <span className="text-[10px] text-text-subtle pl-1 tabular-nums">
+                      {new Date(loggedTimes[s.toLowerCase()]).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                    </span>
+                  )}
+                </div>
               )}
             </li>
           ))}

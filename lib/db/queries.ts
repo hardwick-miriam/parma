@@ -21,6 +21,7 @@ export interface WorkoutSession {
   id: string
   user_id: string
   date: string
+  created_at: string
   description: string
   duration_minutes: number | null
   feeling: string | null
@@ -64,6 +65,22 @@ export async function getTodayWorkouts(userId: string): Promise<WorkoutSession[]
     .eq('user_id', userId)
     .eq('date', today)
     .order('created_at', { ascending: true })
+
+  if (error) throw error
+  return data ?? []
+}
+
+export async function getRecentWorkouts(userId: string, days = 30): Promise<WorkoutSession[]> {
+  const supabase = await createClient()
+  const since = new Date()
+  since.setDate(since.getDate() - days)
+
+  const { data, error } = await supabase
+    .from('workout_sessions')
+    .select('*')
+    .eq('user_id', userId)
+    .gte('date', since.toISOString().split('T')[0])
+    .order('created_at', { ascending: false })
 
   if (error) throw error
   return data ?? []

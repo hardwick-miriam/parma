@@ -47,9 +47,10 @@ export function WorkoutsWidget({ workouts }: { workouts: WorkoutSession[] }) {
               </span>
               <div className="flex-1 flex flex-col min-w-0">
                 <span className="text-sm font-medium text-text truncate">{w.description}</span>
-                {w.duration_minutes != null && (
-                  <span className="text-xs text-text-muted">{w.duration_minutes} min</span>
-                )}
+                <span className="text-xs text-text-subtle tabular-nums">
+                  {new Date(w.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                  {w.duration_minutes != null ? ` · ${w.duration_minutes} min` : ''}
+                </span>
                 {w.exercises?.length ? (
                   <span className="text-xs text-text-subtle truncate">
                     {w.exercises.join(' · ')}
