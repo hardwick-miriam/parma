@@ -62,11 +62,11 @@ export function ConfirmationDrawer({ rawText, parsed, onConfirm, onDiscard }: Co
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
       {/* Panel: flex-col with header + scrollable body + sticky footer */}
       <div
-        className="w-full max-w-lg bg-surface rounded-t-2xl sm:rounded-2xl flex flex-col"
-        style={{ maxHeight: '90dvh' }}
+        className="w-full max-w-lg bg-surface rounded-2xl flex flex-col shadow-2xl"
+        style={{ maxHeight: '90dvh', boxShadow: 'var(--shadow-lg), 0 0 60px rgba(139,92,246,0.15)' }}
       >
         {/* Header — always visible */}
         <div className="px-6 pt-6 pb-4 shrink-0">
