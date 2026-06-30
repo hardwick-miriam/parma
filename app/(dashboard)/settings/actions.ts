@@ -45,3 +45,15 @@ export async function removePlace(id: string): Promise<void> {
   const updated = (prefs?.saved_places ?? []).filter((p) => p.id !== id)
   await upsertUserPreferences(user.id, { saved_places: updated })
 }
+
+export async function changePassword(
+  newPassword: string
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not signed in' }
+
+  const { error } = await supabase.auth.updateUser({ password: newPassword })
+  if (error) return { error: error.message }
+  return {}
+}

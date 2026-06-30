@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { saveSettings, generateToken, addPlace, removePlace } from './actions'
+import { saveSettings, generateToken, addPlace, removePlace, changePassword } from './actions'
 import type { SavedPlace } from '@/lib/db/preferences'
 
 interface Props {
@@ -34,6 +34,10 @@ export function SettingsClient({ initialPrefs }: Props) {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [tokenCopied, setTokenCopied] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordSaving, setPasswordSaving] = useState(false)
+  const [passwordStatus, setPasswordStatus] = useState<{ ok?: boolean; msg?: string } | null>(null)
 
   async function handleSave() {
     setSaving(true)
@@ -75,6 +79,28 @@ export function SettingsClient({ initialPrefs }: Props) {
   async function handleRemovePlace(id: string) {
     await removePlace(id)
     setPlaces((prev) => prev.filter((p) => p.id !== id))
+  }
+
+  async function handleChangePassword() {
+    if (newPassword.length < 8) {
+      setPasswordStatus({ ok: false, msg: 'Password must be at least 8 characters' })
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordStatus({ ok: false, msg: 'Passwords do not match' })
+      return
+    }
+    setPasswordSaving(true)
+    setPasswordStatus(null)
+    const result = await changePassword(newPassword)
+    setPasswordSaving(false)
+    if (result.error) {
+      setPasswordStatus({ ok: false, msg: result.error })
+    } else {
+      setPasswordStatus({ ok: true, msg: 'Password updated' })
+      setNewPassword('')
+      setConfirmPassword('')
+    }
   }
 
   return (
@@ -220,6 +246,41 @@ export function SettingsClient({ initialPrefs }: Props) {
               Add place
             </button>
           </div>
+        </div>
+      </Section>
+
+      {/* Change password */}
+      <Section title="Change password">
+        <div className="flex flex-col gap-3">
+          <input
+            type="password"
+            placeholder="New password (min 8 characters)"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            autoComplete="new-password"
+            className="rounded-lg bg-surface-elevated border border-border text-text text-sm px-3 py-2 focus:outline-none focus:border-accent placeholder:text-text-subtle"
+          />
+          <input
+            type="password"
+            placeholder="Confirm new password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            autoComplete="new-password"
+            onKeyDown={(e) => { if (e.key === 'Enter') handleChangePassword() }}
+            className="rounded-lg bg-surface-elevated border border-border text-text text-sm px-3 py-2 focus:outline-none focus:border-accent placeholder:text-text-subtle"
+          />
+          {passwordStatus && (
+            <p className={`text-xs ${passwordStatus.ok ? 'text-positive' : 'text-negative'}`}>
+              {passwordStatus.msg}
+            </p>
+          )}
+          <button
+            onClick={handleChangePassword}
+            disabled={passwordSaving || !newPassword || !confirmPassword}
+            className="self-start px-4 py-1.5 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 disabled:opacity-50 transition-colors"
+          >
+            {passwordSaving ? 'Updating…' : 'Update password'}
+          </button>
         </div>
       </Section>
     </div>
