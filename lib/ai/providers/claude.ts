@@ -9,8 +9,14 @@ const PARSE_TOOL: Anthropic.Tool = {
   input_schema: {
     type: 'object',
     properties: {
-      calories: { type: 'number', description: 'Total calories consumed' },
-      protein_g: { type: 'number', description: 'Total protein in grams' },
+      calories: {
+        type: 'number',
+        description: 'Total calories consumed. Whenever ANY food or drink with calories is mentioned, you MUST estimate this using nutritional knowledge — even for vague descriptions. Never omit when food was clearly eaten.',
+      },
+      protein_g: {
+        type: 'number',
+        description: 'Total protein in grams. Whenever ANY food is mentioned, you MUST estimate this alongside calories — never leave it absent if food was eaten. Use nutritional knowledge: ham pizza slice ~20g, chicken breast ~30g, eggs 6g each, oats ~5g per serving. Best-estimate is always better than 0 or omitting.',
+      },
       steps: { type: 'number', description: 'Step count' },
       workouts: {
         type: 'array',
@@ -88,7 +94,12 @@ const PARSE_TOOL: Anthropic.Tool = {
 }
 
 const BASE_SYSTEM =
-  "You are a health data extraction assistant. Parse the user's natural-language log entry and extract every health and habit metric you can identify. Omit fields when the information is not present — do not guess. For water: convert to ml (1L=1000ml, 1 glass=250ml). For weight: convert to kg if given in lbs."
+  "You are a health data extraction assistant. Parse the user's natural-language log entry and extract every health and habit metric you can identify.\n\n" +
+  "General rule: omit fields when the information is genuinely absent — do not invent steps, sleep, mood, weight, or water that weren't mentioned.\n\n" +
+  "NUTRITION EXCEPTION — this overrides the general rule: whenever the user mentions eating or drinking anything with nutritional value, you MUST populate BOTH calories AND protein_g using your nutritional knowledge. " +
+  "A vague food description is not an excuse to omit protein — estimate from what you know (e.g. a 15cm ham pizza slice ≈ 400 kcal, 20 g protein; a chicken breast ≈ 165 kcal, 31 g protein; scrambled eggs × 2 ≈ 180 kcal, 12 g protein). " +
+  "It is always better to give a reasonable estimate than to leave protein_g absent or at 0 when food was clearly eaten. The user can correct the estimate in the confirmation step.\n\n" +
+  "For water: convert to ml (1L=1000ml, 1 glass=250ml). For weight: convert to kg if given in lbs."
 
 export class ClaudeProvider implements AIProvider {
   async parseLog(text: string, context?: ParseContext): Promise<ParsedLog> {
