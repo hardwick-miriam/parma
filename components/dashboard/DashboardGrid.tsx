@@ -309,6 +309,7 @@ export function DashboardGrid({
         onClose={closeMetric}
         weightGoal={weightGoal}
         todayStats={stats}
+        logEntries={logEntries}
       />
 
       {/* Milestone toasts */}

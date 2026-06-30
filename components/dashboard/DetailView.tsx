@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { DailyStats } from '@/lib/db/queries'
+import type { DailyStats, LogEntry } from '@/lib/db/queries'
+import type { ParsedLog } from '@/lib/ai/types'
 import { MetricAreaChart } from '@/components/ui/MetricAreaChart'
 
 // ---- Helpers ----------------------------------------------------------------
@@ -139,6 +140,7 @@ interface MetricDetailProps {
   onClose: () => void
   goalWeight?: number | null
   todayStats?: DailyStats | null
+  logEntries?: LogEntry[]
 }
 
 function computeStats(values: number[]) {
@@ -150,6 +152,55 @@ function computeStats(values: number[]) {
   const last7 = values.slice(-7)
   const avg7 = last7.reduce((a, b) => a + b, 0) / (last7.length || 1)
   return { avg, max, min, avg7, count: values.length }
+}
+
+// ---- Food breakdown ---------------------------------------------------------
+
+function formatEntryTime(ts: string | undefined) {
+  if (!ts) return ''
+  return new Date(ts).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+}
+
+function FoodBreakdown({ logEntries }: { logEntries: LogEntry[] }) {
+  const items = logEntries
+    .filter((e) => {
+      const p = e.parsed_json as ParsedLog | null
+      return p && (p.calories || p.protein_g)
+    })
+    .slice()
+    .reverse()
+
+  if (items.length === 0) return null
+
+  return (
+    <div>
+      <p className="text-xs text-text-subtle uppercase tracking-widest mb-2">Today&apos;s food log</p>
+      <div className="flex flex-col divide-y divide-border">
+        {items.map((entry, i) => {
+          const p = entry.parsed_json as ParsedLog
+          const ts = entry.logged_at ?? entry.created_at
+          return (
+            <div key={entry.id ?? i} className="flex items-start gap-2 py-2.5 first:pt-0">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-text line-clamp-1">{entry.raw_text}</p>
+                {ts && (
+                  <p className="text-[10px] text-text-subtle mt-0.5">{formatEntryTime(ts)}</p>
+                )}
+              </div>
+              <div className="shrink-0 flex flex-col items-end gap-0.5 tabular-nums">
+                {p.calories ? (
+                  <span className="text-xs text-text-muted">{p.calories} kcal</span>
+                ) : null}
+                {p.protein_g ? (
+                  <span className="text-xs text-accent">{p.protein_g}g protein</span>
+                ) : null}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
 // ---- What to eat button -----------------------------------------------------
@@ -214,7 +265,7 @@ function WhatToEat({ calories, protein_g }: { calories: number; protein_g: numbe
   )
 }
 
-export function NutritionDetail({ history, onClose, todayStats }: MetricDetailProps) {
+export function NutritionDetail({ history, onClose, todayStats, logEntries }: MetricDetailProps) {
   const calData = history.map((d) => ({ date: shortDate(d.date), value: d.calories || null }))
   const protData = history.map((d) => ({ date: shortDate(d.date), value: d.protein_g || null }))
   const calVals = history.map((d) => d.calories).filter(Boolean) as number[]
@@ -227,6 +278,7 @@ export function NutritionDetail({ history, onClose, todayStats }: MetricDetailPr
       {todayStats && (
         <WhatToEat calories={todayStats.calories ?? 0} protein_g={todayStats.protein_g ?? 0} />
       )}
+      {logEntries && logEntries.length > 0 && <FoodBreakdown logEntries={logEntries} />}
       <div>
         <p className="text-xs text-text-subtle uppercase tracking-widest mb-3">Calories</p>
         <MetricAreaChart data={calData} unit="kcal" height={140} />
@@ -537,12 +589,13 @@ export interface DetailViewProps {
   onClose: () => void
   weightGoal?: number | null
   todayStats?: DailyStats | null
+  logEntries?: LogEntry[]
 }
 
-export function DetailViewRouter({ metric, history, onClose, weightGoal, todayStats }: DetailViewProps) {
+export function DetailViewRouter({ metric, history, onClose, weightGoal, todayStats, logEntries }: DetailViewProps) {
   return (
     <AnimatePresence>
-      {metric === 'nutrition' && <NutritionDetail key="nutrition" history={history} onClose={onClose} todayStats={todayStats} />}
+      {metric === 'nutrition' && <NutritionDetail key="nutrition" history={history} onClose={onClose} todayStats={todayStats} logEntries={logEntries} />}
       {metric === 'steps' && <StepsDetail key="steps" history={history} onClose={onClose} />}
       {metric === 'sleep' && <SleepDetail key="sleep" history={history} onClose={onClose} />}
       {metric === 'hydration' && <HydrationDetail key="hydration" history={history} onClose={onClose} />}
