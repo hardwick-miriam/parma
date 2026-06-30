@@ -30,9 +30,16 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    // cache: 'no-store' prevents Next.js's extended fetch from caching OWM responses
     const [currentRes, forecastRes] = await Promise.all([
-      fetch(`${BASE}/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`),
-      fetch(`${BASE}/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&cnt=8`),
+      fetch(
+        `${BASE}/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`,
+        { cache: 'no-store' }
+      ),
+      fetch(
+        `${BASE}/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&cnt=8`,
+        { cache: 'no-store' }
+      ),
     ])
 
     if (!currentRes.ok || !forecastRes.ok) {
@@ -41,6 +48,9 @@ export async function GET(req: NextRequest) {
 
     const current = await currentRes.json()
     const forecast = await forecastRes.json()
+
+    const currentWeather = (current.weather as Array<{ id: number; description: string; icon: string }>)[0]
+    const isDay = currentWeather.icon.endsWith('d')
 
     const now = Math.floor(Date.now() / 1000)
     const periods = (forecast.list as Array<{
@@ -57,19 +67,20 @@ export async function GET(req: NextRequest) {
         description: item.weather[0].description,
       }))
 
-    return NextResponse.json(
-      {
-        location: current.name as string,
-        temp: Math.round((current.main as { temp: number }).temp),
-        feelsLike: Math.round((current.main as { feels_like: number }).feels_like),
-        humidity: (current.main as { humidity: number }).humidity,
-        description: (current.weather as Array<{ description: string }>)[0].description,
-        emoji: iconToEmoji((current.weather as Array<{ icon: string }>)[0].icon),
-        windKph: Math.round(((current.wind as { speed?: number })?.speed ?? 0) * 3.6),
-        periods,
-      },
-      { headers: { 'Cache-Control': 'max-age=1800, s-maxage=1800' } }
-    )
+    // No Cache-Control header — browser and CDN must not cache this.
+    // Fresh current temperature on every request.
+    return NextResponse.json({
+      location: current.name as string,
+      temp: Math.round((current.main as { temp: number }).temp),
+      feelsLike: Math.round((current.main as { feels_like: number }).feels_like),
+      humidity: (current.main as { humidity: number }).humidity,
+      description: currentWeather.description,
+      emoji: iconToEmoji(currentWeather.icon),
+      windKph: Math.round(((current.wind as { speed?: number })?.speed ?? 0) * 3.6),
+      conditionCode: currentWeather.id,
+      isDay,
+      periods,
+    })
   } catch {
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }

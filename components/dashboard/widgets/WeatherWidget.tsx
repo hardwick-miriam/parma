@@ -10,12 +10,14 @@ interface WeatherData {
   description: string
   emoji: string
   windKph: number
+  conditionCode: number
+  isDay: boolean
   periods: Array<{ dt: number; temp: number; emoji: string; description: string }>
 }
 
-// Module-level cache so navigating away and back doesn't re-fetch immediately
+// Short cache only for same-session navigation — server no longer sends Cache-Control
 let _cache: { data: WeatherData; lat: string; lon: string; ts: number } | null = null
-const CACHE_TTL = 30 * 60 * 1000
+const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
 
 function formatPeriodTime(dt: number) {
   return new Date(dt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', hour12: true })
