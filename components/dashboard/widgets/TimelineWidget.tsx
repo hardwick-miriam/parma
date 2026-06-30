@@ -41,7 +41,7 @@ export function TimelineWidget({ entries }: { entries: LogEntry[] }) {
           {entries.map((entry) => (
             <li key={entry.id} className="group flex items-start gap-3 py-3 first:pt-0 last:pb-0">
               <span className="text-xs text-text-subtle tabular-nums pt-0.5 w-16 shrink-0">
-                {formatTime(entry.logged_at)}
+                {formatTime(entry.logged_at ?? entry.created_at ?? '')}
               </span>
               <span className="flex-1 text-sm text-text leading-relaxed">{entry.raw_text}</span>
 

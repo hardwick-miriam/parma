@@ -234,6 +234,7 @@ export interface LogEntry {
   raw_text: string
   parsed_json: unknown
   logged_at: string
+  created_at?: string
 }
 
 export async function insertLogEntry(
@@ -246,6 +247,7 @@ export async function insertLogEntry(
     user_id: userId,
     raw_text: rawText,
     parsed_json: parsedJson,
+    logged_at: new Date().toISOString(), // always set so the "today" query can find it
   })
   if (error) throw error
 }
@@ -255,9 +257,12 @@ export async function getTodayLogEntries(userId: string): Promise<LogEntry[]> {
   const today = new Date().toISOString().split('T')[0]
   const { data, error } = await supabase
     .from('log_entries')
-    .select('id, user_id, raw_text, parsed_json, logged_at')
+    // Filter on `date` (always populated via DB default) so entries
+    // with NULL logged_at (inserted before this fix) still appear.
+    // Also select created_at as a fallback timestamp for those rows.
+    .select('id, user_id, raw_text, parsed_json, logged_at, created_at')
     .eq('user_id', userId)
-    .gte('logged_at', `${today}T00:00:00`)
+    .eq('date', today)
     .order('logged_at', { ascending: false })
   if (error) throw error
   return data ?? []
