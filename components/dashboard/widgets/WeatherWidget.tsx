@@ -28,16 +28,20 @@ type ConditionKey =
 
 // ─── Condition mapping ────────────────────────────────────────────────────────
 
-function getCondition(code: number, isDay: boolean): ConditionKey {
-  if (code >= 200 && code < 300) return 'thunderstorm'
-  if (code >= 300 && code < 400) return 'drizzle'
-  if (code >= 500 && code < 511) return code >= 502 ? 'heavy-rain' : 'rain'
-  if (code >= 511 && code < 600) return 'rain'
-  if (code >= 600 && code < 700) return 'snow'
-  if (code >= 700 && code < 800) return 'fog'
-  if (code === 800) return isDay ? 'clear-day' : 'clear-night'
-  if (code === 801) return isDay ? 'partly-cloudy-day' : 'partly-cloudy-night'
-  return 'clouds'
+// Maps Open-Meteo WMO codes to animation condition keys
+function getCondition(wmo: number, isDay: boolean): ConditionKey {
+  if (wmo === 0 || wmo === 1) return isDay ? 'clear-day' : 'clear-night'
+  if (wmo === 2) return isDay ? 'partly-cloudy-day' : 'partly-cloudy-night'
+  if (wmo === 3) return 'clouds'
+  if (wmo === 45 || wmo === 48) return 'fog'
+  if (wmo >= 51 && wmo <= 57) return 'drizzle'
+  if (wmo >= 61 && wmo <= 64) return 'rain'
+  if (wmo === 65 || wmo === 66 || wmo === 67 || wmo === 82) return 'heavy-rain'
+  if (wmo >= 71 && wmo <= 77) return 'snow'
+  if (wmo >= 80 && wmo <= 81) return 'rain'
+  if (wmo >= 85 && wmo <= 86) return 'snow'
+  if (wmo >= 95) return 'thunderstorm'
+  return isDay ? 'clear-day' : 'clear-night'
 }
 
 // ─── Background gradients ─────────────────────────────────────────────────────

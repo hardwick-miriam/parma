@@ -3,24 +3,55 @@ import { createClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
-const BASE = 'https://api.openweathermap.org/data/2.5'
+// WMO weather code → emoji
+function wmoEmoji(code: number, isDay: boolean): string {
+  if (code === 0 || code === 1) return isDay ? '☀️' : '🌙'
+  if (code === 2) return '⛅'
+  if (code === 3) return '☁️'
+  if (code === 45 || code === 48) return '🌫️'
+  if (code >= 51 && code <= 57) return '🌦️'
+  if (code >= 61 && code <= 67) return '🌧️'
+  if (code >= 71 && code <= 77) return '❄️'
+  if (code >= 80 && code <= 82) return '🌧️'
+  if (code >= 85 && code <= 86) return '❄️'
+  if (code >= 95) return '⛈️'
+  return isDay ? '🌤️' : '🌙'
+}
 
-function iconToEmoji(icon: string): string {
-  const code = icon.slice(0, 2)
-  const map: Record<string, string> = {
-    '01': '☀️', '02': '⛅', '03': '☁️', '04': '☁️',
-    '09': '🌧️', '10': '🌦️', '11': '⛈️', '13': '❄️', '50': '🌫️',
-  }
-  return map[code] ?? '🌤️'
+// WMO weather code → human description
+function wmoDescription(code: number): string {
+  if (code === 0) return 'clear sky'
+  if (code === 1) return 'mainly clear'
+  if (code === 2) return 'partly cloudy'
+  if (code === 3) return 'overcast'
+  if (code === 45) return 'fog'
+  if (code === 48) return 'icy fog'
+  if (code === 51) return 'light drizzle'
+  if (code === 53) return 'moderate drizzle'
+  if (code === 55) return 'dense drizzle'
+  if (code === 56 || code === 57) return 'freezing drizzle'
+  if (code === 61) return 'light rain'
+  if (code === 63) return 'moderate rain'
+  if (code === 65) return 'heavy rain'
+  if (code === 66 || code === 67) return 'freezing rain'
+  if (code === 71) return 'light snow'
+  if (code === 73) return 'moderate snow'
+  if (code === 75) return 'heavy snow'
+  if (code === 77) return 'snow grains'
+  if (code === 80) return 'light showers'
+  if (code === 81) return 'moderate showers'
+  if (code === 82) return 'heavy showers'
+  if (code === 85) return 'snow showers'
+  if (code === 86) return 'heavy snow showers'
+  if (code === 95) return 'thunderstorm'
+  if (code === 96 || code === 99) return 'thunderstorm with hail'
+  return 'unknown'
 }
 
 export async function GET(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const apiKey = process.env.OPENWEATHERMAP_API_KEY
-  if (!apiKey) return NextResponse.json({ error: 'Weather not configured' }, { status: 503 })
 
   const { searchParams } = new URL(req.url)
   const lat = searchParams.get('lat')
@@ -30,54 +61,76 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // cache: 'no-store' prevents Next.js's extended fetch from caching OWM responses
-    const [currentRes, forecastRes] = await Promise.all([
-      fetch(
-        `${BASE}/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`,
-        { cache: 'no-store' }
-      ),
-      fetch(
-        `${BASE}/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&cnt=8`,
-        { cache: 'no-store' }
-      ),
+    const omUrl =
+      `https://api.open-meteo.com/v1/forecast` +
+      `?latitude=${lat}&longitude=${lon}` +
+      `&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m` +
+      `&hourly=temperature_2m,weather_code,is_day` +
+      `&wind_speed_unit=kmh&timezone=auto&forecast_days=1`
+
+    const geoUrl =
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+
+    const [omRes, geoRes] = await Promise.all([
+      fetch(omUrl, { cache: 'no-store' }),
+      fetch(geoUrl, {
+        cache: 'no-store',
+        headers: { 'User-Agent': 'parma-health-tracker/1.0 (personal app)' },
+      }),
     ])
 
-    if (!currentRes.ok || !forecastRes.ok) {
+    if (!omRes.ok) {
       return NextResponse.json({ error: 'Weather service unavailable' }, { status: 502 })
     }
 
-    const current = await currentRes.json()
-    const forecast = await forecastRes.json()
+    const om = await omRes.json()
+    const geo = geoRes.ok ? await geoRes.json() : null
 
-    const currentWeather = (current.weather as Array<{ id: number; description: string; icon: string }>)[0]
-    const isDay = currentWeather.icon.endsWith('d')
+    const cur = om.current as {
+      temperature_2m: number
+      apparent_temperature: number
+      relative_humidity_2m: number
+      is_day: number
+      weather_code: number
+      wind_speed_10m: number
+    }
 
-    const now = Math.floor(Date.now() / 1000)
-    const periods = (forecast.list as Array<{
-      dt: number
-      main: { temp: number }
-      weather: Array<{ description: string; icon: string }>
-    }>)
-      .filter((item) => item.dt > now)
-      .slice(0, 3)
-      .map((item) => ({
-        dt: item.dt,
-        temp: Math.round(item.main.temp),
-        emoji: iconToEmoji(item.weather[0].icon),
-        description: item.weather[0].description,
-      }))
+    const isDay = cur.is_day === 1
 
-    // No Cache-Control header — browser and CDN must not cache this.
-    // Fresh current temperature on every request.
+    // Pick next 3 hourly slots after now
+    const nowMs = Date.now()
+    const hourlyTimes: string[] = om.hourly?.time ?? []
+    const hourlyTemps: number[] = om.hourly?.temperature_2m ?? []
+    const hourlyCodes: number[] = om.hourly?.weather_code ?? []
+    const hourlyIsDay: number[] = om.hourly?.is_day ?? []
+
+    const periods: Array<{ dt: number; temp: number; emoji: string; description: string }> = []
+    for (let i = 0; i < hourlyTimes.length && periods.length < 3; i++) {
+      const slotMs = new Date(hourlyTimes[i]).getTime()
+      if (slotMs > nowMs) {
+        periods.push({
+          dt: Math.floor(slotMs / 1000),
+          temp: Math.round(hourlyTemps[i]),
+          emoji: wmoEmoji(hourlyCodes[i], hourlyIsDay[i] === 1),
+          description: wmoDescription(hourlyCodes[i]),
+        })
+      }
+    }
+
+    // Best available location name from Nominatim reverse geocode
+    const addr = geo?.address ?? {}
+    const location: string =
+      addr.city ?? addr.town ?? addr.village ?? addr.hamlet ?? addr.county ?? 'Your location'
+
     return NextResponse.json({
-      location: current.name as string,
-      temp: Math.round((current.main as { temp: number }).temp),
-      feelsLike: Math.round((current.main as { feels_like: number }).feels_like),
-      humidity: (current.main as { humidity: number }).humidity,
-      description: currentWeather.description,
-      emoji: iconToEmoji(currentWeather.icon),
-      windKph: Math.round(((current.wind as { speed?: number })?.speed ?? 0) * 3.6),
-      conditionCode: currentWeather.id,
+      location,
+      temp: Math.round(cur.temperature_2m),
+      feelsLike: Math.round(cur.apparent_temperature),
+      humidity: Math.round(cur.relative_humidity_2m),
+      description: wmoDescription(cur.weather_code),
+      emoji: wmoEmoji(cur.weather_code, isDay),
+      windKph: Math.round(cur.wind_speed_10m),
+      conditionCode: cur.weather_code,
       isDay,
       periods,
     })
