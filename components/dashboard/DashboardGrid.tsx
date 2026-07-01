@@ -20,6 +20,7 @@ import { Nudges } from './Nudges'
 import { SummaryCard } from './SummaryCard'
 import { DetailViewRouter } from './DetailView'
 import { RecoveryWidget } from './RecoveryWidget'
+import { ProgressPhotos } from './ProgressPhotos'
 import { MilestoneToast } from './MilestoneToast'
 import { detectMilestones } from '@/lib/milestones'
 import { weekOverWeek } from '@/lib/comparison'
@@ -358,6 +359,11 @@ export function DashboardGrid({
             <MounjaroWidget doses={mounjaroDoses} effects={mounjaroEffects} />
           </motion.div>
         )}
+
+        {/* Progress photos */}
+        <motion.div variants={itemVariants}>
+          <ProgressPhotos />
+        </motion.div>
 
         {/* Timeline */}
         <motion.div variants={itemVariants}>
