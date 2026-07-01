@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps'
 
-// World Atlas topojson — free, no API key
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
 
 // ISO 3166-1 alpha-3 → numeric ID (world-atlas uses numeric codes)
@@ -31,6 +30,10 @@ const A3_TO_NUM: Record<string, number> = {
   KOR:410,MLT:470,
 }
 
+const NUM_TO_A3: Record<number, string> = Object.fromEntries(
+  Object.entries(A3_TO_NUM).map(([a3, num]) => [num, a3])
+)
+
 function visitedSet(codes: string[]): Set<number> {
   const s = new Set<number>()
   for (const c of codes) {
@@ -40,57 +43,32 @@ function visitedSet(codes: string[]): Set<number> {
   return s
 }
 
-function MiniMap({ visited }: { visited: Set<number> }) {
-  return (
-    <ComposableMap
-      projectionConfig={{ scale: 120, center: [10, 0] }}
-      style={{ width: '100%', height: '100%' }}
-    >
-      <Geographies geography={GEO_URL}>
-        {({ geographies }) =>
-          geographies.map((geo) => (
-            <Geography
-              key={geo.rsmKey}
-              geography={geo}
-              fill={visited.has(Number(geo.id)) ? 'var(--accent)' : 'rgba(255,255,255,0.08)'}
-              stroke="rgba(255,255,255,0.04)"
-              strokeWidth={0.3}
-              style={{ default: { outline: 'none' }, hover: { outline: 'none' }, pressed: { outline: 'none' } }}
-            />
-          ))
-        }
-      </Geographies>
-    </ComposableMap>
-  )
-}
+type Selected = { numeric: number; name: string; wasVisited: boolean }
 
 function FullMap({
   visited,
   onClose,
+  onAdd,
   onRemove,
 }: {
   visited: Set<number>
   onClose: () => void
+  onAdd: (numeric: number, name: string) => void
   onRemove: (numeric: number) => void
 }) {
   const [mounted, setMounted] = useState(false)
-  const [tooltip, setTooltip] = useState<string | null>(null)
+  const [selected, setSelected] = useState<Selected | null>(null)
   useEffect(() => { setMounted(true) }, [])
   if (!mounted) return null
 
-  // Reverse lookup numeric → alpha-3 for tooltip/delete
-  const numToA3: Record<number, string> = {}
-  for (const [a3, num] of Object.entries(A3_TO_NUM)) numToA3[num] = a3
-
   return createPortal(
-    <div
-      className="fixed inset-0 flex flex-col"
-      style={{ zIndex: 9999, background: 'var(--bg)' }}
-    >
+    <div className="fixed inset-0 flex flex-col" style={{ zIndex: 9999, background: 'var(--bg)' }}>
       <div className="flex items-center justify-between px-5 pt-6 pb-3 border-b border-border shrink-0">
         <div>
           <h2 className="text-lg font-bold text-text">Places visited</h2>
-          <p className="text-xs text-text-subtle mt-0.5">{visited.size} {visited.size === 1 ? 'country' : 'countries'}</p>
+          <p className="text-xs text-text-subtle mt-0.5">
+            {visited.size} {visited.size === 1 ? 'country' : 'countries'} · tap any country to add or remove
+          </p>
         </div>
         <button
           onClick={onClose}
@@ -108,23 +86,35 @@ function FullMap({
           <Geographies geography={GEO_URL}>
             {({ geographies }) =>
               geographies.map((geo) => {
-                const isVisited = visited.has(Number(geo.id))
+                const numeric = Number(geo.id)
+                const isVisited = visited.has(numeric)
+                const isSelected = selected?.numeric === numeric
                 return (
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
-                    fill={isVisited ? 'var(--accent)' : 'rgba(255,255,255,0.07)'}
-                    stroke="rgba(255,255,255,0.06)"
+                    fill={
+                      isSelected
+                        ? 'var(--accent)'
+                        : isVisited
+                        ? 'rgba(139,92,246,0.75)'
+                        : 'rgba(255,255,255,0.08)'
+                    }
+                    stroke="rgba(255,255,255,0.08)"
                     strokeWidth={0.4}
                     style={{
-                      default: { outline: 'none', cursor: isVisited ? 'pointer' : 'default' },
-                      hover: { outline: 'none', cursor: isVisited ? 'pointer' : 'default' },
+                      default: { outline: 'none', cursor: 'pointer' },
+                      hover: { outline: 'none', cursor: 'pointer', fill: isVisited ? 'var(--accent)' : 'rgba(255,255,255,0.18)' },
                       pressed: { outline: 'none' },
                     }}
                     onClick={() => {
-                      if (!isVisited) return
-                      const a3 = numToA3[Number(geo.id)]
-                      if (a3) setTooltip(tooltip === a3 ? null : a3)
+                      const name = (geo.properties as { name: string }).name
+                      if (!isVisited) {
+                        onAdd(numeric, name)
+                      }
+                      setSelected(
+                        selected?.numeric === numeric ? null : { numeric, name, wasVisited: isVisited }
+                      )
                     }}
                   />
                 )
@@ -133,29 +123,38 @@ function FullMap({
           </Geographies>
         </ComposableMap>
 
-        {tooltip && (
+        {selected && (
           <div
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 px-4 py-2.5 rounded-xl"
-            style={{ background: 'var(--surface-elevated)', border: '1px solid var(--border-strong)', boxShadow: 'var(--shadow-md)' }}
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 px-4 py-2.5 rounded-xl whitespace-nowrap"
+            style={{
+              background: 'var(--surface-elevated)',
+              border: '1px solid var(--border-strong)',
+              boxShadow: 'var(--shadow-md)',
+            }}
           >
-            <span className="text-sm font-medium text-text">{tooltip}</span>
+            <span className="text-sm font-medium text-text">{selected.name}</span>
+            {selected.wasVisited ? (
+              <button
+                onClick={() => { onRemove(selected.numeric); setSelected(null) }}
+                className="text-xs text-negative hover:text-red-300 transition-colors"
+              >
+                Remove
+              </button>
+            ) : (
+              <span className="text-xs text-positive">Added ✓</span>
+            )}
             <button
-              onClick={() => {
-                const n = A3_TO_NUM[tooltip]
-                if (n != null) onRemove(n)
-                setTooltip(null)
-              }}
-              className="text-xs text-negative hover:text-red-300 transition-colors"
+              onClick={() => setSelected(null)}
+              className="text-text-subtle hover:text-text text-lg leading-none"
             >
-              Remove
+              ×
             </button>
-            <button onClick={() => setTooltip(null)} className="text-text-subtle hover:text-text text-lg leading-none">×</button>
           </div>
         )}
       </div>
 
       <div className="px-5 py-3 border-t border-border shrink-0">
-        <p className="text-xs text-text-subtle">Tap a highlighted country to remove it · Log visits naturally: "I've been to Japan"</p>
+        <p className="text-xs text-text-subtle">Tap any country to add it · tap a visited country to remove it · or say "I've been to Japan" in the log</p>
       </div>
     </div>,
     document.body
@@ -165,23 +164,42 @@ function FullMap({
 export function WorldMapWidget({ initialCountries }: { initialCountries?: string[] }) {
   const [countries, setCountries] = useState<string[]>(initialCountries ?? [])
   const [open, setOpen] = useState(false)
-  const [loading, setLoading] = useState(!initialCountries)
+  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (initialCountries) return
+  const fetchCountries = useCallback(() => {
     fetch('/api/countries')
       .then((r) => r.json())
       .then((d) => setCountries(d.countries ?? []))
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [initialCountries])
+  }, [])
+
+  useEffect(() => {
+    fetchCountries()
+  }, [fetchCountries])
+
+  // Refresh after any log is saved (in case countries_visited was detected)
+  useEffect(() => {
+    const handler = () => fetchCountries()
+    window.addEventListener('parma:saved', handler)
+    return () => window.removeEventListener('parma:saved', handler)
+  }, [fetchCountries])
 
   const visited = visitedSet(countries)
 
+  function handleAdd(numeric: number, _name: string) {
+    const a3 = NUM_TO_A3[numeric]
+    if (!a3 || countries.includes(a3)) return
+    setCountries((prev) => [...prev, a3])
+    fetch('/api/countries', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ codes: [a3] }),
+    }).catch(() => {})
+  }
+
   function handleRemove(numeric: number) {
-    const numToA3: Record<number, string> = {}
-    for (const [a3, num] of Object.entries(A3_TO_NUM)) numToA3[num] = a3
-    const a3 = numToA3[numeric]
+    const a3 = NUM_TO_A3[numeric]
     if (!a3) return
     setCountries((prev) => prev.filter((c) => c !== a3))
     fetch(`/api/countries?code=${a3}`, { method: 'DELETE' }).catch(() => {})
@@ -190,29 +208,42 @@ export function WorldMapWidget({ initialCountries }: { initialCountries?: string
   return (
     <>
       <div
-        className="rounded-2xl bg-surface border border-border overflow-hidden cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-transform duration-150"
-        style={{ boxShadow: 'var(--shadow-md)', height: '180px' }}
+        className="rounded-2xl bg-surface border border-border overflow-hidden cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-transform duration-150 h-[180px]"
+        style={{ boxShadow: 'var(--shadow-md)' }}
         onClick={() => !loading && setOpen(true)}
       >
         <div className="relative w-full h-full">
-          {/* Map fills the card */}
           <div className="absolute inset-0" style={{ opacity: loading ? 0.3 : 1 }}>
-            <MiniMap visited={visited} />
+            <ComposableMap
+              projectionConfig={{ scale: 120, center: [10, 0] }}
+              style={{ width: '100%', height: '100%' }}
+            >
+              <Geographies geography={GEO_URL}>
+                {({ geographies }) =>
+                  geographies.map((geo) => (
+                    <Geography
+                      key={geo.rsmKey}
+                      geography={geo}
+                      fill={visited.has(Number(geo.id)) ? 'var(--accent)' : 'rgba(255,255,255,0.08)'}
+                      stroke="rgba(255,255,255,0.04)"
+                      strokeWidth={0.3}
+                      style={{ default: { outline: 'none' }, hover: { outline: 'none' }, pressed: { outline: 'none' } }}
+                    />
+                  ))
+                }
+              </Geographies>
+            </ComposableMap>
           </div>
-
-          {/* Overlay with count */}
           <div className="absolute inset-0 pointer-events-none flex flex-col justify-between p-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xs font-semibold text-white/70 uppercase tracking-widest" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
-                Places I've been
-              </h2>
-            </div>
+            <h2 className="text-xs font-semibold text-white/70 uppercase tracking-widest" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
+              Places I've been
+            </h2>
             <div>
               <p className="text-2xl font-bold text-white" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.9)' }}>
                 {countries.length}
               </p>
               <p className="text-xs text-white/60" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
-                {countries.length === 1 ? 'country' : 'countries'} visited
+                {countries.length === 1 ? 'country' : 'countries'}
               </p>
             </div>
           </div>
@@ -223,6 +254,7 @@ export function WorldMapWidget({ initialCountries }: { initialCountries?: string
         <FullMap
           visited={visited}
           onClose={() => setOpen(false)}
+          onAdd={handleAdd}
           onRemove={handleRemove}
         />
       )}

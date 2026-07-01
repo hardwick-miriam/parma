@@ -38,6 +38,7 @@ export function LogFlow() {
         setPending((p) => p ? { ...p, saveError: result.error } : null)
       } else {
         setPending(null)
+        window.dispatchEvent(new CustomEvent('parma:saved'))
       }
     } catch {
       setPending((p) => p ? { ...p, saveError: 'Save failed — please try again' } : null)
