@@ -36,7 +36,7 @@ const PARSE_TOOL: Anthropic.Tool = {
       water_ml: { type: 'number', description: 'Water intake in millilitres (1 glass ~250ml, 1 litre = 1000ml, 1 bottle ~500ml)' },
       sleep_hours: { type: 'number', description: 'Hours of sleep last night' },
       supplements: { type: 'array', items: { type: 'string' }, description: 'Supplements, vitamins, or medications taken (e.g. creatine, vitamin D, magnesium)' },
-      weight_kg: { type: 'number', description: 'Body weight in kilograms (convert lbs: divide by 2.205)' },
+      weight_kg: { type: 'number', description: 'Body weight in kilograms. Set this whenever the user states their current weight — e.g. "I weigh 85kg" → 85, "weighed 74.5 this morning" → 74.5, "weighed in at 163 lbs" → convert (divide by 2.205). Never omit when a weight measurement is clearly stated.' },
       habits_done: {
         type: 'array',
         items: { type: 'string' },
@@ -70,7 +70,7 @@ const PARSE_TOOL: Anthropic.Tool = {
       },
       injury_checkin: {
         type: 'object',
-        description: 'Use ONLY when the person gives a progress update on an existing injury — not a new injury and not when it is healed. E.g. "ankle is feeling 70% today after a walk".',
+        description: 'Use when the person gives a progress update on an existing injury — not a new injury and not when it is fully healed. Triggers include: any percentage ("feels 90%", "about 70% recovered"), any feeling description about an injured area ("achilles is feeling good", "knee is still a bit sore"), or mentioning activity with an injured body part. When in doubt between check-in and healed, prefer injury_checkin.',
         properties: {
           body_part: { type: 'string', description: 'Body part affected, e.g. ankle, knee, shoulder, back' },
           feeling_pct: { type: 'number', description: 'How recovered the injury feels, 0–100 (0=worst ever, 100=fully healed). E.g. "felt 80%" → 80, "much better" → ~75, "still bad" → ~25' },
@@ -119,8 +119,9 @@ export class ClaudeProvider implements AIProvider {
         `• If the user says one of these injuries is healed/resolved/better/recovered/fine, set injury_resolved.body_part to the anatomical body part of the matching injury. ` +
         `Match flexibly — "my sprained ankle is healed" matches "sprained ankle" → body_part "ankle". ` +
         `"ankle's better" matches "sprained ankle" → body_part "ankle".\n` +
-        `• If the user gives a recovery percentage or describes how an injury feels today (without saying it's fully healed), use injury_checkin.\n` +
-        `• Only use injury_resolved when the injury is FULLY healed, not for partial improvement.`
+        `• If the user gives a recovery percentage or describes how an injured area feels today (without saying it's fully healed), use injury_checkin. Be aggressive — "my achilles feels like 90% right now", "knee's a bit better", "shoulder still sore" are ALL check-ins.\n` +
+        `• Only use injury_resolved when the injury is FULLY healed, not for partial improvement.\n` +
+        `• If the user says nothing about their injuries, set neither injury_checkin nor injury_resolved.`
     }
 
     const response = await client.messages.create({

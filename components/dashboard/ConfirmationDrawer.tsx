@@ -57,7 +57,8 @@ export function ConfirmationDrawer({ rawText, parsed, onConfirm, onDiscard }: Co
   const hasAnything = presentNumbers.length > 0 || presentText.length > 0 ||
     edited.sick != null || edited.injured != null ||
     edited.supplements?.length || edited.habits_done?.length ||
-    edited.workouts?.length
+    edited.workouts?.length ||
+    edited.injury_checkin != null || edited.injury_resolved != null
 
   async function handleConfirm() {
     setSaving(true)
@@ -195,6 +196,45 @@ export function ConfirmationDrawer({ rawText, parsed, onConfirm, onDiscard }: Co
                   </li>
                 ))}
               </ul>
+            </div>
+          ) : null}
+
+          {edited.injury_checkin != null ? (
+            <div>
+              <p className="text-xs text-text-muted mb-2">Injury check-in</p>
+              <div className="bg-surface-elevated rounded-lg px-3 py-2 flex flex-col gap-0.5">
+                {edited.injury_checkin.body_part && (
+                  <p className="text-sm text-text">
+                    <span className="text-text-muted">Body part: </span>{edited.injury_checkin.body_part}
+                  </p>
+                )}
+                <p className="text-sm text-text">
+                  <span className="text-text-muted">Feeling: </span>{edited.injury_checkin.feeling_pct}%
+                </p>
+                {edited.injury_checkin.activity && (
+                  <p className="text-sm text-text">
+                    <span className="text-text-muted">Activity: </span>{edited.injury_checkin.activity}
+                  </p>
+                )}
+                {edited.injury_checkin.notes && (
+                  <p className="text-sm text-text">
+                    <span className="text-text-muted">Notes: </span>{edited.injury_checkin.notes}
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : null}
+
+          {edited.injury_resolved != null ? (
+            <div>
+              <p className="text-xs text-text-muted mb-2">Injury resolved</p>
+              <div className="bg-surface-elevated rounded-lg px-3 py-2">
+                <p className="text-sm text-text">
+                  {edited.injury_resolved.body_part
+                    ? <>Marking <strong>{edited.injury_resolved.body_part}</strong> injury as healed</>
+                    : 'Marking injury as healed'}
+                </p>
+              </div>
             </div>
           ) : null}
         </div>
