@@ -115,8 +115,9 @@ body {
     grid-template-columns: repeat(2, 1fr);
   }
   /* Wide cards span both columns on tablet */
-  .bento-nutr  { grid-column: span 2; }
-  .bento-supp  { grid-column: span 2; }
+  .bento-nutr    { grid-column: span 2; }
+  .bento-supp    { grid-column: span 2; }
+  .bento-map     { grid-column: span 2; }
 }
 
 /* Desktop: full 6-column named-area layout */
@@ -127,7 +128,7 @@ body {
       "nutr    nutr    steps   steps   sleep   mood"
       "hydra   wt      work    work    weather hab"
       "media   media   supp    supp    supp    supp"
-      "map     map     map     map     map     map";
+      "photos  photos  journal journal map     map";
     align-items: start;
   }
   /* Named areas override the tablet spans above */
@@ -142,6 +143,8 @@ body {
   .bento-hab     { grid-area: hab; }
   .bento-media   { grid-area: media; }
   .bento-supp    { grid-column: unset; grid-area: supp; }
+  .bento-photos  { grid-area: photos; }
+  .bento-journal { grid-area: journal; }
   .bento-map     { grid-area: map; }
 }
 

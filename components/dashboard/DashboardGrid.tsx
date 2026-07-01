@@ -359,6 +359,14 @@ export function DashboardGrid({
             />
           </div>
 
+          <div className="bento-photos">
+            <ProgressPhotos />
+          </div>
+
+          <div className="bento-journal">
+            <JournalWidget stats={stats} workouts={workouts} history={history} />
+          </div>
+
           <div className="bento-map">
             <WorldMapWidget />
           </div>
@@ -370,16 +378,6 @@ export function DashboardGrid({
             <MounjaroWidget doses={mounjaroDoses} effects={mounjaroEffects} />
           </motion.div>
         )}
-
-        {/* Progress photos */}
-        <motion.div variants={itemVariants}>
-          <ProgressPhotos />
-        </motion.div>
-
-        {/* Journal */}
-        <motion.div variants={itemVariants}>
-          <JournalWidget stats={stats} workouts={workouts} history={history} />
-        </motion.div>
 
         {/* Timeline */}
         <motion.div variants={itemVariants}>

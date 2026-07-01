@@ -237,39 +237,43 @@ export function JournalWidget({ stats, workouts, history }: JournalWidgetProps) 
   return (
     <>
       <div
-        className="rounded-2xl flex flex-col gap-4 p-5"
+        className="rounded-2xl flex flex-col h-[180px] overflow-hidden"
         style={{
           background: 'var(--surface)',
           border: '1px solid var(--border)',
           boxShadow: 'var(--shadow-md)',
         }}
       >
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-text">Journal</h2>
-          <div className="flex items-center gap-3">
-            {todayStatus === 'saving' && (
-              <span className="text-xs text-text-subtle">Saving…</span>
-            )}
-            {todayStatus === 'saved' && (
-              <span className="text-xs text-positive">Saved</span>
-            )}
-            <button
-              onClick={() => setOpen(true)}
-              className="text-xs text-text-subtle hover:text-text transition-colors"
-            >
-              {noteCount > 0 ? `${noteCount} ${noteCount === 1 ? 'entry' : 'entries'}` : 'View all'} →
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
+          <h2 className="text-xs font-semibold text-text-muted uppercase tracking-widest">Journal</h2>
+          <div className="flex items-center gap-2">
+            {todayStatus === 'saving' && <span className="text-[10px] text-text-subtle">Saving…</span>}
+            {todayStatus === 'saved' && <span className="text-[10px] text-positive">Saved</span>}
+            <button onClick={() => setOpen(true)} className="text-[10px] text-text-subtle hover:text-text transition-colors">
+              {noteCount > 0 ? `${noteCount} entries` : 'All'} →
             </button>
           </div>
         </div>
 
-        <SummaryChips chips={todayChips} />
+        {/* Today's highlights — single truncated line */}
+        {todayChips.length > 0 && (
+          <p className="px-4 text-[11px] text-text-subtle truncate shrink-0">
+            {todayChips.slice(0, 3).map(c => `${c.emoji} ${c.text}`).join(' · ')}
+          </p>
+        )}
 
-        <NoteArea
-          date={todayISO}
-          value={todayNote}
-          onChange={handleNoteChange}
-          placeholder="How was your day?"
-        />
+        {/* Note textarea — fills remaining space */}
+        <div className="flex-1 px-4 pb-4 pt-2 min-h-0">
+          <textarea
+            rows={3}
+            value={todayNote}
+            onChange={(e) => handleNoteChange(todayISO, e.target.value)}
+            placeholder="How was your day?"
+            className="w-full h-full rounded-xl text-xs text-text placeholder:text-text-subtle px-3 py-2 resize-none focus:outline-none focus:border-border-strong transition-colors"
+            style={{ background: 'var(--surface-elevated)', border: '1px solid var(--border)' }}
+          />
+        </div>
       </div>
 
       {open && (
