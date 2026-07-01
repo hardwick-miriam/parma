@@ -48,6 +48,11 @@ const PARSE_TOOL: Anthropic.Tool = {
       injury_description: { type: 'string', description: 'Full description of a new injury (e.g. "sprained ankle", "pulled hamstring")' },
       injury_body_part: { type: 'string', description: 'The specific body part of a new injury, isolated (e.g. "ankle", "hamstring", "wrist", "knee")' },
       injury_estimated_days: { type: 'number', description: 'Estimated days until recovery from a new injury, if mentioned' },
+      countries_visited: {
+        type: 'array',
+        description: 'ISO 3166-1 alpha-3 country codes for countries the person mentions having visited or traveled to. E.g. "I\'ve been to Japan and Italy" → ["JPN","ITA"]. "add France" → ["FRA"]. "visited New York" → [] (city, not country). Only use when visiting/traveling is explicitly mentioned.',
+        items: { type: 'string', description: 'ISO alpha-3 code, e.g. FRA, JPN, USA, GBR, ITA, DEU, ESP, AUS' },
+      },
       notes: { type: 'string', description: 'Anything that does not fit another field — unless it fits media, in which case use media' },
       media: {
         type: 'array',

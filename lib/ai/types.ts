@@ -44,6 +44,7 @@ export interface ParsedLog {
   injury_checkin?: ParsedInjuryCheckin
   injury_resolved?: ParsedInjuryResolved
   media?: ParsedMediaItem[]
+  countries_visited?: string[] // ISO alpha-3 codes
   mounjaro_dose_mg?: number
   mounjaro_feeling?: string
   mounjaro_side_effects?: {

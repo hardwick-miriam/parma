@@ -126,6 +126,20 @@ export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ err
       await Promise.all(parsed.media.map((m) => insertMediaEntry(user.id, m)))
     }
 
+    if (parsed.countries_visited?.length) {
+      const newCodes = parsed.countries_visited.map((c) => c.toUpperCase())
+      const { data: existing } = await supabase
+        .from('user_preferences')
+        .select('visited_countries')
+        .eq('user_id', user.id)
+        .maybeSingle()
+      const current: string[] = (existing?.visited_countries as string[]) ?? []
+      const merged = [...new Set([...current, ...newCodes])]
+      await supabase
+        .from('user_preferences')
+        .upsert({ user_id: user.id, visited_countries: merged, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
+    }
+
     if (parsed.mounjaro_dose_mg != null) {
       await insertMounjaroDose(user.id, parsed.mounjaro_dose_mg, parsed.mounjaro_feeling ?? null, null)
     }

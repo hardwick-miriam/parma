@@ -60,7 +60,7 @@ export function ConfirmationDrawer({ rawText, parsed, saveError, onConfirm, onDi
     edited.supplements?.length || edited.habits_done?.length ||
     edited.workouts?.length ||
     edited.injury_checkin != null || edited.injury_resolved != null ||
-    edited.media?.length
+    edited.media?.length || edited.countries_visited?.length
 
   async function handleConfirm() {
     setSaving(true)
@@ -224,6 +224,15 @@ export function ConfirmationDrawer({ rawText, parsed, saveError, onConfirm, onDi
                   </p>
                 )}
               </div>
+            </div>
+          ) : null}
+
+          {edited.countries_visited?.length ? (
+            <div>
+              <p className="text-xs text-text-muted mb-2">Countries visited</p>
+              <p className="text-sm text-text bg-surface-elevated rounded-lg px-3 py-2">
+                {edited.countries_visited.join(', ')}
+              </p>
             </div>
           ) : null}
 
