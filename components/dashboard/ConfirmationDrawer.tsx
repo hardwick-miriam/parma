@@ -7,6 +7,7 @@ import type { ParsedLog } from '@/lib/ai/types'
 interface ConfirmationDrawerProps {
   rawText: string
   parsed: ParsedLog
+  saveError?: string
   onConfirm: (edited: ParsedLog) => Promise<void>
   onDiscard: () => void
 }
@@ -28,7 +29,7 @@ const TEXT_FIELDS = [
   { key: 'notes' as const, label: 'Notes' },
 ]
 
-export function ConfirmationDrawer({ rawText, parsed, onConfirm, onDiscard }: ConfirmationDrawerProps) {
+export function ConfirmationDrawer({ rawText, parsed, saveError, onConfirm, onDiscard }: ConfirmationDrawerProps) {
   const [edited, setEdited] = useState<ParsedLog>({ ...parsed })
   const [saving, setSaving] = useState(false)
   // Portal needs document — wait for client mount to avoid SSR mismatch
@@ -240,22 +241,27 @@ export function ConfirmationDrawer({ rawText, parsed, onConfirm, onDiscard }: Co
         </div>
 
         {/* Footer — pinned, always visible */}
-        <div className="px-6 py-4 shrink-0 border-t border-border flex gap-3">
-          <button
-            type="button"
-            onClick={onDiscard}
-            className="flex-1 py-2.5 rounded-xl border border-border text-text-muted text-sm hover:border-border-strong transition-colors"
-          >
-            Discard
-          </button>
-          <button
-            type="button"
-            onClick={handleConfirm}
-            disabled={saving || !hasAnything}
-            className="flex-1 py-2.5 rounded-xl bg-accent text-bg text-sm font-semibold disabled:opacity-40 hover:opacity-90 transition-opacity"
-          >
-            {saving ? 'Saving…' : 'Save'}
-          </button>
+        <div className="px-6 py-4 shrink-0 border-t border-border flex flex-col gap-3">
+          {saveError && (
+            <p className="text-xs text-red-400 text-center">{saveError}</p>
+          )}
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onDiscard}
+              className="flex-1 py-2.5 rounded-xl border border-border text-text-muted text-sm hover:border-border-strong transition-colors"
+            >
+              Discard
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirm}
+              disabled={saving || !hasAnything}
+              className="flex-1 py-2.5 rounded-xl bg-accent text-bg text-sm font-semibold disabled:opacity-40 hover:opacity-90 transition-opacity"
+            >
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+          </div>
         </div>
       </div>
     </div>,
