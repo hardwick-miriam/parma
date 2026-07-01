@@ -48,7 +48,22 @@ const PARSE_TOOL: Anthropic.Tool = {
       injury_description: { type: 'string', description: 'Full description of a new injury (e.g. "sprained ankle", "pulled hamstring")' },
       injury_body_part: { type: 'string', description: 'The specific body part of a new injury, isolated (e.g. "ankle", "hamstring", "wrist", "knee")' },
       injury_estimated_days: { type: 'number', description: 'Estimated days until recovery from a new injury, if mentioned' },
-      notes: { type: 'string', description: 'Anything that does not fit another field' },
+      notes: { type: 'string', description: 'Anything that does not fit another field — unless it fits media, in which case use media' },
+      media: {
+        type: 'array',
+        description: 'Books read, films/shows watched, or songs listened to. E.g. "watched Oppenheimer last night, 9/10" → [{category:"film",title:"Oppenheimer",rating:9}]. "finished reading Dune, loved it" → [{category:"book",title:"Dune",note:"loved it"}]. "just watched Breaking Bad S1" → [{category:"show",title:"Breaking Bad S1"}]. Only use when media consumption is clearly mentioned.',
+        items: {
+          type: 'object',
+          properties: {
+            category: { type: 'string', enum: ['book', 'film', 'show', 'song'], description: 'Type of media' },
+            title: { type: 'string', description: 'Title of the work' },
+            rating: { type: 'number', description: 'Rating on 1-10 scale if mentioned (e.g. "9/10" → 9, "★★★★" → 8)' },
+            note: { type: 'string', description: 'Any comment or review note (e.g. "loved it", "slow start but great ending")' },
+          },
+          required: ['category', 'title'],
+          additionalProperties: false,
+        },
+      },
       mounjaro_dose_mg: {
         type: 'number',
         description: 'Mounjaro (tirzepatide) dose in mg if the user logged taking their injection. Common doses: 2.5, 5, 7.5, 10, 12.5, 15. E.g. "took my Mounjaro, 5mg" → 5',

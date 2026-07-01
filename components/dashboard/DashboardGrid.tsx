@@ -16,6 +16,7 @@ import { TimelineWidget } from './widgets/TimelineWidget'
 import { InjuryWidget } from './widgets/InjuryWidget'
 import { MounjaroWidget } from './widgets/MounjaroWidget'
 import { WeatherWidget } from './widgets/WeatherWidget'
+import { MediaWidget } from './widgets/MediaWidget'
 import { Nudges } from './Nudges'
 import { SummaryCard } from './SummaryCard'
 import { DetailViewRouter } from './DetailView'
@@ -343,6 +344,10 @@ export function DashboardGrid({
               loggedTimes={habitTimes}
               streak={streaks.logging}
             />
+          </div>
+
+          <div className="bento-media">
+            <MediaWidget />
           </div>
 
           <div className="bento-supp">

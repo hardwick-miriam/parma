@@ -16,6 +16,13 @@ export interface ParsedInjuryResolved {
   body_part?: string
 }
 
+export interface ParsedMediaItem {
+  category: 'book' | 'film' | 'show' | 'song'
+  title: string
+  rating?: number
+  note?: string
+}
+
 export interface ParsedLog {
   calories?: number
   protein_g?: number
@@ -36,6 +43,7 @@ export interface ParsedLog {
   injury_estimated_days?: number
   injury_checkin?: ParsedInjuryCheckin
   injury_resolved?: ParsedInjuryResolved
+  media?: ParsedMediaItem[]
   mounjaro_dose_mg?: number
   mounjaro_feeling?: string
   mounjaro_side_effects?: {

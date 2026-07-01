@@ -59,7 +59,8 @@ export function ConfirmationDrawer({ rawText, parsed, saveError, onConfirm, onDi
     edited.sick != null || edited.injured != null ||
     edited.supplements?.length || edited.habits_done?.length ||
     edited.workouts?.length ||
-    edited.injury_checkin != null || edited.injury_resolved != null
+    edited.injury_checkin != null || edited.injury_resolved != null ||
+    edited.media?.length
 
   async function handleConfirm() {
     setSaving(true)
@@ -223,6 +224,21 @@ export function ConfirmationDrawer({ rawText, parsed, saveError, onConfirm, onDi
                   </p>
                 )}
               </div>
+            </div>
+          ) : null}
+
+          {edited.media?.length ? (
+            <div>
+              <p className="text-xs text-text-muted mb-2">Media logged</p>
+              <ul className="flex flex-col gap-1">
+                {edited.media.map((m, i) => (
+                  <li key={i} className="text-sm text-text bg-surface-elevated rounded-lg px-3 py-2 flex items-baseline gap-2">
+                    <span className="text-text-subtle text-xs capitalize shrink-0">{m.category}</span>
+                    <span className="font-medium truncate">{m.title}</span>
+                    {m.rating != null && <span className="text-accent text-xs shrink-0">{m.rating}/10</span>}
+                  </li>
+                ))}
+              </ul>
             </div>
           ) : null}
 

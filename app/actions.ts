@@ -19,6 +19,7 @@ import {
   resolveInjuryById,
 } from '@/lib/db/queries'
 import { insertMounjaroDose, upsertMounjaroEffects } from '@/lib/db/mounjaro'
+import { insertMediaEntry } from '@/lib/db/media'
 import type { ParsedLog } from '@/lib/ai/types'
 import type { Injury } from '@/lib/db/queries'
 
@@ -119,6 +120,10 @@ export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ err
           parsed.injury_estimated_days ?? null
         )
       }
+    }
+
+    if (parsed.media?.length) {
+      await Promise.all(parsed.media.map((m) => insertMediaEntry(user.id, m)))
     }
 
     if (parsed.mounjaro_dose_mg != null) {
