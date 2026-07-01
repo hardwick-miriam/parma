@@ -38,7 +38,24 @@ export function ReviewClient() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function generate() {
+  const cacheKey = `parma-review-${year}-${month}`
+
+  async function generate(bust = false) {
+    if (!bust) {
+      try {
+        const cached = localStorage.getItem(cacheKey)
+        const cachedTime = localStorage.getItem(cacheKey + '-time')
+        const fresh = cachedTime && Date.now() - Number(cachedTime) < 24 * 60 * 60 * 1000
+        if (cached && fresh) {
+          const d = JSON.parse(cached)
+          setNarrative(d.narrative)
+          setStats(d.stats)
+          setPeriodName(d.periodName)
+          return
+        }
+      } catch {}
+    }
+
     setLoading(true)
     setError(null)
     setNarrative(null)
@@ -55,6 +72,10 @@ export function ReviewClient() {
       setNarrative(data.narrative)
       setStats(data.stats)
       setPeriodName(data.periodName)
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify(data))
+        localStorage.setItem(cacheKey + '-time', String(Date.now()))
+      } catch {}
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate review')
     } finally {
@@ -104,13 +125,23 @@ export function ReviewClient() {
               ))}
             </select>
           </div>
-          <button
-            onClick={generate}
-            disabled={loading}
-            className="ml-auto px-4 py-1.5 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 disabled:opacity-50 transition-colors"
-          >
-            {loading ? 'Generating…' : 'Generate review'}
-          </button>
+          <div className="ml-auto flex items-center gap-2">
+            {(narrative || stats) && !loading && (
+              <button
+                onClick={() => generate(true)}
+                className="text-xs text-text-subtle hover:text-text-muted transition-colors"
+              >
+                Refresh
+              </button>
+            )}
+            <button
+              onClick={() => generate(false)}
+              disabled={loading}
+              className="px-4 py-1.5 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 disabled:opacity-50 transition-colors"
+            >
+              {loading ? 'Generating…' : 'Generate review'}
+            </button>
+          </div>
         </div>
       </div>
 

@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     : String(year)
 
   const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
+    model: 'claude-haiku-4-5',
     max_tokens: 300,
     system: 'You are JARVIS, a calm intelligent health assistant. Write a concise 2-3 sentence review of this health period. Be specific, use the actual numbers, and end with one forward-looking observation. No bullet points — flowing prose only.',
     messages: [{

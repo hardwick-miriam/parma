@@ -32,7 +32,7 @@ export async function GET() {
   const csv = `date,calories,protein_g,steps,water_L,sleep_h,mood,weight_kg\n${csvRows.join('\n')}`
 
   const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
+    model: 'claude-haiku-4-5',
     max_tokens: 900,
     system: 'You are a health data analyst. Analyze health tracking data and return specific, quantitative insights. Return ONLY a valid JSON array, no other text.',
     messages: [{

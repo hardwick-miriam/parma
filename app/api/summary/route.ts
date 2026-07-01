@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     }
 
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-haiku-4-5',
       max_tokens: 150,
       system: 'You are Parma, a health assistant with a JARVIS-like tone — terse, intelligent, no fluff. Never start with "Here is" or "Based on". No sign-off.',
       messages: [{ role: 'user', content: userPrompt }],
