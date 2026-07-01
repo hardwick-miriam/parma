@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface WeatherData {
+export interface WeatherData {
   location: string
   temp: number
   feelsLike: number
@@ -470,7 +470,7 @@ function formatPeriodTime(dt: number) {
 
 // ─── Widget ───────────────────────────────────────────────────────────────────
 
-export function WeatherWidget() {
+export function WeatherWidget({ onData }: { onData?: (d: WeatherData) => void }) {
   const [data, setData] = useState<WeatherData | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -485,7 +485,7 @@ export function WeatherWidget() {
 
     function fetchWeather(lat: string, lon: string) {
       if (_cache && _cache.lat === lat && _cache.lon === lon && Date.now() - _cache.ts < CACHE_TTL) {
-        if (!cancelled) { setData(_cache.data); setLoading(false) }
+        if (!cancelled) { setData(_cache.data); setLoading(false); onData?.(_cache.data) }
         return
       }
       fetch(`/api/weather?lat=${lat}&lon=${lon}`)
@@ -497,6 +497,7 @@ export function WeatherWidget() {
           } else {
             _cache = { data: json, lat, lon, ts: Date.now() }
             setData(json)
+            onData?.(json)
           }
           setLoading(false)
         })

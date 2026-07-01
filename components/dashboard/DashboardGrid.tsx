@@ -23,6 +23,7 @@ import { RecoveryWidget } from './RecoveryWidget'
 import { MilestoneToast } from './MilestoneToast'
 import { detectMilestones } from '@/lib/milestones'
 import { weekOverWeek } from '@/lib/comparison'
+import { computeRecovery } from '@/lib/recovery'
 import type { MetricId } from './DetailView'
 import type {
   DailyStats,
@@ -34,6 +35,7 @@ import type {
 import type { StreakData } from '@/lib/streaks'
 import type { ParsedLog } from '@/lib/ai/types'
 import type { MounjaroDose, MounjaroEffect } from '@/lib/db/mounjaro'
+import type { WeatherData } from './widgets/WeatherWidget'
 
 // ---- Helpers ----------------------------------------------------------------
 
@@ -42,6 +44,58 @@ function greeting() {
   if (h < 12) return 'Good morning'
   if (h < 17) return 'Good afternoon'
   return 'Good evening'
+}
+
+function buildContextLine(
+  stats: DailyStats | null,
+  health: HealthStatus | null,
+  streaks: StreakData,
+  workouts: WorkoutSession[],
+  weather: WeatherData | null,
+): string {
+  const h = new Date().getHours()
+  const recovery = computeRecovery(stats, health)
+
+  const parts: string[] = []
+
+  if (weather) {
+    parts.push(`${weather.temp}° and ${weather.description} in ${weather.location}`)
+  }
+
+  const recoveryLabel =
+    recovery.level === 'great' ? 'great' :
+    recovery.level === 'good' ? 'good' :
+    recovery.level === 'fair' ? 'fair' : 'low'
+
+  let recoveryNote = `Recovery's ${recoveryLabel}`
+
+  const proteinG = stats?.protein_g ?? 0
+  const proteinTarget = 150
+  const calories = stats?.calories ?? 0
+  const steps = stats?.steps ?? 0
+  const hasLogged = calories > 0 || steps > 0 || proteinG > 0
+  const hasWorkout = workouts.length > 0
+
+  if (health?.sick) {
+    recoveryNote += ' — take it easy today'
+  } else if (health?.injured) {
+    recoveryNote += ' — mind the injury'
+  } else if (!hasLogged && h >= 10) {
+    recoveryNote += ' — nothing logged yet'
+  } else if (proteinG >= proteinTarget) {
+    recoveryNote += ' — protein target hit'
+  } else if (proteinG > 0 && proteinG < proteinTarget * 0.4 && h >= 15) {
+    recoveryNote += ` — protein's a little behind`
+  } else if (hasWorkout) {
+    recoveryNote += ' — workout logged'
+  } else if (steps > 8000) {
+    recoveryNote += ' — good steps today'
+  } else if (streaks.logging >= 7) {
+    recoveryNote += ` — ${streaks.logging}-day streak`
+  }
+
+  parts.push(recoveryNote)
+  return parts.join(' · ')
 }
 
 function buildEntryTimestamps(logEntries: LogEntry[]) {
@@ -150,6 +204,7 @@ export function DashboardGrid({
   const [activeMetric, setActiveMetric] = useState<MetricId | null>(null)
   const [detailHistory, setDetailHistory] = useState<DailyStats[]>(history)
   const fetchedRef = useRef(history.length > 0)
+  const [weather, setWeather] = useState<WeatherData | null>(null)
 
   const openMetric = useCallback(async (id: MetricId) => {
     setActiveMetric(id)
@@ -195,6 +250,9 @@ export function DashboardGrid({
         <motion.div variants={itemVariants} className="pb-1">
           <h1 className="text-2xl font-bold text-text">{greeting()}</h1>
           <p className="text-sm text-text-muted mt-0.5">{today}</p>
+          <p className="text-xs text-text-subtle mt-1">
+            {buildContextLine(stats, health, streaks, workouts, weather)}
+          </p>
         </motion.div>
 
         {/* Recovery / readiness score */}
@@ -275,7 +333,7 @@ export function DashboardGrid({
           </div>
 
           <div className="bento-weather">
-            <WeatherWidget />
+            <WeatherWidget onData={setWeather} />
           </div>
 
           <div className="bento-hab">
