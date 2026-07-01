@@ -15,6 +15,7 @@ import { calculateStreaks } from '@/lib/streaks'
 import { getMounjaroDoses, getMounjaroEffects } from '@/lib/db/mounjaro'
 import { getUserPreferences } from '@/lib/db/preferences'
 import { DashboardGrid } from '@/components/dashboard/DashboardGrid'
+import { RealtimeSync } from '@/components/dashboard/RealtimeSync'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -47,6 +48,8 @@ export default async function DashboardPage() {
   })
 
   return (
+    <>
+    {user && <RealtimeSync userId={user.id} />}
     <DashboardGrid
       stats={stats}
       workouts={workouts ?? []}
@@ -62,5 +65,6 @@ export default async function DashboardPage() {
       mounjaroEffects={mounjaroEffects}
       weightGoal={prefs?.weight_goal_kg ?? null}
     />
+    </>
   )
 }
