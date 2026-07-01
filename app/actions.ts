@@ -140,6 +140,35 @@ export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ err
         .upsert({ user_id: user.id, visited_countries: merged, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
     }
 
+    if (parsed.world_clock_cities?.length) {
+      const { data: existingPrefs } = await supabase
+        .from('user_preferences')
+        .select('world_clocks')
+        .eq('user_id', user.id)
+        .maybeSingle()
+      type CityConfig = { name: string; country: string; lat: number; lon: number; timezone: string }
+      const currentClocks: CityConfig[] = (existingPrefs?.world_clocks as CityConfig[]) ?? []
+      const added: CityConfig[] = []
+      for (const cityName of parsed.world_clock_cities) {
+        if (currentClocks.some((c) => c.name.toLowerCase() === cityName.toLowerCase())) continue
+        try {
+          const geoRes = await fetch(
+            `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1&language=en&format=json`,
+          )
+          const geoData = await geoRes.json()
+          const r = geoData.results?.[0]
+          if (!r) continue
+          added.push({ name: r.name, country: r.country ?? '', lat: r.latitude, lon: r.longitude, timezone: r.timezone })
+        } catch { /* skip unresolvable cities */ }
+      }
+      if (added.length) {
+        const merged = [...currentClocks, ...added]
+        await supabase
+          .from('user_preferences')
+          .upsert({ user_id: user.id, world_clocks: merged, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
+      }
+    }
+
     if (parsed.mounjaro_dose_mg != null) {
       await insertMounjaroDose(user.id, parsed.mounjaro_dose_mg, parsed.mounjaro_feeling ?? null, null)
     }

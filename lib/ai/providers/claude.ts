@@ -53,6 +53,11 @@ const PARSE_TOOL: Anthropic.Tool = {
         description: 'ISO 3166-1 alpha-3 country codes for countries the person mentions having visited or traveled to. E.g. "I\'ve been to Japan and Italy" → ["JPN","ITA"]. "add France" → ["FRA"]. "visited New York" → [] (city, not country). Map sub-national regions to their sovereign country: England/Scotland/Wales/Northern Ireland → GBR, Catalonia → ESP, Bavaria → DEU, Bali → IDN, Hong Kong/Macau → CHN, Siberia → RUS, Patagonia → ARG. Use the sovereign state ISO code, never invent codes. Only use when visiting/traveling is explicitly mentioned.',
         items: { type: 'string', description: 'ISO alpha-3 code, e.g. FRA, JPN, USA, GBR, ITA, DEU, ESP, AUS, IRL, NLD, BEL, CHE, PRT, GRC, TUR, THA, VNM, KOR, MEX, BRA, ZAF, EGY, MAR' },
       },
+      world_clock_cities: {
+        type: 'array',
+        description: 'City names to add to the world clocks widget. Use when the user says "add [city] to my world clocks", "show me [city] time", "track the time in [city]", "add [city] as a clock". E.g. "add London and Tokyo to my clocks" → ["London","Tokyo"]. Only use when the user explicitly wants to track a city\'s time.',
+        items: { type: 'string', description: 'City name in English, e.g. London, Tokyo, New York, Paris, Sydney' },
+      },
       notes: { type: 'string', description: 'Anything that does not fit another field — unless it fits media, in which case use media' },
       media: {
         type: 'array',

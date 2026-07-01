@@ -128,7 +128,8 @@ body {
       "nutr    nutr    steps   steps   sleep   mood"
       "hydra   wt      work    work    weather hab"
       "media   media   supp    supp    supp    supp"
-      "photos  photos  journal journal map     map";
+      "photos  photos  journal journal map     map"
+      "clocks  clocks  clocks  clocks  clocks  clocks";
     align-items: start;
   }
   /* Named areas override the tablet spans above */
@@ -146,6 +147,7 @@ body {
   .bento-photos  { grid-area: photos; }
   .bento-journal { grid-area: journal; }
   .bento-map     { grid-area: map; }
+  .bento-clocks  { grid-area: clocks; }
 }
 
 /* Breathing glow on accent elements */

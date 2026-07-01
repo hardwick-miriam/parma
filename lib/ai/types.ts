@@ -45,6 +45,7 @@ export interface ParsedLog {
   injury_resolved?: ParsedInjuryResolved
   media?: ParsedMediaItem[]
   countries_visited?: string[] // ISO alpha-3 codes
+  world_clock_cities?: string[] // city names to add to world clocks widget
   mounjaro_dose_mg?: number
   mounjaro_feeling?: string
   mounjaro_side_effects?: {

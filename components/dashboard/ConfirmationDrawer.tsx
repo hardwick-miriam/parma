@@ -60,7 +60,8 @@ export function ConfirmationDrawer({ rawText, parsed, saveError, onConfirm, onDi
     edited.supplements?.length || edited.habits_done?.length ||
     edited.workouts?.length ||
     edited.injury_checkin != null || edited.injury_resolved != null ||
-    edited.media?.length || edited.countries_visited?.length
+    edited.media?.length || edited.countries_visited?.length ||
+    edited.world_clock_cities?.length
 
   async function handleConfirm() {
     setSaving(true)
@@ -248,6 +249,15 @@ export function ConfirmationDrawer({ rawText, parsed, saveError, onConfirm, onDi
                   </li>
                 ))}
               </ul>
+            </div>
+          ) : null}
+
+          {edited.world_clock_cities?.length ? (
+            <div>
+              <p className="text-xs text-text-muted mb-2">World clocks to add</p>
+              <p className="text-sm text-text bg-surface-elevated rounded-lg px-3 py-2">
+                {edited.world_clock_cities.join(', ')}
+              </p>
             </div>
           ) : null}
 

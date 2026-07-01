@@ -24,6 +24,7 @@ import { RecoveryWidget } from './RecoveryWidget'
 import { ProgressPhotos } from './ProgressPhotos'
 import { WorldMapWidget } from './WorldMapWidget'
 import { JournalWidget } from './JournalWidget'
+import { WorldClocksWidget } from './widgets/WorldClocksWidget'
 import { MilestoneToast } from './MilestoneToast'
 import { detectMilestones } from '@/lib/milestones'
 import { weekOverWeek } from '@/lib/comparison'
@@ -369,6 +370,10 @@ export function DashboardGrid({
 
           <div className="bento-map">
             <WorldMapWidget />
+          </div>
+
+          <div className="bento-clocks">
+            <WorldClocksWidget />
           </div>
         </motion.div>
 
