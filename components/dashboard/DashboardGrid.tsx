@@ -23,6 +23,7 @@ import { DetailViewRouter } from './DetailView'
 import { RecoveryWidget } from './RecoveryWidget'
 import { ProgressPhotos } from './ProgressPhotos'
 import { WorldMapWidget } from './WorldMapWidget'
+import { JournalWidget } from './JournalWidget'
 import { MilestoneToast } from './MilestoneToast'
 import { detectMilestones } from '@/lib/milestones'
 import { weekOverWeek } from '@/lib/comparison'
@@ -373,6 +374,11 @@ export function DashboardGrid({
         {/* Progress photos */}
         <motion.div variants={itemVariants}>
           <ProgressPhotos />
+        </motion.div>
+
+        {/* Journal */}
+        <motion.div variants={itemVariants}>
+          <JournalWidget stats={stats} workouts={workouts} history={history} />
         </motion.div>
 
         {/* Timeline */}
