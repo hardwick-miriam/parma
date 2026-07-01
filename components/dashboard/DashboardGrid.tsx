@@ -22,6 +22,7 @@ import { SummaryCard } from './SummaryCard'
 import { DetailViewRouter } from './DetailView'
 import { RecoveryWidget } from './RecoveryWidget'
 import { ProgressPhotos } from './ProgressPhotos'
+import { WorldMapWidget } from './WorldMapWidget'
 import { MilestoneToast } from './MilestoneToast'
 import { detectMilestones } from '@/lib/milestones'
 import { weekOverWeek } from '@/lib/comparison'
@@ -355,6 +356,10 @@ export function DashboardGrid({
               supplements={stats?.supplements ?? null}
               loggedTimes={supTimes}
             />
+          </div>
+
+          <div className="bento-map">
+            <WorldMapWidget />
           </div>
         </motion.div>
 

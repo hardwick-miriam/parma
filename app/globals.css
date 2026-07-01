@@ -126,7 +126,8 @@ body {
     grid-template-areas:
       "nutr    nutr    steps   steps   sleep   mood"
       "hydra   wt      work    work    weather hab"
-      "media   media   supp    supp    supp    supp";
+      "media   media   supp    supp    supp    supp"
+      "map     map     map     map     map     map";
     align-items: start;
   }
   /* Named areas override the tablet spans above */
@@ -141,6 +142,7 @@ body {
   .bento-hab     { grid-area: hab; }
   .bento-media   { grid-area: media; }
   .bento-supp    { grid-column: unset; grid-area: supp; }
+  .bento-map     { grid-area: map; }
 }
 
 /* Breathing glow on accent elements */
