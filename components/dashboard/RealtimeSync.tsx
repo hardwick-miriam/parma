@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 
 const WATCHED_TABLES = [
   'daily_stats',
-  'workouts',
+  'workout_sessions',
   'log_entries',
   'health_status',
   'injuries',
