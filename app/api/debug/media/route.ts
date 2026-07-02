@@ -7,58 +7,91 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   const supabase = await createClient()
 
-  // 1. Who is the authenticated user?
   const { data: { user }, error: authError } = await supabase.auth.getUser()
-  const authResult = {
-    userId: user?.id ?? null,
-    email: user?.email ?? null,
-    authError: authError ? { message: authError.message, status: authError.status } : null,
+  if (!user) {
+    return NextResponse.json({ error: 'Not authenticated', authError })
   }
 
-  // 2. Can we SELECT from media_log?
-  const { data: selectData, error: selectError } = await supabase
-    .from('media_log')
-    .select('id, category, title')
-    .limit(3)
+  const today = new Date().toISOString().split('T')[0]
+  const results: Record<string, unknown> = {}
 
-  const selectResult = {
-    data: selectData,
-    error: selectError
-      ? { code: selectError.code, message: selectError.message, details: selectError.details, hint: selectError.hint }
-      : null,
+  // 1. daily_stats columns — does weight_kg / supplements / habits_done exist?
+  for (const col of ['calories', 'protein_g', 'steps', 'water_ml', 'mood', 'sleep_hours',
+                      'weight_kg', 'supplements', 'habits_done', 'notes']) {
+    const { error } = await supabase
+      .from('daily_stats')
+      .select(col)
+      .eq('user_id', user.id)
+      .limit(1)
+    results[`daily_stats.${col}`] = error ? `MISSING: ${error.message}` : 'ok'
   }
 
-  // 3. Try an INSERT (only if we have a real user id)
-  let insertResult: Record<string, unknown> = { skipped: 'no authenticated user' }
-  if (user?.id) {
-    const payload = {
+  // 2. log_entries — does logged_at exist?
+  for (const col of ['raw_text', 'parsed_json', 'date', 'logged_at', 'created_at']) {
+    const { error } = await supabase
+      .from('log_entries')
+      .select(col)
+      .eq('user_id', user.id)
+      .limit(1)
+    results[`log_entries.${col}`] = error ? `MISSING: ${error.message}` : 'ok'
+  }
+
+  // 3. user_preferences — does visited_countries / world_clocks exist?
+  for (const col of ['weight_goal_kg', 'shortcuts_token', 'saved_places',
+                      'mounjaro_enabled', 'visited_countries', 'world_clocks']) {
+    const { error } = await supabase
+      .from('user_preferences')
+      .select(col)
+      .eq('user_id', user.id)
+      .limit(1)
+    results[`user_preferences.${col}`] = error ? `MISSING: ${error.message}` : 'ok'
+  }
+
+  // 4. Simulate exactly what saveLog does for a media-only entry
+  //    (upsertDailyStats + insertLogEntry in parallel, then insertMediaEntry)
+  const fakeMedia = { category: 'film' as const, title: '__debug_movie__' }
+
+  // Step A: upsertDailyStats (media-only entry sends all zeros)
+  const { error: statsErr } = await supabase
+    .from('daily_stats')
+    .upsert(
+      { user_id: user.id, date: today, calories: 0, protein_g: 0, steps: 0, water_ml: 0 },
+      { onConflict: 'user_id,date' }
+    )
+  results['sim.upsertDailyStats'] = statsErr
+    ? { code: statsErr.code, message: statsErr.message, details: statsErr.details }
+    : 'ok'
+
+  // Step B: insertLogEntry
+  const { error: logErr } = await supabase
+    .from('log_entries')
+    .insert({
       user_id: user.id,
-      category: 'film',
-      title: '__debug_test__',
-      rating: null,
-      note: null,
-      added_date: new Date().toISOString().split('T')[0],
-    }
-    const { data: insertData, error: insertError } = await supabase
-      .from('media_log')
-      .insert(payload)
-      .select()
-      .single()
+      raw_text: '__debug__',
+      parsed_json: { media: [fakeMedia] },
+      logged_at: new Date().toISOString(),
+    })
+  results['sim.insertLogEntry'] = logErr
+    ? { code: logErr.code, message: logErr.message, details: logErr.details }
+    : 'ok'
 
-    insertResult = {
-      payload,
-      data: insertData,
-      error: insertError
-        ? { code: insertError.code, message: insertError.message, details: insertError.details, hint: insertError.hint }
-        : null,
-      success: !insertError,
-    }
+  // Step C: insertMediaEntry
+  const { data: mediaData, error: mediaErr } = await supabase
+    .from('media_log')
+    .insert({ user_id: user.id, category: 'film', title: '__debug_movie__', rating: null, note: null, added_date: today })
+    .select()
+    .single()
+  results['sim.insertMediaEntry'] = mediaErr
+    ? { code: mediaErr.code, message: mediaErr.message, details: mediaErr.details }
+    : 'ok'
 
-    // Clean up the test row if insert succeeded
-    if (!insertError && insertData?.id) {
-      await supabase.from('media_log').delete().eq('id', insertData.id)
-    }
+  // Clean up debug rows
+  if (!logErr) {
+    await supabase.from('log_entries').delete().eq('raw_text', '__debug__').eq('user_id', user.id)
+  }
+  if (!mediaErr && mediaData?.id) {
+    await supabase.from('media_log').delete().eq('id', mediaData.id)
   }
 
-  return NextResponse.json({ auth: authResult, select: selectResult, insert: insertResult }, { status: 200 })
+  return NextResponse.json({ userId: user.id, results })
 }
