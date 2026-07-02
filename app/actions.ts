@@ -206,8 +206,14 @@ export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ err
     revalidatePath('/')
     return {}
   } catch (err) {
-    console.error('saveLog error:', err)
-    return { error: err instanceof Error ? err.message : 'Failed to save log' }
+    // PostgrestError is a plain object {code, message, details, hint}, not an Error instance
+    const pg = err as Record<string, unknown>
+    const msg =
+      typeof pg?.message === 'string' ? `${pg.message}${pg.code ? ` (${pg.code})` : ''}` :
+      err instanceof Error ? err.message :
+      'Failed to save log'
+    console.error('saveLog error:', JSON.stringify(err))
+    return { error: msg }
   }
 }
 
