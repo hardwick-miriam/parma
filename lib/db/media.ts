@@ -60,10 +60,7 @@ export async function insertMediaEntry(
     })
     .select()
     .single()
-  if (error) {
-    console.error('insertMediaEntry failed:', JSON.stringify({ error, payload: { user_id: userId, ...entry } }))
-    throw error
-  }
+  if (error) throw error
   return data
 }
 
