@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps'
 
@@ -44,6 +44,7 @@ function visitedSet(codes: string[]): Set<number> {
 }
 
 type Selected = { numeric: number; name: string; wasVisited: boolean }
+type Hovered = { name: string; visited: boolean }
 
 function FullMap({
   visited,
@@ -58,8 +59,23 @@ function FullMap({
 }) {
   const [mounted, setMounted] = useState(false)
   const [selected, setSelected] = useState<Selected | null>(null)
+  const [hovered, setHovered] = useState<Hovered | null>(null)
+
+  // Tooltip position tracked via ref to avoid re-rendering the whole map on every mousemove
+  const tooltipRef = useRef<HTMLDivElement>(null)
+  const mapContainerRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => { setMounted(true) }, [])
   if (!mounted) return null
+
+  function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    if (!tooltipRef.current || !mapContainerRef.current) return
+    const rect = mapContainerRef.current.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    tooltipRef.current.style.left = `${x + 14}px`
+    tooltipRef.current.style.top = `${y - 36}px`
+  }
 
   return createPortal(
     <div className="fixed inset-0 flex flex-col" style={{ zIndex: 9999, background: 'var(--bg)' }}>
@@ -78,7 +94,13 @@ function FullMap({
         </button>
       </div>
 
-      <div className="flex-1 relative overflow-hidden">
+      {/* Map area — relative container so tooltip can be absolutely positioned inside */}
+      <div
+        ref={mapContainerRef}
+        className="flex-1 relative overflow-hidden"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setHovered(null)}
+      >
         <ComposableMap
           projectionConfig={{ scale: 140, center: [10, 10] }}
           style={{ width: '100%', height: '100%' }}
@@ -89,6 +111,7 @@ function FullMap({
                 const numeric = Number(geo.id)
                 const isVisited = visited.has(numeric)
                 const isSelected = selected?.numeric === numeric
+                const name = (geo.properties as { name: string }).name
                 return (
                   <Geography
                     key={geo.rsmKey}
@@ -107,11 +130,9 @@ function FullMap({
                       hover: { outline: 'none', cursor: 'pointer', fill: isVisited ? 'var(--accent)' : 'rgba(255,255,255,0.18)' },
                       pressed: { outline: 'none' },
                     }}
+                    onMouseEnter={() => setHovered({ name, visited: isVisited })}
                     onClick={() => {
-                      const name = (geo.properties as { name: string }).name
-                      if (!isVisited) {
-                        onAdd(numeric, name)
-                      }
+                      if (!isVisited) { onAdd(numeric, name) }
                       setSelected(
                         selected?.numeric === numeric ? null : { numeric, name, wasVisited: isVisited }
                       )
@@ -123,6 +144,31 @@ function FullMap({
           </Geographies>
         </ComposableMap>
 
+        {/* Hover tooltip — position updated via DOM to avoid map re-renders */}
+        {hovered && (
+          <div
+            ref={tooltipRef}
+            className="absolute pointer-events-none px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap"
+            style={{
+              background: 'var(--surface-elevated)',
+              border: '1px solid var(--border-strong)',
+              color: hovered.visited ? 'var(--accent)' : 'var(--text)',
+              boxShadow: 'var(--shadow-sm)',
+              left: 0,
+              top: 0,
+            }}
+          >
+            {hovered.name}
+            {hovered.visited && (
+              <span
+                className="ml-1.5 inline-block w-1.5 h-1.5 rounded-full align-middle -mt-px"
+                style={{ background: 'var(--accent)' }}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Selected country action bar */}
         {selected && (
           <div
             className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 px-4 py-2.5 rounded-xl whitespace-nowrap"
@@ -165,11 +211,15 @@ export function WorldMapWidget({ initialCountries }: { initialCountries?: string
   const [countries, setCountries] = useState<string[]>(initialCountries ?? [])
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   const fetchCountries = useCallback(() => {
     fetch('/api/countries')
       .then((r) => r.json())
-      .then((d) => setCountries(d.countries ?? []))
+      .then((d) => {
+        if (d.error) console.error('countries fetch error:', d.error)
+        else setCountries(d.countries ?? [])
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
@@ -178,31 +228,59 @@ export function WorldMapWidget({ initialCountries }: { initialCountries?: string
     fetchCountries()
   }, [fetchCountries])
 
-  // Refresh after any log is saved (in case countries_visited was detected)
   useEffect(() => {
     const handler = () => fetchCountries()
     window.addEventListener('parma:saved', handler)
     return () => window.removeEventListener('parma:saved', handler)
   }, [fetchCountries])
 
-  const visited = visitedSet(countries)
-
-  function handleAdd(numeric: number, _name: string) {
-    const a3 = NUM_TO_A3[numeric]
-    if (!a3 || countries.includes(a3)) return
-    setCountries((prev) => [...prev, a3])
-    fetch('/api/countries', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ codes: [a3] }),
-    }).catch(() => {})
+  function showError(msg: string) {
+    setSaveError(msg)
+    setTimeout(() => setSaveError(null), 4000)
   }
 
-  function handleRemove(numeric: number) {
+  const visited = visitedSet(countries)
+
+  async function handleAdd(numeric: number, _name: string) {
+    const a3 = NUM_TO_A3[numeric]
+    if (!a3 || countries.includes(a3)) return
+    // Optimistic update
+    setCountries((prev) => [...prev, a3])
+    try {
+      const res = await fetch('/api/countries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codes: [a3] }),
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) {
+        // Revert optimistic update
+        setCountries((prev) => prev.filter((c) => c !== a3))
+        showError(data.error ?? 'Failed to save country')
+      }
+    } catch {
+      setCountries((prev) => prev.filter((c) => c !== a3))
+      showError('Network error — country not saved')
+    }
+  }
+
+  async function handleRemove(numeric: number) {
     const a3 = NUM_TO_A3[numeric]
     if (!a3) return
+    // Optimistic update
     setCountries((prev) => prev.filter((c) => c !== a3))
-    fetch(`/api/countries?code=${a3}`, { method: 'DELETE' }).catch(() => {})
+    try {
+      const res = await fetch(`/api/countries?code=${a3}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (!res.ok || data.error) {
+        // Revert
+        setCountries((prev) => [...prev, a3])
+        showError(data.error ?? 'Failed to remove country')
+      }
+    } catch {
+      setCountries((prev) => [...prev, a3])
+      showError('Network error — change not saved')
+    }
   }
 
   return (
@@ -247,6 +325,15 @@ export function WorldMapWidget({ initialCountries }: { initialCountries?: string
               </p>
             </div>
           </div>
+          {/* Inline error pill */}
+          {saveError && (
+            <div
+              className="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none"
+              style={{ background: 'rgba(239,68,68,0.9)', color: '#fff', zIndex: 10 }}
+            >
+              {saveError}
+            </div>
+          )}
         </div>
       </div>
 

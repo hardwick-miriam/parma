@@ -207,7 +207,7 @@ export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ err
     return {}
   } catch (err) {
     console.error('saveLog error:', err)
-    return { error: 'Failed to save log' }
+    return { error: err instanceof Error ? err.message : 'Failed to save log' }
   }
 }
 
