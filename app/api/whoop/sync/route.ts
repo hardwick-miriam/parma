@@ -7,9 +7,19 @@ export async function POST() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const result = await syncWhoopUser(user.id)
-  if (result.error) {
-    return NextResponse.json({ error: result.error }, { status: 500 })
+  let result: Awaited<ReturnType<typeof syncWhoopUser>>
+  try {
+    result = await syncWhoopUser(user.id)
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Unexpected sync failure' },
+      { status: 500 }
+    )
   }
-  return NextResponse.json({ synced: result.synced })
+
+  if (result.error) {
+    return NextResponse.json({ error: result.error, detail: result }, { status: 500 })
+  }
+
+  return NextResponse.json(result)
 }

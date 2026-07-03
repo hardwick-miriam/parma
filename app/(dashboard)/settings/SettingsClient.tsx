@@ -68,15 +68,27 @@ export function SettingsClient({ currentEmail, initialPrefs, whoopConnection }: 
   async function handleWhoopSync() {
     setWhoopSyncing(true)
     setWhoopSyncMsg(null)
-    const res = await fetch('/api/whoop/sync', { method: 'POST' })
-    const data = await res.json() as { synced?: number; error?: string }
-    setWhoopSyncing(false)
-    if (data.error) {
-      setWhoopSyncMsg(`Error: ${data.error}`)
-    } else {
-      setWhoopSyncMsg(`Synced ${data.synced} day${data.synced === 1 ? '' : 's'}`)
-      setWhoop(w => w ? { ...w, lastSyncAt: new Date().toISOString() } : w)
-      setTimeout(() => setWhoopSyncMsg(null), 4000)
+    try {
+      const res = await fetch('/api/whoop/sync', { method: 'POST' })
+      let data: Record<string, unknown> = {}
+      try { data = await res.json() } catch { /* non-JSON body */ }
+
+      setWhoopSyncing(false)
+      if (!res.ok || data.error) {
+        setWhoopSyncMsg(`Error: ${String(data.error ?? `HTTP ${res.status}`)}`)
+      } else {
+        const synced = data.synced as number ?? 0
+        const errors = (data.upsert_errors as unknown[])?.length ?? 0
+        const parts = [`Wrote ${synced} day${synced === 1 ? '' : 's'}`]
+        if (data.skipped_open) parts.push(`${data.skipped_open} open`)
+        if (errors > 0) parts.push(`${errors} write error${errors === 1 ? '' : 's'}`)
+        setWhoopSyncMsg(parts.join(' · '))
+        setWhoop(w => w ? { ...w, lastSyncAt: new Date().toISOString() } : w)
+        setTimeout(() => setWhoopSyncMsg(null), 6000)
+      }
+    } catch (err) {
+      setWhoopSyncing(false)
+      setWhoopSyncMsg(`Error: ${err instanceof Error ? err.message : 'Network failure'}`)
     }
   }
 

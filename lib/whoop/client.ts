@@ -2,7 +2,7 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { getWhoopConnection, upsertWhoopConnection } from '@/lib/db/whoop'
 import type { WhoopConnection } from '@/lib/db/whoop'
 
-const WHOOP_BASE = 'https://api.prod.whoop.com/developer/v2'
+export const WHOOP_BASE = 'https://api.prod.whoop.com/developer/v2'
 const TOKEN_URL = 'https://api.prod.whoop.com/oauth/oauth2/token'
 export const REVOKE_URL = 'https://api.prod.whoop.com/oauth/oauth2/revoke'
 export const AUTH_URL = 'https://api.prod.whoop.com/oauth/oauth2/auth'

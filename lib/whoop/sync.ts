@@ -52,8 +52,17 @@ interface WhoopSleepRecord {
   }
 }
 
+export interface SyncResult {
+  synced: number
+  cycles_fetched: number
+  recoveries_fetched: number
+  sleeps_fetched: number
+  skipped_open: number
+  upsert_errors: Array<{ date: string; error: string }>
+  error?: string
+}
+
 function cycleDate(start: string, timezoneOffset: string): string {
-  // Parse the start time and apply timezone offset to get local date
   const startMs = new Date(start).getTime()
   const offsetMatch = timezoneOffset.match(/([+-])(\d{2}):(\d{2})/)
   if (!offsetMatch) return new Date(start).toISOString().split('T')[0]
@@ -62,17 +71,34 @@ function cycleDate(start: string, timezoneOffset: string): string {
   return new Date(startMs + offsetMs).toISOString().split('T')[0]
 }
 
-export async function syncWhoopUser(userId: string): Promise<{ synced: number; error?: string }> {
-  const supabase = createServiceClient()
+export async function syncWhoopUser(userId: string): Promise<SyncResult> {
+  // ── service client ────────────────────────────────────────────────────────────
+  let supabase: ReturnType<typeof createServiceClient>
+  try {
+    supabase = createServiceClient()
+  } catch (err) {
+    return {
+      synced: 0, cycles_fetched: 0, recoveries_fetched: 0,
+      sleeps_fetched: 0, skipped_open: 0, upsert_errors: [],
+      error: `Service client unavailable: ${err instanceof Error ? err.message : String(err)}`,
+    }
+  }
 
+  // ── valid token ───────────────────────────────────────────────────────────────
   let conn: Awaited<ReturnType<typeof getValidConnectionService>>
   try {
     conn = await getValidConnectionService(userId)
-  } catch {
-    return { synced: 0, error: 'Not connected or token refresh failed' }
+  } catch (err) {
+    return {
+      synced: 0, cycles_fetched: 0, recoveries_fetched: 0,
+      sleeps_fetched: 0, skipped_open: 0, upsert_errors: [],
+      error: `Token refresh failed: ${err instanceof Error ? err.message : String(err)}`,
+    }
   }
 
-  // Determine sync window: since last sync - 1 day, or last 14 days
+  // ── sync window ───────────────────────────────────────────────────────────────
+  // First sync (last_sync_at null): backfill 30 days.
+  // Subsequent syncs: since last_sync_at minus 1 day to catch late-scored records.
   const { data: connRow } = await supabase
     .from('whoop_connections')
     .select('last_sync_at')
@@ -82,16 +108,15 @@ export async function syncWhoopUser(userId: string): Promise<{ synced: number; e
   const lastSync = connRow?.last_sync_at as string | null
   const startDate = lastSync
     ? new Date(new Date(lastSync).getTime() - 86400_000).toISOString()
-    : new Date(Date.now() - 14 * 86400_000).toISOString()
+    : new Date(Date.now() - 30 * 86400_000).toISOString()
 
   const params = { start: startDate }
-  let synced = 0
 
   try {
-    // 1. Pull recoveries (contains hrv, rhr, recovery_score)
+    // ── 1. Pull recoveries ────────────────────────────────────────────────────
     const recoveries = await whoopListAll<WhoopRecoveryRecord>('/recovery', conn.access_token, params)
 
-    // Build map cycle_id → recovery
+    // Map cycle_id → recovery, and sleep_id → recovery (for sleep lookup)
     const recoveryByCycle: Record<number, WhoopRecoveryRecord> = {}
     for (const r of recoveries) {
       if (r.score_state === 'SCORED' && r.score) {
@@ -99,27 +124,37 @@ export async function syncWhoopUser(userId: string): Promise<{ synced: number; e
       }
     }
 
-    // 2. Pull cycles (contains strain and dates)
+    // ── 2. Pull cycles ────────────────────────────────────────────────────────
     const cycles = await whoopListAll<WhoopCycleRecord>('/cycle', conn.access_token, params)
 
-    // 3. Pull non-nap sleeps (contains sleep_performance)
+    // ── 3. Pull sleeps ────────────────────────────────────────────────────────
     const sleeps = await whoopListAll<WhoopSleepRecord>('/activity/sleep', conn.access_token, params)
 
-    // Build map: roughly match sleep to cycle by date
-    const sleepByDate: Record<string, WhoopSleepRecord> = {}
+    // Map sleep by ID (not by date — sleep.start is early morning, cycle.start is
+    // afternoon; the dates differ so date-matching is wrong).
+    // recovery.sleep_id is the authoritative link between a cycle and its sleep.
+    const sleepById: Record<number, WhoopSleepRecord> = {}
     for (const s of sleeps) {
       if (!s.nap && s.score_state === 'SCORED' && s.score) {
-        const d = cycleDate(s.start, s.timezone_offset)
-        sleepByDate[d] = s
+        sleepById[s.id] = s
       }
     }
 
-    // Upsert one row per cycle
+    // ── 4. Upsert one row per closed cycle ────────────────────────────────────
+    let synced = 0
+    let skipped_open = 0
+    const upsert_errors: Array<{ date: string; error: string }> = []
+
     for (const cycle of cycles) {
-      if (!cycle.end) continue // skip open cycles
+      if (!cycle.end) {
+        skipped_open++
+        continue
+      }
+
       const date = cycleDate(cycle.start, cycle.timezone_offset)
       const recovery = recoveryByCycle[cycle.id]
-      const sleep = sleepByDate[date]
+      // Use recovery.sleep_id to find the right sleep record
+      const sleep = recovery?.sleep_id ? sleepById[recovery.sleep_id] : undefined
 
       const row: Record<string, unknown> = {
         user_id: userId,
@@ -142,27 +177,48 @@ export async function syncWhoopUser(userId: string): Promise<{ synced: number; e
         row.sleep_performance_pct = sleep.score.sleep_performance_percentage
       }
 
-      await supabase
+      const { error: upsertErr } = await supabase
         .from('whoop_metrics')
         .upsert(row, { onConflict: 'user_id,date' })
 
-      synced++
+      if (upsertErr) {
+        upsert_errors.push({
+          date,
+          error: `[${upsertErr.code}] ${upsertErr.message}${upsertErr.details ? ` — ${upsertErr.details}` : ''}`,
+        })
+      } else {
+        synced++
+      }
     }
 
-    // Update last_sync_at
-    await supabase
-      .from('whoop_connections')
-      .update({ last_sync_at: new Date().toISOString() })
-      .eq('user_id', userId)
+    // ── 5. Update last_sync_at only if we wrote at least something ─────────────
+    if (synced > 0 || cycles.length > 0) {
+      await supabase
+        .from('whoop_connections')
+        .update({ last_sync_at: new Date().toISOString() })
+        .eq('user_id', userId)
+    }
 
-    return { synced }
+    return {
+      synced,
+      cycles_fetched: cycles.length,
+      recoveries_fetched: recoveries.length,
+      sleeps_fetched: sleeps.length,
+      skipped_open,
+      upsert_errors,
+    }
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Sync error'
-    return { synced, error: msg }
+    return {
+      synced: 0, cycles_fetched: 0, recoveries_fetched: 0,
+      sleeps_fetched: 0, skipped_open: 0, upsert_errors: [],
+      error: msg,
+    }
   }
 }
 
-// Sync a single recovery by cycle_id (used by webhook)
+// ── Webhook helpers ───────────────────────────────────────────────────────────
+
 export async function syncRecoveryByCycleId(userId: string, cycleId: number): Promise<void> {
   const conn = await getValidConnectionService(userId)
   const supabase = createServiceClient()
@@ -170,9 +226,12 @@ export async function syncRecoveryByCycleId(userId: string, cycleId: number): Pr
   const recovery = await whoopGet<WhoopRecoveryRecord>(`/recovery/${cycleId}`, conn.access_token)
   if (recovery.score_state !== 'SCORED' || !recovery.score) return
 
-  // Get cycle for date and strain
   const cycle = await whoopGet<WhoopCycleRecord>(`/cycle/${cycleId}`, conn.access_token)
   const date = cycleDate(cycle.start, cycle.timezone_offset)
+
+  const sleep = recovery.sleep_id
+    ? await whoopGet<WhoopSleepRecord>(`/activity/sleep/${recovery.sleep_id}`, conn.access_token).catch(() => null)
+    : null
 
   await supabase
     .from('whoop_metrics')
@@ -184,11 +243,13 @@ export async function syncRecoveryByCycleId(userId: string, cycleId: number): Pr
       hrv_rmssd_milli: recovery.score.hrv_rmssd_milli,
       resting_hr: recovery.score.resting_heart_rate,
       strain: cycle.score?.strain ?? null,
+      sleep_performance_pct: (sleep && !sleep.nap && sleep.score_state === 'SCORED')
+        ? sleep.score?.sleep_performance_percentage ?? null
+        : null,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id,date' })
 }
 
-// Sync a single sleep by sleep_id (used by webhook)
 export async function syncSleepById(userId: string, sleepId: number): Promise<void> {
   const conn = await getValidConnectionService(userId)
   const supabase = createServiceClient()
