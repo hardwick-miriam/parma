@@ -1,15 +1,36 @@
 import type { DailyStats, HealthStatus } from './db/queries'
+import type { WhoopMetrics } from './db/whoop'
 
 export interface RecoveryData {
   score: number
   level: 'poor' | 'fair' | 'good' | 'great'
   explanation: string
+  whoopPowered?: boolean
 }
 
 export function computeRecovery(
   stats: DailyStats | null,
-  health: HealthStatus | null
+  health: HealthStatus | null,
+  whoop?: WhoopMetrics | null
 ): RecoveryData {
+  // When WHOOP data is available with a scored recovery, use it as the primary signal
+  if (whoop?.recovery_score != null) {
+    const score = Math.round(whoop.recovery_score)
+    const level: RecoveryData['level'] =
+      score >= 67 ? 'great' : score >= 34 ? 'good' : score >= 20 ? 'fair' : 'poor'
+
+    const parts: string[] = [`${score}% recovery`]
+    if (whoop.hrv_rmssd_milli != null) parts.push(`HRV ${Math.round(whoop.hrv_rmssd_milli)}ms`)
+    if (whoop.resting_hr != null) parts.push(`RHR ${whoop.resting_hr}bpm`)
+    if (whoop.sleep_performance_pct != null)
+      parts.push(`${Math.round(whoop.sleep_performance_pct)}% sleep`)
+    if (health?.sick) parts.push('sick')
+    if (health?.injured) parts.push('managing injury')
+
+    return { score, level, explanation: parts.join(' · '), whoopPowered: true }
+  }
+
+
   if (!stats) {
     return { score: 50, level: 'fair', explanation: 'Log data today to see your readiness' }
   }

@@ -7,5 +7,5 @@ export default async function ReviewPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
-  return <ReviewClient />
+  return <div className="max-w-5xl mx-auto"><ReviewClient /></div>
 }

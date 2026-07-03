@@ -16,6 +16,10 @@ interface Props {
     mounjaroEnabled: boolean
     theme: string
   }
+  whoopConnection: {
+    displayName: string | null
+    lastSyncAt: string | null
+  } | null
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -35,7 +39,7 @@ const THEMES: { id: Theme; label: string; desc: string; preview: string }[] = [
   { id: 'dark-academia', label: 'Dark Academia',    desc: 'Warm brown · candle amber',     preview: '#13100a/#d4930a' },
 ]
 
-export function SettingsClient({ currentEmail, initialPrefs }: Props) {
+export function SettingsClient({ currentEmail, initialPrefs, whoopConnection }: Props) {
   const [weightGoal, setWeightGoal] = useState(initialPrefs.weightGoal?.toString() ?? '')
   const [mounjaroEnabled, setMounjaroEnabled] = useState(initialPrefs.mounjaroEnabled)
   const [token, setToken] = useState(initialPrefs.token)
@@ -55,6 +59,33 @@ export function SettingsClient({ currentEmail, initialPrefs }: Props) {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [passwordSaving, setPasswordSaving] = useState(false)
   const [passwordStatus, setPasswordStatus] = useState<{ ok?: boolean; msg?: string } | null>(null)
+
+  const [whoop, setWhoop] = useState(whoopConnection)
+  const [whoopSyncing, setWhoopSyncing] = useState(false)
+  const [whoopSyncMsg, setWhoopSyncMsg] = useState<string | null>(null)
+  const [whoopDisconnecting, setWhoopDisconnecting] = useState(false)
+
+  async function handleWhoopSync() {
+    setWhoopSyncing(true)
+    setWhoopSyncMsg(null)
+    const res = await fetch('/api/whoop/sync', { method: 'POST' })
+    const data = await res.json() as { synced?: number; error?: string }
+    setWhoopSyncing(false)
+    if (data.error) {
+      setWhoopSyncMsg(`Error: ${data.error}`)
+    } else {
+      setWhoopSyncMsg(`Synced ${data.synced} day${data.synced === 1 ? '' : 's'}`)
+      setWhoop(w => w ? { ...w, lastSyncAt: new Date().toISOString() } : w)
+      setTimeout(() => setWhoopSyncMsg(null), 4000)
+    }
+  }
+
+  async function handleWhoopDisconnect() {
+    setWhoopDisconnecting(true)
+    await fetch('/api/whoop/disconnect', { method: 'POST' })
+    setWhoopDisconnecting(false)
+    setWhoop(null)
+  }
 
   async function handleSave() {
     setSaving(true)
@@ -235,6 +266,65 @@ export function SettingsClient({ currentEmail, initialPrefs }: Props) {
             )
           })}
         </div>
+      </Section>
+
+      {/* WHOOP */}
+      <Section title="WHOOP Integration">
+        {whoop ? (
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3 rounded-xl bg-surface-elevated border border-border px-4 py-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-text">
+                  {whoop.displayName ?? 'Connected'}
+                </p>
+                <p className="text-xs text-text-subtle">
+                  {whoop.lastSyncAt
+                    ? `Last synced ${new Date(whoop.lastSyncAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
+                    : 'Never synced'}
+                </p>
+              </div>
+              <span
+                className="text-[10px] px-1.5 py-0.5 rounded font-medium"
+                style={{ background: 'var(--positive)', color: '#000', opacity: 0.85 }}
+              >
+                Connected
+              </span>
+            </div>
+            {whoopSyncMsg && (
+              <p className={`text-xs ${whoopSyncMsg.startsWith('Error') ? 'text-negative' : 'text-positive'}`}>
+                {whoopSyncMsg}
+              </p>
+            )}
+            <div className="flex gap-2">
+              <button
+                onClick={handleWhoopSync}
+                disabled={whoopSyncing}
+                className="px-4 py-1.5 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 disabled:opacity-50 transition-colors"
+              >
+                {whoopSyncing ? 'Syncing…' : 'Sync now'}
+              </button>
+              <button
+                onClick={handleWhoopDisconnect}
+                disabled={whoopDisconnecting}
+                className="px-4 py-1.5 rounded-lg bg-surface-elevated border border-border text-sm text-text-muted hover:text-negative disabled:opacity-50 transition-colors"
+              >
+                {whoopDisconnecting ? 'Disconnecting…' : 'Disconnect'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <p className="text-sm text-text-muted leading-relaxed">
+              Connect your WHOOP strap to pull recovery scores, HRV, resting heart rate, strain, and sleep performance into Parma.
+            </p>
+            <a
+              href="/api/whoop/connect"
+              className="self-start px-4 py-1.5 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition-colors"
+            >
+              Connect WHOOP
+            </a>
+          </div>
+        )}
       </Section>
 
       {/* Apple Shortcuts */}

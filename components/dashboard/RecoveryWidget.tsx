@@ -2,6 +2,7 @@
 
 import { computeRecovery } from '@/lib/recovery'
 import type { DailyStats, HealthStatus } from '@/lib/db/queries'
+import type { WhoopMetrics } from '@/lib/db/whoop'
 
 const LEVEL_COLOR: Record<string, string> = {
   poor: 'var(--negative)',
@@ -20,10 +21,11 @@ const LEVEL_LABEL: Record<string, string> = {
 interface RecoveryWidgetProps {
   stats: DailyStats | null
   health: HealthStatus | null
+  whoop?: WhoopMetrics | null
 }
 
-export function RecoveryWidget({ stats, health }: RecoveryWidgetProps) {
-  const { score, level, explanation } = computeRecovery(stats, health)
+export function RecoveryWidget({ stats, health, whoop }: RecoveryWidgetProps) {
+  const { score, level, explanation, whoopPowered } = computeRecovery(stats, health, whoop)
   const color = LEVEL_COLOR[level]
   const r = 26
   const circ = 2 * Math.PI * r
@@ -63,11 +65,19 @@ export function RecoveryWidget({ stats, health }: RecoveryWidgetProps) {
 
       {/* Text */}
       <div className="min-w-0 flex-1">
-        <div className="flex items-baseline gap-1.5 mb-0.5">
+        <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
           <span className="text-base font-semibold" style={{ color }}>
             {LEVEL_LABEL[level]}
           </span>
           <span className="text-xs text-text-subtle">readiness today</span>
+          {whoopPowered && (
+            <span
+              className="text-[10px] px-1.5 py-0.5 rounded font-medium tracking-wide"
+              style={{ background: 'var(--accent)', color: 'var(--bg)', opacity: 0.85 }}
+            >
+              WHOOP
+            </span>
+          )}
         </div>
         <p className="text-xs text-text-muted leading-relaxed">{explanation}</p>
       </div>

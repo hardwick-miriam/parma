@@ -25,6 +25,7 @@ import { Nudges } from './Nudges'
 import { SummaryCard } from './SummaryCard'
 import { DetailViewRouter } from './DetailView'
 import { RecoveryWidget } from './RecoveryWidget'
+import { WhoopWidget } from './widgets/WhoopWidget'
 import { ProgressPhotos } from './ProgressPhotos'
 import { WorldMapWidget } from './WorldMapWidget'
 import { JournalWidget } from './JournalWidget'
@@ -46,6 +47,7 @@ import type { StreakData } from '@/lib/streaks'
 import type { ParsedLog } from '@/lib/ai/types'
 import type { MounjaroDose, MounjaroEffect } from '@/lib/db/mounjaro'
 import type { WeatherData } from './widgets/WeatherWidget'
+import type { WhoopMetrics } from '@/lib/db/whoop'
 
 const ResponsiveGridLayout = WidthProvider(Responsive)
 
@@ -67,6 +69,7 @@ const DEFAULT_LG: LayoutItem[] = [
   { i: 'journal', x: 4,  y: 12, w: 4, h: 4, minW: 2, minH: 3 },
   { i: 'map',     x: 8,  y: 12, w: 4, h: 4, minW: 3, minH: 3 },
   { i: 'clocks',  x: 0,  y: 16, w: 12, h: 3, minW: 3, minH: 2 },
+  { i: 'whoop',   x: 0,  y: 19, w: 4,  h: 4, minW: 2, minH: 3 },
 ]
 
 const DEFAULT_SM: LayoutItem[] = [
@@ -85,6 +88,7 @@ const DEFAULT_SM: LayoutItem[] = [
   { i: 'journal', x: 0, y: 43, w: 4, h: 4 },
   { i: 'map',     x: 0, y: 47, w: 4, h: 3 },
   { i: 'clocks',  x: 0, y: 50, w: 4, h: 3 },
+  { i: 'whoop',   x: 0, y: 53, w: 4, h: 4 },
 ]
 
 const DEFAULT_LAYOUTS: ResponsiveLayouts = { lg: DEFAULT_LG, sm: DEFAULT_SM }
@@ -302,6 +306,9 @@ interface DashboardGridProps {
   mounjaroEffects: MounjaroEffect[]
   weightGoal: number | null
   savedLayouts?: Record<string, unknown>
+  whoopConnected?: boolean
+  whoopToday?: WhoopMetrics | null
+  whoopHistory?: WhoopMetrics[]
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -321,6 +328,9 @@ export function DashboardGrid({
   mounjaroEffects,
   weightGoal,
   savedLayouts,
+  whoopConnected = false,
+  whoopToday = null,
+  whoopHistory = [],
 }: DashboardGridProps) {
   const [activeMetric, setActiveMetric] = useState<MetricId | null>(null)
   const [detailHistory, setDetailHistory] = useState<DailyStats[]>(history)
@@ -416,7 +426,7 @@ export function DashboardGrid({
 
         {/* Recovery */}
         <motion.div variants={itemVariants}>
-          <RecoveryWidget stats={stats} health={health} />
+          <RecoveryWidget stats={stats} health={health} whoop={whoopConnected ? whoopToday : null} />
         </motion.div>
 
         {/* Summary */}
@@ -579,6 +589,14 @@ export function DashboardGrid({
                 <WorldClocksWidget />
               </PlainWrapper>
             </div>
+
+            {whoopConnected && (
+              <div key="whoop" style={{ cursor: 'default' }}>
+                <PlainWrapper itemW={gs('whoop').w} itemH={gs('whoop').h}>
+                  <WhoopWidget today={whoopToday} history={whoopHistory} />
+                </PlainWrapper>
+              </div>
+            )}
           </ResponsiveGridLayout>
         </motion.div>
 

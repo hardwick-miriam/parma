@@ -14,6 +14,7 @@ import { getDailyStatsHistory } from '@/lib/db/history'
 import { calculateStreaks } from '@/lib/streaks'
 import { getMounjaroDoses, getMounjaroEffects } from '@/lib/db/mounjaro'
 import { getUserPreferences } from '@/lib/db/preferences'
+import { getWhoopConnection, getTodayWhoopMetrics, getWhoopMetrics } from '@/lib/db/whoop'
 import { DashboardGrid } from '@/components/dashboard/DashboardGrid'
 import { RealtimeSync } from '@/components/dashboard/RealtimeSync'
 
@@ -35,9 +36,15 @@ export default async function DashboardPage() {
 
   const mounjaroEnabled = prefs?.mounjaro_enabled ?? false
 
-  const [mounjaroDoses, mounjaroEffects] = await Promise.all([
+  // Check WHOOP connection and load metrics if connected
+  const whoopConn = user ? await getWhoopConnection(user.id).catch(() => null) : null
+  const whoopConnected = !!whoopConn
+
+  const [mounjaroDoses, mounjaroEffects, whoopToday, whoopHistory] = await Promise.all([
     user && mounjaroEnabled ? getMounjaroDoses(user.id, 90).catch(() => []) : [],
     user && mounjaroEnabled ? getMounjaroEffects(user.id, 90).catch(() => []) : [],
+    user && whoopConnected ? getTodayWhoopMetrics(user.id).catch(() => null) : null,
+    user && whoopConnected ? getWhoopMetrics(user.id, 7).catch(() => []) : [],
   ])
 
   const workoutDates = new Set((recentWorkouts ?? []).map((w) => w.date))
@@ -65,6 +72,9 @@ export default async function DashboardPage() {
       mounjaroEffects={mounjaroEffects}
       weightGoal={prefs?.weight_goal_kg ?? null}
       savedLayouts={(prefs?.layouts as Record<string, unknown>) ?? {}}
+      whoopConnected={whoopConnected}
+      whoopToday={whoopToday}
+      whoopHistory={whoopHistory ?? []}
     />
     </>
   )

@@ -48,7 +48,7 @@ export default async function DashboardLayout({
 
       {/* Scrollable content — top padding clears the header + status bar */}
       <main
-        className="max-w-5xl mx-auto px-4 w-full min-w-0"
+        className="px-4 w-full min-w-0"
         style={{
           paddingTop: 'calc(2.75rem + env(safe-area-inset-top))',
           paddingBottom: 'calc(7.5rem + env(safe-area-inset-bottom))',
@@ -72,6 +72,14 @@ export default async function DashboardLayout({
       >
         <div className="max-w-5xl mx-auto px-4">
           <LogFlow />
+          <div className="mt-1.5 flex justify-end">
+            <a
+              href="/privacy"
+              className="text-[10px] text-text-subtle hover:text-text-muted transition-colors"
+            >
+              Privacy
+            </a>
+          </div>
         </div>
       </div>
     </div>
