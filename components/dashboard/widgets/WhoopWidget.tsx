@@ -4,6 +4,7 @@ import { useGridItemSize } from '@/components/dashboard/GridItemSizeContext'
 import type { WhoopMetrics } from '@/lib/db/whoop'
 
 interface WhoopWidgetProps {
+  // Most recent row with recovery_score != null (may be from a previous day)
   today: WhoopMetrics | null
   history: WhoopMetrics[]
 }
@@ -39,21 +40,40 @@ function Sparkline({ data }: { data: number[] }) {
   )
 }
 
+function shortDate(isoDate: string): string {
+  // isoDate is YYYY-MM-DD; parse as local noon to avoid timezone flipping the day
+  return new Date(`${isoDate}T12:00:00`).toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'short',
+  })
+}
+
 export function WhoopWidget({ today, history }: WhoopWidgetProps) {
   const { w } = useGridItemSize()
   const compact = w <= 2
 
-  const recovery = today?.recovery_score ?? null
-  const strain = today?.strain ?? null
-  const hrv = today?.hrv_rmssd_milli != null ? Math.round(today.hrv_rmssd_milli) : null
-  const rhr = today?.resting_hr ?? null
-  const sleep = today?.sleep_performance_pct != null ? Math.round(today.sleep_performance_pct) : null
+  // `today` is already the latest scored row (server picks it via getLatestWhoopMetrics).
+  // Fall back into history just in case it's null.
+  const display = today ?? history.find(m => m.recovery_score != null) ?? null
 
+  // Check if displayed row is actually from today (UTC, good enough for label)
+  const utcToday = new Date().toISOString().split('T')[0]
+  const isActuallyToday = display?.date === utcToday
+  const dateLabel = display && !isActuallyToday ? shortDate(display.date) : null
+
+  const recovery = display?.recovery_score ?? null
+  const strain = display?.strain ?? null
+  const hrv = display?.hrv_rmssd_milli != null ? Math.round(display.hrv_rmssd_milli) : null
+  const rhr = display?.resting_hr ?? null
+  const sleep = display?.sleep_performance_pct != null
+    ? Math.round(display.sleep_performance_pct)
+    : null
+
+  // Sparkline: 7 most recent scored days, oldest→newest
   const sparkData = history
-    .slice()
+    .filter(m => (m.recovery_score ?? 0) > 0)
+    .slice(0, 7)
     .reverse()
-    .map(m => m.recovery_score ?? 0)
-    .filter(v => v > 0)
+    .map(m => m.recovery_score as number)
 
   const color = recoveryColor(recovery)
 
@@ -64,6 +84,7 @@ export function WhoopWidget({ today, history }: WhoopWidgetProps) {
           {recovery != null ? Math.round(recovery) : '—'}
         </span>
         <span className="text-[10px] text-text-muted uppercase tracking-wider">recovery</span>
+        {dateLabel && <span className="text-[9px] text-text-subtle">{dateLabel}</span>}
       </div>
     )
   }
@@ -75,8 +96,18 @@ export function WhoopWidget({ today, history }: WhoopWidgetProps) {
     >
       {/* Header */}
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-widest text-text-subtle">Recovery</span>
-        <span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{ background: 'var(--accent)', color: 'var(--bg)', opacity: 0.85 }}>WHOOP</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-widest text-text-subtle">Recovery</span>
+          {dateLabel && (
+            <span className="text-[10px] text-text-subtle">· {dateLabel}</span>
+          )}
+        </div>
+        <span
+          className="text-[10px] px-1.5 py-0.5 rounded font-medium"
+          style={{ background: 'var(--accent)', color: 'var(--bg)', opacity: 0.85 }}
+        >
+          WHOOP
+        </span>
       </div>
 
       {/* Score */}
@@ -84,7 +115,7 @@ export function WhoopWidget({ today, history }: WhoopWidgetProps) {
         <span className="text-4xl font-bold tabular-nums leading-none" style={{ color }}>
           {recovery != null ? Math.round(recovery) : '—'}
         </span>
-        <span className="text-sm text-text-muted pb-0.5">%</span>
+        {recovery != null && <span className="text-sm text-text-muted pb-0.5">%</span>}
       </div>
 
       {/* Stats row */}
@@ -126,7 +157,7 @@ export function WhoopWidget({ today, history }: WhoopWidgetProps) {
       {sparkData.length >= 2 && (
         <div className="mt-auto flex items-end justify-between">
           <span className="text-[10px] text-text-muted">7d recovery</span>
-          <Sparkline data={sparkData.slice(-7)} />
+          <Sparkline data={sparkData} />
         </div>
       )}
     </div>

@@ -97,9 +97,19 @@ function mergeLayouts(saved: Record<string, unknown>): ResponsiveLayouts {
   if (!saved || typeof saved !== 'object' || Object.keys(saved).length === 0) {
     return DEFAULT_LAYOUTS
   }
+  const savedLg = (saved.lg as LayoutItem[] | undefined) ?? []
+  const savedSm = (saved.sm as LayoutItem[] | undefined) ?? []
+  // Append any new default widgets missing from the saved layout so widgets
+  // added after the user last saved their layout become visible.
+  const lgKeys = new Set(savedLg.map(i => i.i))
+  const smKeys = new Set(savedSm.map(i => i.i))
   return {
-    lg: (saved.lg as LayoutItem[]) ?? DEFAULT_LG,
-    sm: (saved.sm as LayoutItem[]) ?? DEFAULT_SM,
+    lg: savedLg.length > 0
+      ? [...savedLg, ...DEFAULT_LG.filter(item => !lgKeys.has(item.i))]
+      : DEFAULT_LG,
+    sm: savedSm.length > 0
+      ? [...savedSm, ...DEFAULT_SM.filter(item => !smKeys.has(item.i))]
+      : DEFAULT_SM,
   }
 }
 

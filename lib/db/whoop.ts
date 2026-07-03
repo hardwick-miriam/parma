@@ -26,11 +26,12 @@ export interface WhoopMetrics {
 
 export async function getWhoopConnection(userId: string): Promise<WhoopConnection | null> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('whoop_connections')
     .select('*')
     .eq('user_id', userId)
     .maybeSingle()
+  if (error) console.error('[whoop] getWhoopConnection error:', error.code, error.message)
   return data ?? null
 }
 
@@ -74,40 +75,50 @@ export async function upsertWhoopMetrics(
   }
 ): Promise<void> {
   const supabase = await createClient()
-  await supabase
+  const { error } = await supabase
     .from('whoop_metrics')
     .upsert(
       { user_id: userId, date, ...metrics, updated_at: new Date().toISOString() },
       { onConflict: 'user_id,date' }
     )
+  if (error) console.error('[whoop] upsertWhoopMetrics error:', error.code, error.message)
 }
 
+// Returns up to `days` rows ordered newest-first.
+// Rows with recovery_score=null are included — callers that need scored data
+// should filter with .find(m => m.recovery_score != null).
 export async function getWhoopMetrics(
   userId: string,
   days = 7
 ): Promise<WhoopMetrics[]> {
   const supabase = await createClient()
   const since = new Date(Date.now() - days * 86400_000).toISOString().split('T')[0]
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('whoop_metrics')
     .select('*')
     .eq('user_id', userId)
     .gte('date', since)
     .order('date', { ascending: false })
+  if (error) console.error('[whoop] getWhoopMetrics error:', error.code, error.message)
   return data ?? []
 }
 
-export async function getTodayWhoopMetrics(
+// Returns the single most-recent row that has a real recovery score.
+// Does NOT restrict to today — WHOOP recovery for the current cycle is only
+// available after tonight's sleep, so "today's" row is almost always null.
+export async function getLatestWhoopMetrics(
   userId: string
 ): Promise<WhoopMetrics | null> {
   const supabase = await createClient()
-  const today = new Date().toISOString().split('T')[0]
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('whoop_metrics')
     .select('*')
     .eq('user_id', userId)
-    .eq('date', today)
+    .not('recovery_score', 'is', null)
+    .order('date', { ascending: false })
+    .limit(1)
     .maybeSingle()
+  if (error) console.error('[whoop] getLatestWhoopMetrics error:', error.code, error.message)
   return data ?? null
 }
 
@@ -115,10 +126,11 @@ export async function getWhoopConnectionByWhoopUserId(
   whoopUserId: number
 ): Promise<WhoopConnection | null> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('whoop_connections')
     .select('*')
     .eq('whoop_user_id', whoopUserId)
     .maybeSingle()
+  if (error) console.error('[whoop] getWhoopConnectionByWhoopUserId error:', error.code, error.message)
   return data ?? null
 }

@@ -1,16 +1,15 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { WHOOP_BASE } from '@/lib/whoop/client'
-import { getValidConnectionService } from '@/lib/whoop/client'
+import { WHOOP_BASE, getValidConnectionService } from '@/lib/whoop/client'
 
-// Diagnostic endpoint — returns full trace of env, WHOOP API calls, and Supabase writes.
-// DELETE or gate behind admin check before going public.
+// Diagnostic endpoint — authenticated users only; returns a full trace of every
+// query the dashboard makes, env var status, RLS check, and layout state.
 export async function GET() {
   const log: Record<string, unknown>[] = []
 
   // ── 1. Auth ──────────────────────────────────────────────────────────────────
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const userClient = await createClient()
+  const { data: { user } } = await userClient.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   log.push({ step: '1_auth', userId: user.id })
 
@@ -21,7 +20,6 @@ export async function GET() {
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL ?? 'MISSING',
     WHOOP_CLIENT_ID: process.env.WHOOP_CLIENT_ID ? 'SET' : 'MISSING',
     WHOOP_CLIENT_SECRET: process.env.WHOOP_CLIENT_SECRET ? 'SET' : 'MISSING',
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'MISSING',
   })
 
   // ── 3. Service-role client ────────────────────────────────────────────────────
@@ -35,105 +33,125 @@ export async function GET() {
     return NextResponse.json({ log })
   }
 
-  // ── 4. WHOOP connection row ───────────────────────────────────────────────────
-  const { data: connRow, error: connErr } = await svc
+  // ── 4. Saved layout (what's in user_preferences) ─────────────────────────────
+  const { data: prefs } = await svc
+    .from('user_preferences')
+    .select('layouts')
+    .eq('user_id', user.id)
+    .maybeSingle()
+  const savedLayouts = prefs?.layouts as Record<string, unknown> | null
+  const savedLgKeys = Array.isArray((savedLayouts as Record<string,unknown>)?.lg)
+    ? ((savedLayouts as Record<string,unknown>).lg as Array<{i:string}>).map(i => i.i)
+    : null
+  log.push({
+    step: '4_saved_layout',
+    has_saved_layout: !!savedLayouts && Object.keys(savedLayouts).length > 0,
+    lg_widget_keys: savedLgKeys,
+    whoop_in_saved_lg: savedLgKeys ? savedLgKeys.includes('whoop') : 'no saved layout',
+  })
+
+  // ── 5. whoop_connections — service role vs user client ────────────────────────
+  const { data: connSvc, error: connSvcErr } = await svc
     .from('whoop_connections')
-    .select('user_id, whoop_display_name, whoop_user_id, last_sync_at, connected_at, token_expires_at')
+    .select('user_id, whoop_display_name, last_sync_at, token_expires_at')
     .eq('user_id', user.id)
     .maybeSingle()
   log.push({
-    step: '4_connection_row',
-    found: !!connRow,
-    display_name: connRow?.whoop_display_name,
-    last_sync_at: connRow?.last_sync_at,
-    token_expires_at: connRow?.token_expires_at,
-    db_error: connErr ? { message: connErr.message, code: connErr.code, details: connErr.details } : null,
+    step: '5a_connection_via_service_role',
+    found: !!connSvc,
+    user_id_in_row: connSvc?.user_id,
+    auth_uid: user.id,
+    uuids_match: connSvc?.user_id === user.id,
+    last_sync_at: connSvc?.last_sync_at,
+    error: connSvcErr ? { code: connSvcErr.code, message: connSvcErr.message } : null,
   })
-  if (!connRow) return NextResponse.json({ log })
 
-  // ── 5. Valid token ────────────────────────────────────────────────────────────
-  let conn: Awaited<ReturnType<typeof getValidConnectionService>>
-  try {
-    conn = await getValidConnectionService(user.id)
-    log.push({ step: '5_valid_token', ok: true })
-  } catch (err) {
-    log.push({ step: '5_valid_token', ok: false, error: String(err) })
-    return NextResponse.json({ log })
-  }
+  const { data: connUser, error: connUserErr } = await userClient
+    .from('whoop_connections')
+    .select('user_id, whoop_display_name, last_sync_at')
+    .eq('user_id', user.id)
+    .maybeSingle()
+  log.push({
+    step: '5b_connection_via_user_client_rls',
+    found: !!connUser,
+    error: connUserErr ? { code: connUserErr.code, message: connUserErr.message } : null,
+    rls_select_works: !!connUser,
+  })
 
-  // ── 6. WHOOP API calls (raw fetch so we capture status codes) ─────────────────
-  const startDate = new Date(Date.now() - 30 * 86400_000).toISOString()
-  const authHeader = { Authorization: `Bearer ${conn.access_token}` }
+  // ── 6. whoop_metrics — service role vs user client ────────────────────────────
+  const since = new Date(Date.now() - 10 * 86400_000).toISOString().split('T')[0]
 
-  async function whoopProbe(label: string, path: string) {
-    const url = `${WHOOP_BASE}${path}?start=${encodeURIComponent(startDate)}&limit=25`
-    let status: number, body: unknown
-    try {
-      const res = await fetch(url, { headers: authHeader })
-      status = res.status
-      body = await res.json()
-    } catch (err) {
-      log.push({ step: `6_api_${label}`, url, error: String(err) })
-      return
-    }
-    const records = (body as { records?: unknown[] })?.records ?? []
-    log.push({
-      step: `6_api_${label}`,
-      url,
-      http_status: status,
-      record_count: records.length,
-      next_token: (body as { next_token?: string })?.next_token ?? null,
-      first_record: records[0] ?? null,
-    })
-    return records
-  }
-
-  const cycles   = await whoopProbe('cycles',   '/cycle')
-  const recoveries = await whoopProbe('recovery', '/recovery')
-  const sleeps   = await whoopProbe('sleep',    '/activity/sleep')
-  const workouts = await whoopProbe('workout',  '/activity/workout')
-  void workouts // logged above; workouts go to whoop_metrics in future work
-
-  // ── 7. Test upsert (first closed cycle, if any) ───────────────────────────────
-  const firstClosed = (cycles as Array<{ id: number; end?: string; start: string; timezone_offset: string }> | undefined)
-    ?.find(c => !!c.end)
-  if (firstClosed) {
-    const testDate = firstClosed.start.split('T')[0]
-    const testRow = {
-      user_id: user.id,
-      date: testDate,
-      cycle_id: firstClosed.id,
-      updated_at: new Date().toISOString(),
-    }
-    const { data: upsertData, error: upsertErr } = await svc
-      .from('whoop_metrics')
-      .upsert(testRow, { onConflict: 'user_id,date' })
-      .select()
-    log.push({
-      step: '7_test_upsert',
-      row_attempted: testRow,
-      returned_rows: upsertData,
-      error: upsertErr
-        ? { message: upsertErr.message, code: upsertErr.code, details: upsertErr.details, hint: upsertErr.hint }
-        : null,
-    })
-  } else {
-    log.push({ step: '7_test_upsert', skipped: 'no closed cycles in last 30 days' })
-  }
-
-  // ── 8. Current state of whoop_metrics ─────────────────────────────────────────
-  const { data: existing, count, error: readErr } = await svc
+  const { data: metricsSvc, count: countSvc, error: metricsSvcErr } = await svc
     .from('whoop_metrics')
     .select('*', { count: 'exact' })
     .eq('user_id', user.id)
+    .gte('date', since)
     .order('date', { ascending: false })
-    .limit(5)
   log.push({
-    step: '8_existing_metrics',
-    total_row_count: count,
-    most_recent_5: existing,
-    read_error: readErr ? { message: readErr.message, code: readErr.code } : null,
+    step: '6a_metrics_via_service_role',
+    since,
+    total_rows_in_window: countSvc,
+    sample: metricsSvc?.slice(0, 3),
+    error: metricsSvcErr ? { code: metricsSvcErr.code, message: metricsSvcErr.message } : null,
   })
+
+  const { data: metricsUser, count: countUser, error: metricsUserErr } = await userClient
+    .from('whoop_metrics')
+    .select('*', { count: 'exact' })
+    .eq('user_id', user.id)
+    .gte('date', since)
+    .order('date', { ascending: false })
+  log.push({
+    step: '6b_metrics_via_user_client_rls',
+    since,
+    total_rows_in_window: countUser,
+    sample: metricsUser?.slice(0, 3),
+    error: metricsUserErr ? { code: metricsUserErr.code, message: metricsUserErr.message } : null,
+    rls_select_works: countUser != null && countUser > 0,
+  })
+
+  // ── 7. getLatestWhoopMetrics equivalent ───────────────────────────────────────
+  const utcToday = new Date().toISOString().split('T')[0]
+  const { data: latest, error: latestErr } = await userClient
+    .from('whoop_metrics')
+    .select('*')
+    .eq('user_id', user.id)
+    .not('recovery_score', 'is', null)
+    .order('date', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  log.push({
+    step: '7_latest_scored_row',
+    utc_server_today: utcToday,
+    latest_row: latest,
+    is_today: latest?.date === utcToday,
+    error: latestErr ? { code: latestErr.code, message: latestErr.message } : null,
+  })
+
+  // ── 8. WHOOP API health check ──────────────────────────────────────────────────
+  if (connSvc) {
+    let conn: Awaited<ReturnType<typeof getValidConnectionService>>
+    try {
+      conn = await getValidConnectionService(user.id)
+      const startDate = new Date(Date.now() - 10 * 86400_000).toISOString()
+      const res = await fetch(
+        `${WHOOP_BASE}/cycle?start=${encodeURIComponent(startDate)}&limit=5`,
+        { headers: { Authorization: `Bearer ${conn.access_token}` } }
+      )
+      const body = await res.json() as { records?: unknown[]; next_token?: string }
+      log.push({
+        step: '8_whoop_api_cycles',
+        http_status: res.status,
+        record_count: body.records?.length ?? 0,
+        has_next_page: !!body.next_token,
+        first_record: body.records?.[0] ?? null,
+      })
+    } catch (err) {
+      log.push({ step: '8_whoop_api_cycles', error: String(err) })
+    }
+  } else {
+    log.push({ step: '8_whoop_api_cycles', skipped: 'no connection row' })
+  }
 
   return NextResponse.json({ log })
 }
