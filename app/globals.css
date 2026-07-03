@@ -181,3 +181,194 @@ body {
   box-shadow: var(--shadow-lg);
   border-color: var(--border-strong);
 }
+
+/* ─── HACKER theme ─────────────────────────────────────────────────────── */
+[data-theme="hacker"] {
+  --bg: #000000;
+  --surface: #001400;
+  --surface-elevated: #002000;
+  --surface-hover: #003000;
+  --border: rgba(0, 200, 0, 0.18);
+  --border-strong: rgba(0, 255, 0, 0.35);
+  --text: #00cc44;
+  --text-muted: rgba(0, 204, 68, 0.55);
+  --text-subtle: rgba(0, 204, 68, 0.3);
+  --accent: #00ff41;
+  --accent-dim: rgba(0, 255, 65, 0.12);
+  --accent-glow: rgba(0, 255, 65, 0.3);
+  --positive: #00ff41;
+  --positive-dim: rgba(0, 255, 65, 0.12);
+  --negative: #ff4136;
+  --negative-dim: rgba(255, 65, 54, 0.12);
+  --warning: #ffdc00;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.9), 0 0 6px rgba(0,255,65,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.95), 0 0 20px rgba(0,255,65,0.1);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,1), 0 0 40px rgba(0,255,65,0.14);
+  --font-display: var(--font-jetbrains), 'Courier New', monospace;
+}
+
+[data-theme="hacker"] body {
+  font-family: var(--font-jetbrains), 'Courier New', monospace;
+}
+
+[data-theme="hacker"] .tabular-nums,
+[data-theme="hacker"] [class*="text-4xl"],
+[data-theme="hacker"] [class*="text-3xl"],
+[data-theme="hacker"] [class*="text-2xl"] {
+  font-family: var(--font-jetbrains), 'Courier New', monospace;
+}
+
+/* ─── MODERN BRUTALISM theme ───────────────────────────────────────────── */
+[data-theme="brutalism"] {
+  --bg: #ffffff;
+  --surface: #f5f5f5;
+  --surface-elevated: #ebebeb;
+  --surface-hover: #e0e0e0;
+  --border: rgba(0, 0, 0, 0.85);
+  --border-strong: rgba(0, 0, 0, 1);
+  --text: #000000;
+  --text-muted: rgba(0, 0, 0, 0.55);
+  --text-subtle: rgba(0, 0, 0, 0.35);
+  --accent: #000000;
+  --accent-dim: rgba(0, 0, 0, 0.08);
+  --accent-glow: rgba(0, 0, 0, 0.2);
+  --positive: #006400;
+  --positive-dim: rgba(0, 100, 0, 0.1);
+  --negative: #b30000;
+  --negative-dim: rgba(179, 0, 0, 0.1);
+  --warning: #8b6914;
+  --shadow-sm: 2px 2px 0px rgba(0,0,0,0.9);
+  --shadow-md: 4px 4px 0px rgba(0,0,0,0.85);
+  --shadow-lg: 6px 6px 0px rgba(0,0,0,0.8);
+}
+
+[data-theme="brutalism"] .rounded-2xl,
+[data-theme="brutalism"] .rounded-xl,
+[data-theme="brutalism"] .rounded-lg,
+[data-theme="brutalism"] .rounded-full,
+[data-theme="brutalism"] [class*="rounded"] {
+  border-radius: 0 !important;
+}
+
+[data-theme="brutalism"] ::selection {
+  background: #000;
+  color: #fff;
+}
+
+/* ─── OLD MONEY theme ──────────────────────────────────────────────────── */
+[data-theme="old-money"] {
+  --bg: #0f1a08;
+  --surface: #152010;
+  --surface-elevated: #1c2a16;
+  --surface-hover: #22341c;
+  --border: rgba(201, 168, 76, 0.2);
+  --border-strong: rgba(201, 168, 76, 0.4);
+  --text: #e8d5a3;
+  --text-muted: rgba(232, 213, 163, 0.55);
+  --text-subtle: rgba(232, 213, 163, 0.3);
+  --accent: #c9a84c;
+  --accent-dim: rgba(201, 168, 76, 0.12);
+  --accent-glow: rgba(201, 168, 76, 0.25);
+  --positive: #6aad3d;
+  --positive-dim: rgba(106, 173, 61, 0.12);
+  --negative: #c0392b;
+  --negative-dim: rgba(192, 57, 43, 0.12);
+  --warning: #e67e22;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.65), 0 2px 4px rgba(0,0,0,0.4);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.75), 0 4px 8px rgba(0,0,0,0.5);
+}
+
+[data-theme="old-money"] h1,
+[data-theme="old-money"] h2,
+[data-theme="old-money"] .font-bold {
+  font-family: var(--font-playfair), 'Georgia', serif;
+}
+
+/* ─── DARK ACADEMIA theme ──────────────────────────────────────────────── */
+[data-theme="dark-academia"] {
+  --bg: #13100a;
+  --surface: #1c1710;
+  --surface-elevated: #252015;
+  --surface-hover: #2e271a;
+  --border: rgba(212, 147, 10, 0.18);
+  --border-strong: rgba(212, 147, 10, 0.35);
+  --text: #e4d0b4;
+  --text-muted: rgba(228, 208, 180, 0.55);
+  --text-subtle: rgba(228, 208, 180, 0.3);
+  --accent: #d4930a;
+  --accent-dim: rgba(212, 147, 10, 0.12);
+  --accent-glow: rgba(212, 147, 10, 0.28);
+  --positive: #5d8a2e;
+  --positive-dim: rgba(93, 138, 46, 0.12);
+  --negative: #b83c3c;
+  --negative-dim: rgba(184, 60, 60, 0.12);
+  --warning: #d97706;
+  --shadow-sm: 0 1px 4px rgba(0,0,0,0.7), 0 0 8px rgba(212,147,10,0.06);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.75), 0 0 24px rgba(212,147,10,0.08);
+  --shadow-lg: 0 12px 48px rgba(0,0,0,0.85), 0 0 48px rgba(212,147,10,0.1);
+}
+
+[data-theme="dark-academia"] body {
+  font-family: var(--font-libre), 'Georgia', serif;
+}
+
+[data-theme="dark-academia"] h1,
+[data-theme="dark-academia"] h2 {
+  font-family: var(--font-libre), 'Georgia', serif;
+  letter-spacing: 0.01em;
+}
+
+/* ─── react-grid-layout overrides ──────────────────────────────────────── */
+.react-grid-layout {
+  position: relative;
+}
+
+.react-grid-item {
+  transition: none;
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: var(--accent-dim);
+  border: 2px dashed var(--accent);
+  border-radius: 16px;
+  opacity: 0.7;
+}
+
+[data-theme="brutalism"] .react-grid-item.react-grid-placeholder {
+  border-radius: 0 !important;
+}
+
+.react-grid-item > .react-resizable-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+  content: '';
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid var(--border-strong);
+  border-bottom: 2px solid var(--border-strong);
+}
+
+/* Edit mode indicator on grid items */
+.rgl-edit-mode .react-grid-item {
+  cursor: grab;
+}
+
+.rgl-edit-mode .react-grid-item:active {
+  cursor: grabbing;
+}
+
+.rgl-edit-mode .react-grid-item > :first-child {
+  outline: 1px dashed var(--accent-glow);
+  outline-offset: -2px;
+}

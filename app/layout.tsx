@@ -1,10 +1,31 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, JetBrains_Mono, Playfair_Display, Libre_Baskerville } from 'next/font/google'
+import { cookies } from 'next/headers'
+import { ThemeProvider } from '@/components/ThemeProvider'
 import './globals.css'
 
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
+  display: 'swap',
+})
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-jetbrains',
+  display: 'swap',
+})
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  variable: '--font-playfair',
+  display: 'swap',
+})
+
+const libreBaskerville = Libre_Baskerville({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-libre',
   display: 'swap',
 })
 
@@ -26,10 +47,24 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const cookieStore = await cookies()
+  const theme = cookieStore.get('parma-theme')?.value ?? 'normal'
+
+  const fontVars = [
+    inter.variable,
+    jetbrainsMono.variable,
+    playfair.variable,
+    libreBaskerville.variable,
+  ].join(' ')
+
   return (
-    <html lang="en" className={`h-full ${inter.variable}`}>
-      <body className="min-h-full">{children}</body>
+    <html lang="en" className={`h-full ${fontVars}`} data-theme={theme} suppressHydrationWarning>
+      <body className="min-h-full">
+        <ThemeProvider initialTheme={theme}>
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   )
 }

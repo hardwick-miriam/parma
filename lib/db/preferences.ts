@@ -14,6 +14,8 @@ export interface UserPreferences {
   shortcuts_token: string | null
   saved_places: SavedPlace[]
   mounjaro_enabled: boolean
+  layouts: Record<string, unknown>
+  theme: string
   updated_at: string
 }
 
@@ -27,7 +29,12 @@ export async function getUserPreferences(userId: string): Promise<UserPreference
 
   if (error) throw error
   if (!data) return null
-  return { ...data, saved_places: (data.saved_places as SavedPlace[]) ?? [] }
+  return {
+    ...data,
+    saved_places: (data.saved_places as SavedPlace[]) ?? [],
+    layouts: (data.layouts as Record<string, unknown>) ?? {},
+    theme: (data.theme as string) ?? 'normal',
+  }
 }
 
 export async function upsertUserPreferences(

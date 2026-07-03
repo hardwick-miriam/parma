@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import { saveSettings, generateToken, addPlace, removePlace, changeEmail, changePassword } from './actions'
+import { useTheme } from '@/components/ThemeProvider'
 import type { SavedPlace } from '@/lib/db/preferences'
+import type { Theme } from '@/components/ThemeProvider'
 
 interface Props {
   userId: string
@@ -12,6 +14,7 @@ interface Props {
     token: string | null
     savedPlaces: SavedPlace[]
     mounjaroEnabled: boolean
+    theme: string
   }
 }
 
@@ -24,10 +27,19 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
+const THEMES: { id: Theme; label: string; desc: string; preview: string }[] = [
+  { id: 'normal',        label: 'Normal',          desc: 'Deep violet on dark slate',     preview: '#111113/#8b5cf6' },
+  { id: 'hacker',        label: 'Hacker',           desc: 'Green phosphor · monospace',    preview: '#000000/#00ff41' },
+  { id: 'brutalism',     label: 'Modern Brutalism', desc: 'Black on white · raw energy',   preview: '#ffffff/#000000' },
+  { id: 'old-money',     label: 'Old Money',        desc: 'Deep green · gold accents',     preview: '#0f1a08/#c9a84c' },
+  { id: 'dark-academia', label: 'Dark Academia',    desc: 'Warm brown · candle amber',     preview: '#13100a/#d4930a' },
+]
+
 export function SettingsClient({ currentEmail, initialPrefs }: Props) {
   const [weightGoal, setWeightGoal] = useState(initialPrefs.weightGoal?.toString() ?? '')
   const [mounjaroEnabled, setMounjaroEnabled] = useState(initialPrefs.mounjaroEnabled)
   const [token, setToken] = useState(initialPrefs.token)
+  const { theme, setTheme } = useTheme()
   const [places, setPlaces] = useState<SavedPlace[]>(initialPrefs.savedPlaces)
   const [newPlaceName, setNewPlaceName] = useState('')
   const [newPlaceAction, setNewPlaceAction] = useState('')
@@ -183,6 +195,46 @@ export function SettingsClient({ currentEmail, initialPrefs }: Props) {
         >
           {saving ? 'Saving…' : saved ? 'Saved ✓' : 'Save'}
         </button>
+      </Section>
+
+      {/* Theme */}
+      <Section title="Theme">
+        <p className="text-xs text-text-subtle">Changes take effect immediately and are saved to your account.</p>
+        <div className="flex flex-col gap-2">
+          {THEMES.map((t) => {
+            const [bg, accent] = t.preview.split('/')
+            const active = theme === t.id
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTheme(t.id as Theme)}
+                className="flex items-center gap-3 rounded-xl px-4 py-3 text-left transition-all"
+                style={{
+                  background: active ? 'var(--accent-dim)' : 'var(--surface-elevated)',
+                  border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+                  boxShadow: active ? 'var(--shadow-sm)' : 'none',
+                }}
+              >
+                {/* Colour swatch */}
+                <div
+                  className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ background: bg, border: `2px solid ${accent}` }}
+                >
+                  <div className="w-2 h-2 rounded-full" style={{ background: accent }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-text">{t.label}</p>
+                  <p className="text-xs text-text-subtle">{t.desc}</p>
+                </div>
+                {active && (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent)', flexShrink: 0 }}>
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </button>
+            )
+          })}
+        </div>
       </Section>
 
       {/* Apple Shortcuts */}

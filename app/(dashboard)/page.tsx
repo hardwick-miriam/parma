@@ -64,6 +64,7 @@ export default async function DashboardPage() {
       mounjaroDoses={mounjaroDoses}
       mounjaroEffects={mounjaroEffects}
       weightGoal={prefs?.weight_goal_kg ?? null}
+      savedLayouts={(prefs?.layouts as Record<string, unknown>) ?? {}}
     />
     </>
   )
