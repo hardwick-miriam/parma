@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 
 export type MediaCategory = 'book' | 'film' | 'show' | 'song'
+export type MediaStatus = 'want-to' | 'in-progress' | 'finished'
 
 export interface MediaEntry {
   id: string
@@ -9,6 +10,7 @@ export interface MediaEntry {
   title: string
   rating: number | null
   note: string | null
+  status: MediaStatus
   added_date: string
   created_at: string
 }
@@ -45,7 +47,7 @@ export async function getMediaCounts(userId: string): Promise<MediaCounts> {
 
 export async function insertMediaEntry(
   userId: string,
-  entry: { category: MediaCategory; title: string; rating?: number; note?: string; added_date?: string }
+  entry: { category: MediaCategory; title: string; rating?: number; note?: string; status?: MediaStatus; added_date?: string }
 ): Promise<MediaEntry> {
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -56,12 +58,23 @@ export async function insertMediaEntry(
       title: entry.title,
       rating: entry.rating ?? null,
       note: entry.note ?? null,
+      status: entry.status ?? 'finished',
       added_date: entry.added_date ?? new Date().toISOString().split('T')[0],
     })
     .select()
     .single()
   if (error) throw error
   return data
+}
+
+export async function updateMediaStatus(userId: string, entryId: string, status: MediaStatus): Promise<void> {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('media_log')
+    .update({ status })
+    .eq('id', entryId)
+    .eq('user_id', userId)
+  if (error) throw error
 }
 
 export async function deleteMediaEntry(userId: string, entryId: string): Promise<void> {

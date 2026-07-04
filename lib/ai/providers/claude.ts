@@ -61,7 +61,7 @@ const PARSE_TOOL: Anthropic.Tool = {
       notes: { type: 'string', description: 'Anything that does not fit another field — unless it fits media, in which case use media' },
       media: {
         type: 'array',
-        description: 'Books read, films/shows watched, or songs listened to. E.g. "watched Oppenheimer last night, 9/10" → [{category:"film",title:"Oppenheimer",rating:9}]. "finished reading Dune, loved it" → [{category:"book",title:"Dune",note:"loved it"}]. "just watched Breaking Bad S1" → [{category:"show",title:"Breaking Bad S1"}]. Only use when media consumption is clearly mentioned.',
+        description: 'Books read/watching/wanting to read, films/shows watched/watching/to watch, or songs listened to. E.g. "watched Oppenheimer" → [{...,status:"finished"}]. "want to watch Inception" → [{...,status:"want-to"}]. "currently reading Dune" → [{...,status:"in-progress"}]. "finished reading Dune" → [{...,status:"finished"}].',
         items: {
           type: 'object',
           properties: {
@@ -69,6 +69,7 @@ const PARSE_TOOL: Anthropic.Tool = {
             title: { type: 'string', description: 'Title of the work' },
             rating: { type: 'number', description: 'Rating on 1-10 scale if mentioned (e.g. "9/10" → 9, "★★★★" → 8)' },
             note: { type: 'string', description: 'Any comment or review note (e.g. "loved it", "slow start but great ending")' },
+            status: { type: 'string', enum: ['want-to', 'in-progress', 'finished'], description: '"want-to" when user wants to read/watch; "in-progress" when currently reading/watching; "finished" when completed (default).' },
           },
           required: ['category', 'title'],
           additionalProperties: false,

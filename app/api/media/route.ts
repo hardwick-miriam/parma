@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getMediaLog, deleteMediaEntry } from '@/lib/db/media'
+import { getMediaLog, deleteMediaEntry, updateMediaStatus, type MediaStatus } from '@/lib/db/media'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,5 +23,18 @@ export async function DELETE(request: NextRequest) {
   if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
 
   await deleteMediaEntry(user.id, id)
+  return NextResponse.json({ ok: true })
+}
+
+export async function PATCH(request: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const body = await request.json().catch(() => null)
+  const { id, status } = body ?? {}
+  if (!id || !status) return NextResponse.json({ error: 'id and status are required' }, { status: 400 })
+
+  await updateMediaStatus(user.id, id, status as MediaStatus)
   return NextResponse.json({ ok: true })
 }

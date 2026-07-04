@@ -21,6 +21,7 @@ export interface ParsedMediaItem {
   title: string
   rating?: number
   note?: string
+  status?: 'want-to' | 'in-progress' | 'finished'
 }
 
 export interface ParsedLog {
@@ -54,6 +55,8 @@ export interface ParsedLog {
     energy?: number
     notes?: string
   }
+  log_date?: string      // YYYY-MM-DD — when the entry belongs to a past/future date
+  estimates?: string[]   // field names that are AI-inferred estimates (not stated by user)
 }
 
 export interface InjuryContext {
@@ -64,6 +67,9 @@ export interface InjuryContext {
 
 export interface ParseContext {
   activeInjuries?: InjuryContext[]
+  today?: string      // YYYY-MM-DD in user's timezone
+  timezone?: string   // IANA tz name, e.g. 'Europe/London'
+  weekday?: string    // e.g. 'Monday' for relative-day resolution
 }
 
 export interface AIProvider {
