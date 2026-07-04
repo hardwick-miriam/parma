@@ -37,6 +37,7 @@ import { PRTrackerWidget } from './widgets/PRTrackerWidget'
 import { TrainingLoadWidget } from './widgets/TrainingLoadWidget'
 import { SleepDebtWidget } from './widgets/SleepDebtWidget'
 import { HabitGardenWidget } from './widgets/HabitGardenWidget'
+import { HeatmapWidget } from './widgets/HeatmapWidget'
 import { MilestoneToast } from './MilestoneToast'
 import { GridItemSizeContext } from './GridItemSizeContext'
 import { detectMilestones } from '@/lib/milestones'
@@ -87,6 +88,7 @@ export const WIDGET_CATALOG: Array<{
   { id: 'trainload',  name: 'Training Load',description: '14-day training volume and AC ratio',      icon: '📊' },
   { id: 'sleepdebt',  name: 'Sleep Debt',   description: '14-day rolling sleep deficit tracker',      icon: '💤' },
   { id: 'habitgarden',name: 'Habit Garden', description: 'SVG plant that grows with your habits',     icon: '🌱' },
+  { id: 'heatmap',   name: 'Year Heatmap', description: '52-week activity heatmap by metric',        icon: '📅' },
 ]
 
 // ─── Default layouts ─────────────────────────────────────────────────────────
@@ -114,6 +116,7 @@ const DEFAULT_LG: LayoutItem[] = [
   { i: 'trainload',  x: 8,  y: 23, w: 4,  h: 5, minW: 3, minH: 3 },
   { i: 'sleepdebt',  x: 4,  y: 28, w: 4,  h: 5, minW: 2, minH: 3 },
   { i: 'habitgarden',x: 8,  y: 28, w: 4,  h: 5, minW: 2, minH: 3 },
+  { i: 'heatmap',   x: 0,  y: 33, w: 12, h: 5, minW: 6, minH: 4 },
 ]
 
 const DEFAULT_SM: LayoutItem[] = [
@@ -139,6 +142,7 @@ const DEFAULT_SM: LayoutItem[] = [
   { i: 'trainload',   x: 0, y: 74, w: 4, h: 5 },
   { i: 'sleepdebt',   x: 0, y: 79, w: 4, h: 5 },
   { i: 'habitgarden', x: 0, y: 84, w: 4, h: 5 },
+  { i: 'heatmap',     x: 0, y: 89, w: 4, h: 6 },
 ]
 
 const DEFAULT_LAYOUTS: ResponsiveLayouts = { lg: DEFAULT_LG, sm: DEFAULT_SM }
@@ -906,6 +910,14 @@ export function DashboardGrid({
                   <HabitGardenWidget history={history} todayHabits={stats?.habits_done} streak={streaks.logging} />
                 </PlainWrapper>
                 {editMode && <RemoveBtn id="habitgarden" onHide={hideWidget} />}
+              </div>
+            )}
+            {!hiddenWidgets.has('heatmap') && (
+              <div key="heatmap" className="relative">
+                <PlainWrapper itemW={gs('heatmap').w} itemH={gs('heatmap').h}>
+                  <HeatmapWidget history={history} workouts={workouts} />
+                </PlainWrapper>
+                {editMode && <RemoveBtn id="heatmap" onHide={hideWidget} />}
               </div>
             )}
           </ResponsiveGridLayout>
