@@ -353,8 +353,9 @@ export async function syncWhoopUser(userId: string): Promise<SyncResult> {
       }
     }
 
-    // ── 8. Update last_sync_at ────────────────────────────────────────────────
-    if (synced > 0 || cycles.length > 0 || workouts_synced > 0) {
+    // ── 8. Update last_sync_at only when sync completed without errors ────────
+    // Don't advance the window on a partial failure — next sync will retry.
+    if (upsert_errors.length === 0 && (synced > 0 || cycles.length > 0 || workouts_synced > 0)) {
       await supabase
         .from('whoop_connections')
         .update({ last_sync_at: new Date().toISOString() })
