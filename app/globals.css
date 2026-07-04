@@ -359,7 +359,12 @@ body {
   border-bottom: 2px solid var(--border-strong);
 }
 
-/* Edit mode indicator on grid items */
+/* All grid items clip their children — prevents phantom reserved space */
+.react-grid-item {
+  overflow: hidden;
+}
+
+/* Edit mode: grab cursor + dashed outline */
 .rgl-edit-mode .react-grid-item {
   cursor: grab;
 }
@@ -371,4 +376,12 @@ body {
 .rgl-edit-mode .react-grid-item > :first-child {
   outline: 1px dashed var(--accent-glow);
   outline-offset: -2px;
+  /* Block pointer events on widget content so the grid item handles the drag */
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Keep resize handle interactive even in edit mode */
+.rgl-edit-mode .react-grid-item > .react-resizable-handle {
+  pointer-events: auto;
 }

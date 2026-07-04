@@ -93,23 +93,31 @@ const DEFAULT_SM: LayoutItem[] = [
 
 const DEFAULT_LAYOUTS: ResponsiveLayouts = { lg: DEFAULT_LG, sm: DEFAULT_SM }
 
-function mergeLayouts(saved: Record<string, unknown>): ResponsiveLayouts {
-  if (!saved || typeof saved !== 'object' || Object.keys(saved).length === 0) {
-    return DEFAULT_LAYOUTS
+function sanitiseItem(item: LayoutItem, maxCols: number): LayoutItem {
+  return {
+    ...item,
+    x: Math.max(0, Math.min(item.x, maxCols - 1)),
+    w: Math.max(item.minW ?? 1, Math.min(item.w, maxCols)),
+    h: Math.max(item.minH ?? 1, Math.min(item.h, 24)),
   }
-  const savedLg = (saved.lg as LayoutItem[] | undefined) ?? []
-  const savedSm = (saved.sm as LayoutItem[] | undefined) ?? []
-  // Append any new default widgets missing from the saved layout so widgets
-  // added after the user last saved their layout become visible.
+}
+
+function mergeLayouts(saved: Record<string, unknown>, hiddenIds: Set<string> = new Set()): ResponsiveLayouts {
+  if (!saved || typeof saved !== 'object' || Object.keys(saved).length === 0) {
+    return { lg: DEFAULT_LG.filter(i => !hiddenIds.has(i.i)), sm: DEFAULT_SM.filter(i => !hiddenIds.has(i.i)) }
+  }
+  const savedLg = ((saved.lg as LayoutItem[] | undefined) ?? []).map(i => sanitiseItem(i, 12)).filter(i => !hiddenIds.has(i.i))
+  const savedSm = ((saved.sm as LayoutItem[] | undefined) ?? []).map(i => sanitiseItem(i, 4)).filter(i => !hiddenIds.has(i.i))
+  // Append any new default widgets missing from the saved layout (and not hidden)
   const lgKeys = new Set(savedLg.map(i => i.i))
   const smKeys = new Set(savedSm.map(i => i.i))
   return {
     lg: savedLg.length > 0
-      ? [...savedLg, ...DEFAULT_LG.filter(item => !lgKeys.has(item.i))]
-      : DEFAULT_LG,
+      ? [...savedLg, ...DEFAULT_LG.filter(item => !lgKeys.has(item.i) && !hiddenIds.has(item.i))]
+      : DEFAULT_LG.filter(i => !hiddenIds.has(i.i)),
     sm: savedSm.length > 0
-      ? [...savedSm, ...DEFAULT_SM.filter(item => !smKeys.has(item.i))]
-      : DEFAULT_SM,
+      ? [...savedSm, ...DEFAULT_SM.filter(item => !smKeys.has(item.i) && !hiddenIds.has(item.i))]
+      : DEFAULT_SM.filter(i => !hiddenIds.has(i.i)),
   }
 }
 
@@ -225,20 +233,22 @@ function WidgetWrapper({
   onOpen,
   itemW,
   itemH,
+  editing,
   children,
 }: {
   metricId: MetricId
   onOpen: (id: MetricId) => void
   itemW: number
   itemH: number
+  editing: boolean
   children: React.ReactNode
 }) {
   return (
     <GridItemSizeContext.Provider value={{ w: itemW, h: itemH }}>
       <motion.div
         variants={itemVariants}
-        className="cursor-pointer h-full transition-transform duration-150 hover:scale-[1.015] active:scale-[0.985]"
-        onClick={(e) => { if (!isInteractiveTarget(e.target)) onOpen(metricId) }}
+        className={`h-full overflow-hidden${editing ? '' : ' cursor-pointer transition-transform duration-150 hover:scale-[1.015] active:scale-[0.985]'}`}
+        onClick={(e) => { if (!editing && !isInteractiveTarget(e.target)) onOpen(metricId) }}
       >
         {children}
       </motion.div>
@@ -257,7 +267,7 @@ function PlainWrapper({
 }) {
   return (
     <GridItemSizeContext.Provider value={{ w: itemW, h: itemH }}>
-      <motion.div variants={itemVariants} className="h-full">
+      <motion.div variants={itemVariants} className="h-full overflow-hidden">
         {children}
       </motion.div>
     </GridItemSizeContext.Provider>
@@ -494,11 +504,10 @@ export function DashboardGrid({
             isDraggable={editMode}
             isResizable={editMode}
             onLayoutChange={handleLayoutChange}
-            draggableHandle=".rgl-drag-handle"
             useCSSTransforms
           >
             <div key="nutr" style={{ cursor: 'default' }}>
-              <WidgetWrapper metricId="nutrition" onOpen={openMetric} itemW={gs('nutr').w} itemH={gs('nutr').h}>
+              <WidgetWrapper metricId="nutrition" onOpen={openMetric} itemW={gs('nutr').w} itemH={gs('nutr').h} editing={editMode}>
                 <NutritionWidget
                   calories={stats?.calories ?? 0}
                   protein_g={stats?.protein_g ?? 0}
@@ -510,31 +519,31 @@ export function DashboardGrid({
             </div>
 
             <div key="steps" style={{ cursor: 'default' }}>
-              <WidgetWrapper metricId="steps" onOpen={openMetric} itemW={gs('steps').w} itemH={gs('steps').h}>
+              <WidgetWrapper metricId="steps" onOpen={openMetric} itemW={gs('steps').w} itemH={gs('steps').h} editing={editMode}>
                 <StepsWidget steps={stats?.steps ?? 0} streak={streaks.steps} comp={stepsComp} />
               </WidgetWrapper>
             </div>
 
             <div key="sleep" style={{ cursor: 'default' }}>
-              <WidgetWrapper metricId="sleep" onOpen={openMetric} itemW={gs('sleep').w} itemH={gs('sleep').h}>
+              <WidgetWrapper metricId="sleep" onOpen={openMetric} itemW={gs('sleep').w} itemH={gs('sleep').h} editing={editMode}>
                 <SleepWidget hours={stats?.sleep_hours ?? null} source={stats?.sleep_source ?? null} />
               </WidgetWrapper>
             </div>
 
             <div key="mood" style={{ cursor: 'default' }}>
-              <WidgetWrapper metricId="mood" onOpen={openMetric} itemW={gs('mood').w} itemH={gs('mood').h}>
+              <WidgetWrapper metricId="mood" onOpen={openMetric} itemW={gs('mood').w} itemH={gs('mood').h} editing={editMode}>
                 <MoodWidget mood={stats?.mood ?? null} />
               </WidgetWrapper>
             </div>
 
             <div key="hydra" style={{ cursor: 'default' }}>
-              <WidgetWrapper metricId="hydration" onOpen={openMetric} itemW={gs('hydra').w} itemH={gs('hydra').h}>
+              <WidgetWrapper metricId="hydration" onOpen={openMetric} itemW={gs('hydra').w} itemH={gs('hydra').h} editing={editMode}>
                 <HydrationWidget water_ml={stats?.water_ml ?? 0} streak={streaks.hydration} comp={hydraComp} />
               </WidgetWrapper>
             </div>
 
             <div key="wt" style={{ cursor: 'default' }}>
-              <WidgetWrapper metricId="weight" onOpen={openMetric} itemW={gs('wt').w} itemH={gs('wt').h}>
+              <WidgetWrapper metricId="weight" onOpen={openMetric} itemW={gs('wt').w} itemH={gs('wt').h} editing={editMode}>
                 <WeightWidget weight_kg={stats?.weight_kg ?? null} goalWeight={weightGoal} />
               </WidgetWrapper>
             </div>
