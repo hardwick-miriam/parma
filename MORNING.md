@@ -41,7 +41,7 @@
 ## Action items before launch
 
 1. **Add `GROQ_API_KEY` to Vercel env vars** — voice logging falls back to Web Speech API without it but Groq is faster/more accurate
-2. **Run Supabase migrations 008–011** — paste each `supabase/migrations/0XX_*.sql` into the Supabase SQL editor
+2. ~~**Run Supabase migrations 008–011**~~ — ✅ Done (migrations 008–012 all applied and verified)
 3. **Register WHOOP webhook** (see SYNC.md) — without it, WHOOP data only syncs on the 15-min cron
 4. **Set `WHOOP_WEBHOOK_SECRET`** in Vercel env vars once the webhook is registered
 5. **WHOOP 15-min cron needs Vercel Pro** — on the free tier the cron degrades to daily
@@ -66,6 +66,7 @@ supabase/migrations/008_insights.sql
 supabase/migrations/009_athlete_package.sql
 supabase/migrations/010_weather_bg.sql
 supabase/migrations/011_media_status.sql
+supabase/migrations/012_hidden_widgets.sql
 app/api/insights/route.ts
 app/api/cron/insights-refresh/route.ts
 app/api/personal-records/route.ts
