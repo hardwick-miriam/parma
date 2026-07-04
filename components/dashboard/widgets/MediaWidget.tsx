@@ -324,7 +324,7 @@ export function MediaWidget({ initialEntries, initialCounts }: MediaWidgetProps)
   return (
     <>
       <div
-        className="rounded-2xl bg-surface border border-border p-5 flex flex-col gap-4 h-full cursor-pointer hover:scale-[1.015] active:scale-[0.985] transition-transform duration-150"
+        className="rounded-2xl bg-surface border border-border p-5 flex flex-col gap-4 h-full overflow-hidden cursor-pointer hover:scale-[1.015] active:scale-[0.985] transition-transform duration-150"
         style={{ boxShadow: 'var(--shadow-md)' }}
         onClick={() => !loading && setOpen(true)}
       >

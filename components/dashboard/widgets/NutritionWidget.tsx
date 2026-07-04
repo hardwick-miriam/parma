@@ -32,7 +32,7 @@ export function NutritionWidget({
     const calPct = Math.round(Math.min((calories / calorieTarget) * 100, 100))
     const proPct = Math.round(Math.min((protein_g / proteinTarget) * 100, 100))
     return (
-      <div className="rounded-2xl bg-surface border border-border p-4 flex flex-col gap-2 h-full" style={{ boxShadow: 'var(--shadow-md)' }}>
+      <div className="rounded-2xl bg-surface border border-border p-4 flex flex-col gap-2 h-full overflow-hidden" style={{ boxShadow: 'var(--shadow-md)' }}>
         <h2 className="text-xs font-semibold text-text-muted uppercase tracking-widest">Nutrition</h2>
         <div className="flex-1 flex flex-col justify-center gap-3">
           <div>
@@ -49,7 +49,7 @@ export function NutritionWidget({
   }
 
   return (
-    <div className="rounded-2xl bg-surface border border-border p-6 flex flex-col gap-4 h-full" style={{ boxShadow: 'var(--shadow-md)' }}>
+    <div className="rounded-2xl bg-surface border border-border p-6 flex flex-col gap-4 h-full overflow-hidden" style={{ boxShadow: 'var(--shadow-md)' }}>
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest">Nutrition</h2>
         <StreakBadge count={proteinStreak} label="protein days" />

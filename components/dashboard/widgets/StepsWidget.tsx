@@ -20,7 +20,7 @@ export function StepsWidget({ steps, target = 10000, streak = 0, comp }: StepsWi
 
   if (compact) {
     return (
-      <div className="rounded-2xl bg-surface border border-border p-4 flex flex-col gap-2 h-full" style={{ boxShadow: 'var(--shadow-md)' }}>
+      <div className="rounded-2xl bg-surface border border-border p-4 flex flex-col gap-2 h-full overflow-hidden" style={{ boxShadow: 'var(--shadow-md)' }}>
         <h2 className="text-xs font-semibold text-text-muted uppercase tracking-widest">Steps</h2>
         <div className="flex-1 flex flex-col justify-center">
           <p className="text-2xl font-bold text-text tabular-nums">{steps.toLocaleString()}</p>
@@ -31,7 +31,7 @@ export function StepsWidget({ steps, target = 10000, streak = 0, comp }: StepsWi
   }
 
   return (
-    <div className="rounded-2xl bg-surface border border-border p-6 flex flex-col gap-4 h-full" style={{ boxShadow: 'var(--shadow-md)' }}>
+    <div className="rounded-2xl bg-surface border border-border p-6 flex flex-col gap-4 h-full overflow-hidden" style={{ boxShadow: 'var(--shadow-md)' }}>
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest">Steps</h2>
         <StreakBadge count={streak} />

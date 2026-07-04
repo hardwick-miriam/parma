@@ -51,7 +51,7 @@ export function SleepDebtWidget({ history, target = TARGET }: SleepDebtWidgetPro
 
   return (
     <div
-      className="rounded-2xl bg-surface border border-border p-5 flex flex-col gap-4 h-full"
+      className="rounded-2xl bg-surface border border-border p-5 flex flex-col gap-4 h-full overflow-hidden"
       style={{ boxShadow: 'var(--shadow-md)' }}
     >
       <div className="flex items-center justify-between">

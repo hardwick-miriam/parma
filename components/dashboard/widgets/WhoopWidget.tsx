@@ -79,7 +79,7 @@ export function WhoopWidget({ today, history }: WhoopWidgetProps) {
 
   if (compact) {
     return (
-      <div className="rounded-2xl bg-surface border border-border p-3 flex flex-col items-center justify-center h-full gap-1">
+      <div className="rounded-2xl bg-surface border border-border p-3 flex flex-col items-center justify-center h-full gap-1 overflow-hidden">
         <span className="text-2xl font-bold tabular-nums" style={{ color }}>
           {recovery != null ? Math.round(recovery) : '—'}
         </span>
@@ -91,7 +91,7 @@ export function WhoopWidget({ today, history }: WhoopWidgetProps) {
 
   return (
     <div
-      className="rounded-2xl bg-surface border border-border p-4 flex flex-col gap-3 h-full"
+      className="rounded-2xl bg-surface border border-border p-4 flex flex-col gap-3 h-full overflow-hidden"
       style={{ boxShadow: 'var(--shadow-md)' }}
     >
       {/* Header */}
