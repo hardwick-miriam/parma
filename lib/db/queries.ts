@@ -11,6 +11,7 @@ export interface DailyStats {
   water_ml: number
   mood: string | null
   sleep_hours: number | null
+  sleep_source: string | null
   notes: string | null
   weight_kg: number | null
   supplements: string[] | null
@@ -26,6 +27,9 @@ export interface WorkoutSession {
   duration_minutes: number | null
   feeling: string | null
   exercises: string[] | null
+  source: string
+  whoop_id: number | null
+  started_at: string | null
 }
 
 export interface HealthStatus {

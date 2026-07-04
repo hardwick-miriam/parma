@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { createServiceClient } from '@/lib/supabase/service'
-import { syncRecoveryByCycleId, syncSleepById, syncWhoopUser } from '@/lib/whoop/sync'
+import { syncRecoveryByCycleId, syncSleepById, syncWorkoutById } from '@/lib/whoop/sync'
 
 type WebhookEvent = {
   type: string
@@ -60,9 +60,10 @@ export async function POST(request: NextRequest) {
         await syncSleepById(userId, event.id)
         break
       case 'workout.updated':
+        await syncWorkoutById(userId, event.id)
+        break
       case 'cycle.updated':
-        // For workout/cycle updates, trigger a targeted sync for the past 2 days
-        await syncWhoopUser(userId)
+        await syncRecoveryByCycleId(userId, event.id)
         break
       default:
         // Unknown event — ack without acting

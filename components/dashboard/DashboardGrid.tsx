@@ -517,7 +517,7 @@ export function DashboardGrid({
 
             <div key="sleep" style={{ cursor: 'default' }}>
               <WidgetWrapper metricId="sleep" onOpen={openMetric} itemW={gs('sleep').w} itemH={gs('sleep').h}>
-                <SleepWidget hours={stats?.sleep_hours ?? null} />
+                <SleepWidget hours={stats?.sleep_hours ?? null} source={stats?.sleep_source ?? null} />
               </WidgetWrapper>
             </div>
 

@@ -77,12 +77,16 @@ export function SettingsClient({ currentEmail, initialPrefs, whoopConnection }: 
       if (!res.ok || data.error) {
         setWhoopSyncMsg(`Error: ${String(data.error ?? `HTTP ${res.status}`)}`)
       } else {
-        const synced = data.synced as number ?? 0
+        const synced = (data.synced as number) ?? 0
+        const workouts = (data.workouts_synced as number) ?? 0
+        const slps = (data.sleeps_synced as number) ?? 0
         const errors = (data.upsert_errors as unknown[])?.length ?? 0
-        const parts = [`Wrote ${synced} day${synced === 1 ? '' : 's'}`]
+        const parts = [`${synced} day${synced === 1 ? '' : 's'}`]
+        if (workouts > 0) parts.push(`${workouts} workout${workouts === 1 ? '' : 's'}`)
+        if (slps > 0) parts.push(`${slps} sleep${slps === 1 ? '' : 's'}`)
         if (data.skipped_open) parts.push(`${data.skipped_open} open`)
         if (errors > 0) parts.push(`${errors} write error${errors === 1 ? '' : 's'}`)
-        setWhoopSyncMsg(parts.join(' · '))
+        setWhoopSyncMsg(`Synced · ${parts.join(' · ')}`)
         setWhoop(w => w ? { ...w, lastSyncAt: new Date().toISOString() } : w)
         setTimeout(() => setWhoopSyncMsg(null), 6000)
       }

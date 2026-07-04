@@ -46,17 +46,73 @@ interface WhoopSleepRecord {
   nap: boolean
   score_state: string
   score?: {
+    stage_summary?: {
+      total_in_bed_time_milli: number
+      total_awake_time_milli: number
+      total_no_data_time_milli: number
+      total_light_sleep_time_milli: number
+      total_slow_wave_sleep_time_milli: number
+      total_rem_sleep_time_milli: number
+    }
     sleep_performance_percentage: number
     sleep_consistency_percentage: number
     sleep_efficiency_percentage: number
   }
 }
 
+interface WhoopWorkoutRecord {
+  id: number
+  user_id: number
+  created_at: string
+  updated_at: string
+  start: string
+  end: string
+  timezone_offset: string
+  sport_id: number
+  score_state: string
+  score?: {
+    strain: number
+    average_heart_rate: number
+    max_heart_rate: number
+    kilojoule: number
+    percent_recorded: number
+    distance_meter?: number
+  }
+}
+
+// Common WHOOP sport IDs — unknown IDs fall back to "WHOOP Workout"
+const SPORT_NAMES: Record<number, string> = {
+  [-1]: 'Activity',
+  0: 'Running',
+  1: 'Cycling',
+  16: 'Weightlifting',
+  44: 'Functional Fitness',
+  45: 'CrossFit',
+  63: 'HIIT',
+  71: 'Boxing',
+  72: 'Swimming',
+  73: 'Triathlon',
+  74: 'Duathlon',
+  82: 'Walking',
+  91: 'Outdoor Biking',
+  119: 'Rowing',
+  126: 'Yoga',
+  149: 'Pilates',
+  151: 'Jiu Jitsu',
+  167: 'Tennis',
+  172: 'Basketball',
+  206: 'Football',
+  209: 'Soccer',
+}
+
 export interface SyncResult {
   synced: number
+  workouts_synced: number
+  sleeps_synced: number
   cycles_fetched: number
   recoveries_fetched: number
   sleeps_fetched: number
+  workouts_fetched: number
   skipped_open: number
   upsert_errors: Array<{ date: string; error: string }>
   error?: string
@@ -71,6 +127,14 @@ function cycleDate(start: string, timezoneOffset: string): string {
   return new Date(startMs + offsetMs).toISOString().split('T')[0]
 }
 
+function sleepHoursFromScore(score: WhoopSleepRecord['score']): number | null {
+  if (!score?.stage_summary) return null
+  const { total_in_bed_time_milli, total_awake_time_milli, total_no_data_time_milli } = score.stage_summary
+  const sleepMs = total_in_bed_time_milli - total_awake_time_milli - (total_no_data_time_milli ?? 0)
+  if (sleepMs <= 0) return null
+  return Math.round(sleepMs / 360_000) / 10  // round to 1 decimal
+}
+
 export async function syncWhoopUser(userId: string): Promise<SyncResult> {
   // ── service client ────────────────────────────────────────────────────────────
   let supabase: ReturnType<typeof createServiceClient>
@@ -78,8 +142,9 @@ export async function syncWhoopUser(userId: string): Promise<SyncResult> {
     supabase = createServiceClient()
   } catch (err) {
     return {
-      synced: 0, cycles_fetched: 0, recoveries_fetched: 0,
-      sleeps_fetched: 0, skipped_open: 0, upsert_errors: [],
+      synced: 0, workouts_synced: 0, sleeps_synced: 0,
+      cycles_fetched: 0, recoveries_fetched: 0, sleeps_fetched: 0, workouts_fetched: 0,
+      skipped_open: 0, upsert_errors: [],
       error: `Service client unavailable: ${err instanceof Error ? err.message : String(err)}`,
     }
   }
@@ -90,15 +155,14 @@ export async function syncWhoopUser(userId: string): Promise<SyncResult> {
     conn = await getValidConnectionService(userId)
   } catch (err) {
     return {
-      synced: 0, cycles_fetched: 0, recoveries_fetched: 0,
-      sleeps_fetched: 0, skipped_open: 0, upsert_errors: [],
+      synced: 0, workouts_synced: 0, sleeps_synced: 0,
+      cycles_fetched: 0, recoveries_fetched: 0, sleeps_fetched: 0, workouts_fetched: 0,
+      skipped_open: 0, upsert_errors: [],
       error: `Token refresh failed: ${err instanceof Error ? err.message : String(err)}`,
     }
   }
 
   // ── sync window ───────────────────────────────────────────────────────────────
-  // First sync (last_sync_at null): backfill 30 days.
-  // Subsequent syncs: since last_sync_at minus 1 day to catch late-scored records.
   const { data: connRow } = await supabase
     .from('whoop_connections')
     .select('last_sync_at')
@@ -116,7 +180,6 @@ export async function syncWhoopUser(userId: string): Promise<SyncResult> {
     // ── 1. Pull recoveries ────────────────────────────────────────────────────
     const recoveries = await whoopListAll<WhoopRecoveryRecord>('/recovery', conn.access_token, params)
 
-    // Map cycle_id → recovery, and sleep_id → recovery (for sleep lookup)
     const recoveryByCycle: Record<number, WhoopRecoveryRecord> = {}
     for (const r of recoveries) {
       if (r.score_state === 'SCORED' && r.score) {
@@ -130,9 +193,7 @@ export async function syncWhoopUser(userId: string): Promise<SyncResult> {
     // ── 3. Pull sleeps ────────────────────────────────────────────────────────
     const sleeps = await whoopListAll<WhoopSleepRecord>('/activity/sleep', conn.access_token, params)
 
-    // Map sleep by ID (not by date — sleep.start is early morning, cycle.start is
-    // afternoon; the dates differ so date-matching is wrong).
-    // recovery.sleep_id is the authoritative link between a cycle and its sleep.
+    // sleepById: for whoop_metrics rollup (recovery link)
     const sleepById: Record<number, WhoopSleepRecord> = {}
     for (const s of sleeps) {
       if (!s.nap && s.score_state === 'SCORED' && s.score) {
@@ -140,7 +201,10 @@ export async function syncWhoopUser(userId: string): Promise<SyncResult> {
       }
     }
 
-    // ── 4. Upsert one row per closed cycle ────────────────────────────────────
+    // ── 4. Pull workouts ──────────────────────────────────────────────────────
+    const workouts = await whoopListAll<WhoopWorkoutRecord>('/activity/workout', conn.access_token, params)
+
+    // ── 5. Upsert whoop_metrics (one row per closed cycle) ────────────────────
     let synced = 0
     let skipped_open = 0
     const upsert_errors: Array<{ date: string; error: string }> = []
@@ -153,7 +217,7 @@ export async function syncWhoopUser(userId: string): Promise<SyncResult> {
 
       const date = cycleDate(cycle.start, cycle.timezone_offset)
       const recovery = recoveryByCycle[cycle.id]
-      // Use recovery.sleep_id to find the right sleep record
+      // Link recovery → sleep via sleep_id (NOT date matching — they're on different calendar days)
       const sleep = recovery?.sleep_id ? sleepById[recovery.sleep_id] : undefined
 
       const row: Record<string, unknown> = {
@@ -191,8 +255,106 @@ export async function syncWhoopUser(userId: string): Promise<SyncResult> {
       }
     }
 
-    // ── 5. Update last_sync_at only if we wrote at least something ─────────────
-    if (synced > 0 || cycles.length > 0) {
+    // ── 6. Write WHOOP workouts → workout_sessions ────────────────────────────
+    let workouts_synced = 0
+
+    for (const workout of workouts) {
+      if (!workout.end) continue
+
+      const date = cycleDate(workout.start, workout.timezone_offset)
+      const sportName = SPORT_NAMES[workout.sport_id] ?? 'WHOOP Workout'
+      const durationMinutes = Math.round(
+        (new Date(workout.end).getTime() - new Date(workout.start).getTime()) / 60_000
+      )
+
+      const { error: wErr } = await supabase
+        .from('workout_sessions')
+        .upsert(
+          {
+            user_id: userId,
+            date,
+            description: sportName,
+            duration_minutes: durationMinutes,
+            source: 'whoop',
+            whoop_id: workout.id,
+            started_at: workout.start,
+          },
+          { onConflict: 'user_id,whoop_id' }
+        )
+
+      if (wErr) {
+        upsert_errors.push({
+          date,
+          error: `[workout ${workout.id}] [${wErr.code}] ${wErr.message}`,
+        })
+      } else {
+        workouts_synced++
+      }
+    }
+
+    // ── 7. Write non-nap WHOOP sleeps → daily_stats.sleep_hours ──────────────
+    // Date = local morning sleep ended (cycleDate on sleep.end).
+    // Select-then-update-or-insert to avoid clobbering calories/protein/steps.
+    let sleeps_synced = 0
+
+    for (const sleep of sleeps) {
+      if (sleep.nap || sleep.score_state !== 'SCORED' || !sleep.score) continue
+
+      const hours = sleepHoursFromScore(sleep.score)
+      if (hours == null) continue
+
+      const date = cycleDate(sleep.end, sleep.timezone_offset)
+
+      const { data: existing, error: selectErr } = await supabase
+        .from('daily_stats')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('date', date)
+        .maybeSingle()
+
+      if (selectErr) {
+        upsert_errors.push({ date, error: `[sleep ${sleep.id} select] [${selectErr.code}] ${selectErr.message}` })
+        continue
+      }
+
+      if (existing) {
+        const { error: upErr } = await supabase
+          .from('daily_stats')
+          .update({
+            sleep_hours: hours,
+            sleep_source: 'whoop',
+            whoop_sleep_id: sleep.id,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', userId)
+          .eq('date', date)
+
+        if (upErr) {
+          upsert_errors.push({ date, error: `[sleep ${sleep.id} update] [${upErr.code}] ${upErr.message}` })
+        } else {
+          sleeps_synced++
+        }
+      } else {
+        const { error: insErr } = await supabase
+          .from('daily_stats')
+          .insert({
+            user_id: userId,
+            date,
+            sleep_hours: hours,
+            sleep_source: 'whoop',
+            whoop_sleep_id: sleep.id,
+          })
+
+        if (insErr) {
+          upsert_errors.push({ date, error: `[sleep ${sleep.id} insert] [${insErr.code}] ${insErr.message}` })
+        } else {
+          sleeps_synced++
+        }
+      }
+    }
+
+    // ── 8. Update last_sync_at ────────────────────────────────────────────────
+    if (synced > 0 || cycles.length > 0 || workouts_synced > 0) {
       await supabase
         .from('whoop_connections')
         .update({ last_sync_at: new Date().toISOString() })
@@ -201,17 +363,21 @@ export async function syncWhoopUser(userId: string): Promise<SyncResult> {
 
     return {
       synced,
+      workouts_synced,
+      sleeps_synced,
       cycles_fetched: cycles.length,
       recoveries_fetched: recoveries.length,
       sleeps_fetched: sleeps.length,
+      workouts_fetched: workouts.length,
       skipped_open,
       upsert_errors,
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Sync error'
     return {
-      synced: 0, cycles_fetched: 0, recoveries_fetched: 0,
-      sleeps_fetched: 0, skipped_open: 0, upsert_errors: [],
+      synced: 0, workouts_synced: 0, sleeps_synced: 0,
+      cycles_fetched: 0, recoveries_fetched: 0, sleeps_fetched: 0, workouts_fetched: 0,
+      skipped_open: 0, upsert_errors: [],
       error: msg,
     }
   }
@@ -267,4 +433,33 @@ export async function syncSleepById(userId: string, sleepId: number): Promise<vo
       sleep_performance_pct: sleep.score.sleep_performance_percentage,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id,date' })
+}
+
+export async function syncWorkoutById(userId: string, workoutId: number): Promise<void> {
+  const conn = await getValidConnectionService(userId)
+  const supabase = createServiceClient()
+
+  const workout = await whoopGet<WhoopWorkoutRecord>(`/activity/workout/${workoutId}`, conn.access_token)
+  if (!workout.end) return
+
+  const date = cycleDate(workout.start, workout.timezone_offset)
+  const sportName = SPORT_NAMES[workout.sport_id] ?? 'WHOOP Workout'
+  const durationMinutes = Math.round(
+    (new Date(workout.end).getTime() - new Date(workout.start).getTime()) / 60_000
+  )
+
+  await supabase
+    .from('workout_sessions')
+    .upsert(
+      {
+        user_id: userId,
+        date,
+        description: sportName,
+        duration_minutes: durationMinutes,
+        source: 'whoop',
+        whoop_id: workout.id,
+        started_at: workout.start,
+      },
+      { onConflict: 'user_id,whoop_id' }
+    )
 }
