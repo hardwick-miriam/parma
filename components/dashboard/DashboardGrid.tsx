@@ -36,6 +36,8 @@ import { MuscleMapWidget } from './widgets/MuscleMapWidget'
 import { PRTrackerWidget } from './widgets/PRTrackerWidget'
 import { TrainingLoadWidget } from './widgets/TrainingLoadWidget'
 import { InjuryBodyMapWidget } from './widgets/InjuryBodyMapWidget'
+import { SleepDebtWidget } from './widgets/SleepDebtWidget'
+import { HabitGardenWidget } from './widgets/HabitGardenWidget'
 import { MilestoneToast } from './MilestoneToast'
 import { GridItemSizeContext } from './GridItemSizeContext'
 import { detectMilestones } from '@/lib/milestones'
@@ -83,6 +85,8 @@ export const WIDGET_CATALOG: Array<{
   { id: 'prtracker',  name: 'PR Tracker',   description: 'Personal records for exercises',           icon: '🏆' },
   { id: 'trainload',  name: 'Training Load',description: '14-day training volume and AC ratio',      icon: '📊' },
   { id: 'injurymap',  name: 'Injury Map',   description: 'Active injuries shown on body map',        icon: '🩹' },
+  { id: 'sleepdebt',  name: 'Sleep Debt',   description: '14-day rolling sleep deficit tracker',      icon: '💤' },
+  { id: 'habitgarden',name: 'Habit Garden', description: 'SVG plant that grows with your habits',     icon: '🌱' },
 ]
 
 // ─── Default layouts ─────────────────────────────────────────────────────────
@@ -109,6 +113,8 @@ const DEFAULT_LG: LayoutItem[] = [
   { i: 'prtracker',  x: 4,  y: 23, w: 4,  h: 5, minW: 2, minH: 3 },
   { i: 'trainload',  x: 8,  y: 23, w: 4,  h: 5, minW: 3, minH: 3 },
   { i: 'injurymap',  x: 0,  y: 28, w: 4,  h: 5, minW: 2, minH: 4 },
+  { i: 'sleepdebt',  x: 4,  y: 28, w: 4,  h: 5, minW: 2, minH: 3 },
+  { i: 'habitgarden',x: 8,  y: 28, w: 4,  h: 5, minW: 2, minH: 3 },
 ]
 
 const DEFAULT_SM: LayoutItem[] = [
@@ -132,7 +138,9 @@ const DEFAULT_SM: LayoutItem[] = [
   { i: 'musclemap', x: 0, y: 61, w: 4, h: 5 },
   { i: 'prtracker', x: 0, y: 66, w: 4, h: 5 },
   { i: 'trainload', x: 0, y: 71, w: 4, h: 5 },
-  { i: 'injurymap', x: 0, y: 76, w: 4, h: 5 },
+  { i: 'injurymap',   x: 0, y: 76, w: 4, h: 5 },
+  { i: 'sleepdebt',   x: 0, y: 81, w: 4, h: 5 },
+  { i: 'habitgarden', x: 0, y: 86, w: 4, h: 5 },
 ]
 
 const DEFAULT_LAYOUTS: ResponsiveLayouts = { lg: DEFAULT_LG, sm: DEFAULT_SM }
@@ -878,6 +886,22 @@ export function DashboardGrid({
                   <InjuryBodyMapWidget activeInjuries={injuries} allInjuries={[...injuries, ...pastInjuries]} />
                 </PlainWrapper>
                 {editMode && <RemoveBtn id="injurymap" onHide={hideWidget} />}
+              </div>
+            )}
+            {!hiddenWidgets.has('sleepdebt') && (
+              <div key="sleepdebt" className="relative">
+                <PlainWrapper itemW={gs('sleepdebt').w} itemH={gs('sleepdebt').h}>
+                  <SleepDebtWidget history={history} />
+                </PlainWrapper>
+                {editMode && <RemoveBtn id="sleepdebt" onHide={hideWidget} />}
+              </div>
+            )}
+            {!hiddenWidgets.has('habitgarden') && (
+              <div key="habitgarden" className="relative">
+                <PlainWrapper itemW={gs('habitgarden').w} itemH={gs('habitgarden').h}>
+                  <HabitGardenWidget history={history} todayHabits={stats?.habits_done} streak={streaks.logging} />
+                </PlainWrapper>
+                {editMode && <RemoveBtn id="habitgarden" onHide={hideWidget} />}
               </div>
             )}
           </ResponsiveGridLayout>
