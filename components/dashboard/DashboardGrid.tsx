@@ -28,6 +28,7 @@ import { RecoveryWidget } from './RecoveryWidget'
 import { WhoopWidget } from './widgets/WhoopWidget'
 import { ProgressPhotos } from './ProgressPhotos'
 import { WorldMapWidget } from './WorldMapWidget'
+import { GlobeWidget } from './GlobeWidget'
 import { JournalWidget } from './JournalWidget'
 import { WorldClocksWidget } from './widgets/WorldClocksWidget'
 import { InsightsWidget } from './widgets/InsightsWidget'
@@ -841,7 +842,7 @@ export function DashboardGrid({
             {!hiddenWidgets.has('map') && (
               <div key="map" className="relative">
                 <PlainWrapper itemW={gs('map').w} itemH={gs('map').h}>
-                  <WorldMapWidget />
+                  <GlobeWidget />
                 </PlainWrapper>
                 {editMode && <RemoveBtn id="map" onHide={hideWidget} />}
               </div>
