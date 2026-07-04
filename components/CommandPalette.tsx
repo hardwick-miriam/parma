@@ -66,6 +66,7 @@ export function CommandPalette({ onQuickLog, onToggleEditMode, onSyncWhoop, edit
     return (
       <button
         onClick={openPalette}
+        data-tour="command-palette"
         className="fixed bottom-20 right-4 z-40 sm:hidden p-3 rounded-full bg-surface border border-border shadow-lg text-text-muted"
         aria-label="Open command palette"
         title="Search (⌘K)"

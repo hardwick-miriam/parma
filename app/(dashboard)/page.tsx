@@ -17,6 +17,7 @@ import { getUserPreferences } from '@/lib/db/preferences'
 import { getWhoopConnection, getLatestWhoopMetrics, getWhoopMetrics } from '@/lib/db/whoop'
 import { DashboardGrid } from '@/components/dashboard/DashboardGrid'
 import { RealtimeSync } from '@/components/dashboard/RealtimeSync'
+import { OnboardingTour } from '@/components/OnboardingTour'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -57,6 +58,7 @@ export default async function DashboardPage() {
   return (
     <>
     {user && <RealtimeSync userId={user.id} />}
+    {user && <OnboardingTour />}
     <DashboardGrid
       stats={stats}
       workouts={workouts ?? []}

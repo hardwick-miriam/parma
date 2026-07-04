@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { LottieEmpty } from '@/components/ui/LottieEmpty'
 import type { MediaEntry, MediaCategory, MediaCounts, MediaStatus } from '@/lib/db/media'
 
 const CATEGORY_EMOJI: Record<MediaCategory, string> = {
@@ -200,9 +201,11 @@ function CatalogueModal({
       {/* Entry list */}
       <div className="flex-1 overflow-y-auto px-5 py-4">
         {sorted.length === 0 ? (
-          <p className="text-sm text-text-subtle text-center py-12">
-            Nothing here. Try: "want to watch Dune" or "currently reading Atomic Habits"
-          </p>
+          <LottieEmpty
+            title="No media tracked"
+            subtitle={'Try: "want to watch Dune" or "reading Atomic Habits"'}
+            size={72}
+          />
         ) : (
           <div className="flex flex-col gap-6">
             {groupKeys.map((key) => (

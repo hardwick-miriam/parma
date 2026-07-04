@@ -711,6 +711,7 @@ export function DashboardGrid({
         {/* Bento grid */}
         <motion.div variants={itemVariants} className={editMode ? 'rgl-edit-mode' : ''}>
           <ResponsiveGridLayout
+            data-tour="dashboard-grid"
             layouts={layouts}
             breakpoints={{ lg: 1024, sm: 0 }}
             cols={{ lg: 12, sm: 4 }}

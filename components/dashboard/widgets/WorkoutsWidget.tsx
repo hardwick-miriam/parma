@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { deleteWorkout } from '@/app/actions'
 import { StreakBadge } from '@/components/ui/StreakBadge'
 import { useGridItemSize } from '@/components/dashboard/GridItemSizeContext'
+import { LottieEmpty } from '@/components/ui/LottieEmpty'
 import type { WorkoutSession } from '@/lib/db/queries'
 
 const feelingEmoji: Record<string, string> = {
@@ -65,7 +66,7 @@ export function WorkoutsWidget({ workouts, streak = 0 }: { workouts: WorkoutSess
         <StreakBadge count={streak} label="day streak" />
       </div>
       {workouts.length === 0 ? (
-        <p className="text-text-subtle text-sm">No workouts logged today</p>
+        <LottieEmpty title="No workouts today" subtitle="Log a session to see it here" size={60} />
       ) : (
         <ul className="flex flex-col divide-y divide-border">
           {workouts.map((w) => {

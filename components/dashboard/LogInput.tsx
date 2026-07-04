@@ -325,6 +325,7 @@ export function LogInput({ onParsed, onQuestion, onVoiceTranscript }: LogInputPr
       )}
 
       <div
+        data-tour="log-input"
         className="flex items-end gap-2 rounded-2xl border px-4 py-3 transition-colors"
         style={{
           background: 'var(--surface-elevated)',
