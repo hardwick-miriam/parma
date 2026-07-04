@@ -1,6 +1,7 @@
 'use client'
 
 import { useGridItemSize } from '@/components/dashboard/GridItemSizeContext'
+import { CountUp } from '@/components/ui/CountUp'
 import type { WhoopMetrics } from '@/lib/db/whoop'
 
 interface WhoopWidgetProps {
@@ -81,7 +82,7 @@ export function WhoopWidget({ today, history }: WhoopWidgetProps) {
     return (
       <div className="rounded-2xl bg-surface border border-border p-3 flex flex-col items-center justify-center h-full gap-1 overflow-hidden">
         <span className="text-2xl font-bold tabular-nums" style={{ color }}>
-          {recovery != null ? Math.round(recovery) : '—'}
+          {recovery != null ? <CountUp to={Math.round(recovery)} duration={800} /> : '—'}
         </span>
         <span className="text-[10px] text-text-muted uppercase tracking-wider">recovery</span>
         {dateLabel && <span className="text-[9px] text-text-subtle">{dateLabel}</span>}
@@ -113,7 +114,7 @@ export function WhoopWidget({ today, history }: WhoopWidgetProps) {
       {/* Score */}
       <div className="flex items-end gap-2">
         <span className="text-4xl font-bold tabular-nums leading-none" style={{ color }}>
-          {recovery != null ? Math.round(recovery) : '—'}
+          {recovery != null ? <CountUp to={Math.round(recovery)} duration={900} /> : '—'}
         </span>
         {recovery != null && <span className="text-sm text-text-muted pb-0.5">%</span>}
       </div>

@@ -3,6 +3,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { type Milestone, dismissMilestone } from '@/lib/milestones'
+import { fireCelebration } from '@/lib/confetti'
+
+const PR_EMOJIS = new Set(['🏋️', '🏆', '💪'])
 
 export function MilestoneToast({ milestones }: { milestones: Milestone[] }) {
   const [queue, setQueue] = useState<Milestone[]>([])
@@ -10,7 +13,13 @@ export function MilestoneToast({ milestones }: { milestones: Milestone[] }) {
 
   useEffect(() => {
     if (milestones.length > 0) setQueue(milestones)
-  }, [milestones.length]) // only re-queue on count change
+  }, [milestones.length])
+
+  // Fire confetti when a new milestone appears
+  useEffect(() => {
+    if (!current) return
+    fireCelebration(PR_EMOJIS.has(current.emoji) ? { particleCount: 150, spread: 100 } : undefined)
+  }, [current?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const dismiss = useCallback(() => {
     if (!current) return
@@ -36,10 +45,7 @@ export function MilestoneToast({ milestones }: { milestones: Milestone[] }) {
           exit={{ y: 24, opacity: 0 }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
         >
-          <button
-            className="w-full text-left"
-            onClick={dismiss}
-          >
+          <button className="w-full text-left" onClick={dismiss}>
             <div
               className="rounded-2xl p-4 flex items-start gap-3"
               style={{

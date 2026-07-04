@@ -3,6 +3,7 @@
 import { CircularProgress } from '@/components/ui/CircularProgress'
 import { StreakBadge } from '@/components/ui/StreakBadge'
 import { ComparisonBadge } from '@/components/ui/ComparisonBadge'
+import { CountUp } from '@/components/ui/CountUp'
 import { useGridItemSize } from '@/components/dashboard/GridItemSizeContext'
 import type { PeriodComparison } from '@/lib/comparison'
 
@@ -36,11 +37,11 @@ export function NutritionWidget({
         <h2 className="text-xs font-semibold text-text-muted uppercase tracking-widest">Nutrition</h2>
         <div className="flex-1 flex flex-col justify-center gap-3">
           <div>
-            <p className="text-2xl font-bold text-text tabular-nums">{calories.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-text tabular-nums"><CountUp to={calories} duration={800} /></p>
             <p className="text-xs text-text-subtle">kcal · {calPct}%</p>
           </div>
           <div>
-            <p className="text-xl font-bold text-text tabular-nums">{protein_g}g</p>
+            <p className="text-xl font-bold text-text tabular-nums"><CountUp to={protein_g} duration={700} />g</p>
             <p className="text-xs text-text-subtle">protein · {proPct}%</p>
           </div>
         </div>

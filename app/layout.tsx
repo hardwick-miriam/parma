@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono, Playfair_Display, Libre_Baskerville } from 'next
 import { cookies } from 'next/headers'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { QueryProvider } from '@/components/QueryProvider'
+import { Toaster } from 'sonner'
 import './globals.css'
 
 const inter = Inter({
@@ -65,6 +66,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <ThemeProvider initialTheme={theme}>
           <QueryProvider>
             {children}
+            <Toaster
+              position="bottom-center"
+              offset={{ bottom: 140 }}
+              toastOptions={{
+                style: {
+                  background: 'var(--surface-elevated)',
+                  border: '1px solid var(--border-strong)',
+                  color: 'var(--color-text)',
+                  borderRadius: '16px',
+                },
+              }}
+            />
           </QueryProvider>
         </ThemeProvider>
       </body>
