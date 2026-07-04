@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { deleteWorkout } from '@/app/actions'
 import { StreakBadge } from '@/components/ui/StreakBadge'
+import { useGridItemSize } from '@/components/dashboard/GridItemSizeContext'
 import type { WorkoutSession } from '@/lib/db/queries'
 
 const feelingEmoji: Record<string, string> = {
@@ -33,6 +34,8 @@ function WhoopTag() {
 }
 
 export function WorkoutsWidget({ workouts, streak = 0 }: { workouts: WorkoutSession[]; streak?: number }) {
+  const { w, h } = useGridItemSize()
+  const compact = w <= 2 || h <= 3
   const [confirmId, setConfirmId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
@@ -43,8 +46,20 @@ export function WorkoutsWidget({ workouts, streak = 0 }: { workouts: WorkoutSess
     })
   }
 
+  if (compact) {
+    return (
+      <div className="rounded-2xl bg-surface border border-border p-4 flex flex-col gap-2 h-full overflow-hidden" style={{ boxShadow: 'var(--shadow-md)' }}>
+        <h2 className="text-xs font-semibold text-text-muted uppercase tracking-widest truncate">Workouts</h2>
+        <div className="flex-1 flex flex-col justify-center">
+          <p className="text-3xl font-bold text-text tabular-nums">{workouts.length}</p>
+          <p className="text-xs text-text-subtle">{workouts.length === 1 ? 'session' : 'sessions'} today</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="rounded-2xl bg-surface border border-border p-6 flex flex-col gap-4 h-full" style={{ boxShadow: 'var(--shadow-md)' }}>
+    <div className="rounded-2xl bg-surface border border-border p-6 flex flex-col gap-4 h-full overflow-hidden" style={{ boxShadow: 'var(--shadow-md)' }}>
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest">Workouts</h2>
         <StreakBadge count={streak} label="day streak" />

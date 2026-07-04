@@ -23,7 +23,7 @@ export function HabitsWidget({ habits_done, loggedTimes = {}, streak = 0 }: Habi
   }
 
   return (
-    <div className="rounded-2xl bg-surface border border-border p-6 flex flex-col gap-4 h-full" style={{ boxShadow: 'var(--shadow-md)' }}>
+    <div className="rounded-2xl bg-surface border border-border p-6 flex flex-col gap-4 h-full overflow-hidden" style={{ boxShadow: 'var(--shadow-md)' }}>
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest">Habits</h2>
         <StreakBadge count={streak} label="day streak" />

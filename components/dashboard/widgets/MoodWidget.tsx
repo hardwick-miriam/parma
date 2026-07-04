@@ -1,5 +1,7 @@
 'use client'
 
+import { useGridItemSize } from '@/components/dashboard/GridItemSizeContext'
+
 const MOOD_CONFIG: Record<string, { emoji: string; label: string; color: string }> = {
   great: { emoji: '🔥', label: 'Great', color: 'text-accent' },
   good:  { emoji: '😊', label: 'Good',  color: 'text-green-400' },
@@ -9,18 +11,22 @@ const MOOD_CONFIG: Record<string, { emoji: string; label: string; color: string 
 }
 
 export function MoodWidget({ mood }: { mood: string | null }) {
+  const { w, h } = useGridItemSize()
+  const compact = w <= 2 || h <= 3
   const config = mood ? MOOD_CONFIG[mood] : null
 
   return (
-    <div className="rounded-2xl bg-surface border border-border p-6 flex flex-col gap-3 h-full" style={{ boxShadow: 'var(--shadow-md)' }}>
-      <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest">Mood</h2>
+    <div className="rounded-2xl bg-surface border border-border p-4 flex flex-col gap-2 h-full overflow-hidden" style={{ boxShadow: 'var(--shadow-md)' }}>
+      <h2 className="text-xs font-semibold text-text-muted uppercase tracking-widest truncate">Mood</h2>
       {config ? (
-        <div className="flex flex-col items-center gap-1 py-2">
-          <span className="text-5xl">{config.emoji}</span>
-          <span className={`text-sm font-semibold ${config.color}`}>{config.label}</span>
+        <div className="flex-1 flex flex-col items-center justify-center gap-1">
+          <span className={compact ? 'text-4xl' : 'text-5xl'}>{config.emoji}</span>
+          {!compact && <span className={`text-sm font-semibold ${config.color}`}>{config.label}</span>}
         </div>
       ) : (
-        <p className="text-text-subtle text-sm text-center py-4">Not logged today</p>
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-text-subtle text-xs text-center">Not logged</p>
+        </div>
       )}
     </div>
   )

@@ -99,9 +99,9 @@ const DEFAULT_LG: LayoutItem[] = [
   { i: 'hydra',   x: 0,  y: 4,  w: 2, h: 4, minW: 2, minH: 3 },
   { i: 'wt',      x: 2,  y: 4,  w: 2, h: 4, minW: 2, minH: 3 },
   { i: 'work',    x: 4,  y: 4,  w: 4, h: 4, minW: 2, minH: 3 },
-  { i: 'weather', x: 8,  y: 4,  w: 2, h: 4, minW: 2, minH: 3 },
+  { i: 'weather', x: 8,  y: 4,  w: 2, h: 5, minW: 2, minH: 4 },
   { i: 'hab',     x: 10, y: 4,  w: 2, h: 4, minW: 2, minH: 3 },
-  { i: 'media',   x: 0,  y: 8,  w: 4, h: 4, minW: 2, minH: 3 },
+  { i: 'media',   x: 0,  y: 8,  w: 4, h: 5, minW: 2, minH: 4 },
   { i: 'supp',    x: 4,  y: 8,  w: 8, h: 4, minW: 3, minH: 3 },
   { i: 'photos',  x: 0,  y: 12, w: 4, h: 4, minW: 2, minH: 3 },
   { i: 'journal', x: 4,  y: 12, w: 4, h: 4, minW: 2, minH: 3 },
@@ -331,15 +331,19 @@ function PlainWrapper({
 function RemoveBtn({ id, onHide }: { id: string; onHide: (id: string) => void }) {
   return (
     <button
-      onPointerDown={(e) => e.stopPropagation()}
+      onPointerDown={(e) => { e.stopPropagation(); e.preventDefault() }}
+      onTouchStart={(e) => { e.stopPropagation(); e.preventDefault() }}
+      onTouchEnd={(e) => { e.stopPropagation(); e.preventDefault(); onHide(id) }}
       onClick={(e) => { e.stopPropagation(); onHide(id) }}
       aria-label="Hide widget"
-      className="absolute top-2 right-2 z-30 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-opacity"
       style={{
-        background: 'var(--negative)',
-        color: '#fff',
-        opacity: 0.9,
-        pointerEvents: 'auto',
+        position: 'absolute', top: 6, right: 6,
+        width: 40, height: 40, borderRadius: '50%',
+        background: 'var(--negative)', color: '#fff',
+        border: 'none', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 20, fontWeight: 'bold', lineHeight: 1,
+        zIndex: 30, pointerEvents: 'auto', touchAction: 'none', opacity: 0.9,
       }}
     >
       ×
