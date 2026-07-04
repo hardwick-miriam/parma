@@ -25,7 +25,7 @@ export default function AppleIcon() {
         <img
           src={logoBase64}
           alt=""
-          style={{ width: '80%', height: '80%', objectFit: 'contain' }}
+          style={{ width: '70%', height: '70%', objectFit: 'contain' }}
         />
       </div>
     ),

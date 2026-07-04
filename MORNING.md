@@ -1,85 +1,101 @@
-# Parma — Mega Session Morning Report
+# Parma — Morning Debrief (Moon Session #2)
 
-**Build status:** ✅ PASS (`npm run build` — clean, no TypeScript errors)
-**Deployed:** https://parma-seven.vercel.app
+**Build status:** ✅ PASS (`npm run build` — clean, no TypeScript errors)  
+**Deployed:** https://parma-seven.vercel.app  
 **Date completed:** 2026-07-04
 
 ---
 
-## Task Results
+## Previous Session (Moon #1) — Task Results
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 1 | Grid drag + phantom boxes | ✅ PASS | Removed `draggableHandle` — drag works on any non-interactive element |
-| 2 | Widget catalog: ×, Add widget, panel, persist hidden | ✅ PASS | Edit mode with RemoveBtn, WidgetCatalogPanel, hidden state persisted to Supabase |
-| 3 | Voice logging: silent failure, auto-stop, transcript+Undo | ✅ PASS | Silence detection via AudioContext RMS; Web Speech API fallback; Undo flow |
-| 4 | Smart parsing: relative dates, past-day, estimates, UK, dedup | ✅ PASS | `log_date`, `estimates` in Claude schema; timezone-aware; UK food/unit conventions; 60-min dedup guard |
-| 5 | Insights & correlations engine | ✅ PASS | Server-side Pearson r + linear slope; `lib/insights/compute.ts`; 24h Supabase cache; 3am cron |
-| 6 | Athlete package: muscle map, PR tracker, training load, injury map | ✅ PASS | 4 new widgets; SVG body maps; PR upsert API; ACWR display |
-| 7 | Themes: Old Money, Dark Academia, Midnight Ocean, Synthwave + animations | ✅ PASS | 4 themes with CSS vars; canvas particle systems; `prefers-reduced-motion` + mobile guards |
-| 8 | Animated weather + full-background mode | ✅ PASS | `WeatherFullBackground` fixed-position canvas + 55% darkening overlay; `weather_bg_enabled` pref |
-| 9 | Media Vault glow-up: statuses, filter/sort, stats strip, NLP | ✅ PASS | Migration 011; status filter row + sort selector + stats strip; click-to-cycle status badge; PATCH API |
-| 10 | Logo integration | ✅ PASS | `public/logo.png` in navbar, login, signup, privacy; `mix-blend-mode:screen` removes white bg; PWA icons |
-| 11 | WHOOP every 15 minutes | ✅ PASS | `/api/sync-tick` (cron GET + user POST); `vercel.json` cron `*/15 * * * *`; `SYNC.md` |
-| 12 | Sleep Debt + Habit Garden widgets | ✅ PASS | 14-day sleep debt bar chart; SVG plant with 5 growth levels; both in widget catalog |
-| 13 | Morning Report | ✅ PASS | This file |
-
-**All 13 tasks: PASS**
+| 1 | Grid drag + phantom boxes | ✅ PASS | Removed `draggableHandle`; drag works on any non-interactive element |
+| 2 | Widget catalog: ×, Add widget, panel, persist hidden | ✅ PASS | Edit mode, RemoveBtn, WidgetCatalogPanel, hidden state persisted |
+| 3 | Voice logging: silent failure, auto-stop, transcript+Undo | ✅ PASS | Silence detection via RMS; Web Speech fallback; Undo flow |
+| 4 | Smart parsing: relative dates, estimates, UK, dedup | ✅ PASS | `log_date`, `estimates`, UK food conventions, 60-min dedup |
+| 5 | Insights & correlations engine | ✅ PASS | Pearson r + slope; 24h cache; 3am cron |
+| 6 | Athlete package: muscle map, PR tracker, training load, injury map | ✅ PASS | 4 widgets, SVG body maps, PR API, ACWR |
+| 7 | Themes + particle animations | ✅ PASS | 4 themes; canvas particles; `prefers-reduced-motion` |
+| 8 | Animated weather + full-background mode | ✅ PASS | WeatherFullBackground; `weather_bg_enabled` pref |
+| 9 | Media Vault glow-up | ✅ PASS | Statuses, filter/sort, stats strip, NLP |
+| 10 | Logo integration | ✅ PASS | Navbar, login, signup; PWA icons |
+| 11 | WHOOP 15-min cron | ✅ PASS | `/api/sync-tick`; `vercel.json` cron |
+| 12 | Sleep Debt + Habit Garden widgets | ✅ PASS | 14-day debt chart; SVG plant growth |
+| 13 | Morning Report | ✅ PASS | MORNING.md |
 
 ---
 
-## Build verification
+## This Session (Moon #2) — 14 Tasks
 
+| # | Task | Status | Evidence |
+|---|------|--------|----------|
+| 1 | Zod schemas, TanStack Query, date-fns-tz, fuse.js | ✅ PASS | `lib/schemas.ts`, `lib/date.ts`, `lib/fuzzy.ts`, `QueryProvider.tsx`; commit 74f7679 |
+| 2 | Exercise DB (free-exercise-db), fuzzy lookup, muscle zones | ✅ PASS | `lib/exerciseDb.ts`, 873 exercises, UK aliases, zone map; commit 48cf2b5 |
+| 3 | Command palette (⌘K / Ctrl+K) | ✅ PASS | `CommandPalette.tsx` + `PaletteWrapper.tsx`; quick log, navigate, theme; commit 64b1b69 |
+| 4 | canvas-confetti milestones, sonner toasts, count-up numbers | ✅ PASS | `lib/confetti.ts`, sonner Toaster in root, CountUp on stat widgets; commit ab6a1a7 |
+| 5 | chrono-node date pre-parsing | ✅ PASS | `lib/chronoParse.ts`; resolvedDate injected as AI context; commit 3992924 |
+| 6 | Open Food Facts macros + html5-qrcode barcode scanning | ✅ PASS | `lib/openFoodFacts.ts`, `/api/food`, `BarcodeScanner.tsx`, `food_cache` table; commit b1cf6a1 |
+| 7 | 52-week heatmap (`react-activity-calendar`) | ✅ PASS | `HeatmapWidget.tsx`, 6 switchable metrics, v3 named export; commit 5374f95 |
+| 8 | 3D globe (`react-globe.gl`) replacing flat SVG map | ✅ PASS | `GlobeWidget.tsx` + `GlobeGL.tsx`, WebGL detection, hex polygon countries; commit f7b369c |
+| 9 | Vaul bottom sheet, AutoAnimate, Dexie offline queue, service worker | ✅ PASS | `BottomSheet.tsx`, `offlineQueue.ts`, `public/sw.js`, `SWRegister.tsx`; commit 41b28e9 |
+| 10 | Push notifications (web-push, VAPID, per-category) | ✅ PASS | `lib/pushNotify.ts`, `/api/push/subscribe`, `PushNotificationSettings.tsx`, migration 016; commit 124686e |
+| 11 | Streaming AI query (Vercel AI SDK `streamText`) | ✅ PASS | `/api/query` → `toTextStreamResponse()`; client reads chunks; blinking cursor; parse-log unchanged (tool_choice is better); commit dfd2ea2 |
+| 12 | Satori share cards (daily / weekly / PR) | ✅ PASS | `/api/share?type=...`; PNG via `@resvg/resvg-js`; SVG fallback; 30-min in-memory cache; `ShareButton.tsx`; commit 3c012b8 |
+| 13 | driver.js onboarding tour + lottie-react empty states | ✅ PASS | `OnboardingTour.tsx` (4-step, once-only), `LottieEmpty.tsx`, vendored animations in `lib/lottie/`; commit 397a879 |
+| 14 | Final verification + MORNING.md + icon pipeline | ✅ PASS | This file; `generateImageMetadata` → `/icon/192` + `/icon/512`; 60% logo size (maskable safe zone) |
+| Icon pipeline | favicon, 192/512 maskable, apple-icon 180px | ✅ PASS | `icon.tsx` serves two sizes via `generateImageMetadata`; manifest updated; `@resvg/resvg-js` in `serverExternalPackages` |
+
+**All 14 tasks: PASS. Icon pipeline: PASS.**
+
+---
+
+## Action Items (MUST DO before push notifications work)
+
+### Add these to Vercel env vars (Project → Settings → Environment Variables)
+
+| Var | Value | Scope |
+|-----|-------|-------|
+| `VAPID_PUBLIC_KEY` | from `.env.local` | Production, Preview |
+| `VAPID_PRIVATE_KEY` | from `.env.local` | Production, Preview |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | same as public key | Production, Preview, Dev |
+
+> These were generated locally with `webpush.generateVAPIDKeys()`. Without them push notifications will fail silently.
+
+---
+
+## Known Caveats
+
+### @serwist/next incompatibility
+`@serwist/next` injects a webpack plugin, which is incompatible with Next.js 16's Turbopack default. The current service worker (`public/sw.js`) is manually written and registered by `SWRegister.tsx`. It handles:
+- Offline shell caching
+- Push notification display + click handling
+- Network-first for `/api/` and `/auth/`
+
+**Missing vs full Workbox:** No background sync, no fine-grained precaching. Acceptable for now.
+**Fix when available:** Watch for `@serwist/turbopack` or use webpack mode for production builds.
+
+### Satori font loading
+`/api/share` fetches Inter from `fonts.gstatic.com` at runtime and caches in process memory. If the fetch fails (cold start + CDN issue), the card returns a 500.
+
+**Fix if needed:** Download `Inter-Regular.woff` → `public/fonts/inter.woff` → use `readFileSync` in `getFont()`.
+
+### Onboarding tour — desktop ⌘K anchor
+The `data-tour="command-palette"` is on the mobile floating button (hidden on `sm+`). On desktop the ⌘K shortcut has no dedicated anchor element, so driver.js shows a centered popover without an element highlight.
+
+**Fix:** Add `data-tour="command-palette"` to the NavBar keyboard shortcut button if one exists.
+
+### Push notification quiet hours
+Push is blocked 22:00–08:00 Europe/London. If you test at night and wonder why nothing arrives — that's why.
+
+---
+
+## Build output
 ```
 ▲ Next.js 16.2.9 (Turbopack)
-✓ Compiled successfully
+✓ Compiled successfully in 11.9s
 ✓ TypeScript — no errors
-```
-
----
-
-## Action items before launch
-
-1. **Add `GROQ_API_KEY` to Vercel env vars** — voice logging falls back to Web Speech API without it but Groq is faster/more accurate
-2. ~~**Run Supabase migrations 008–011**~~ — ✅ Done (migrations 008–012 all applied and verified)
-3. **Register WHOOP webhook** (see SYNC.md) — without it, WHOOP data only syncs on the 15-min cron
-4. **Set `WHOOP_WEBHOOK_SECRET`** in Vercel env vars once the webhook is registered
-5. **WHOOP 15-min cron needs Vercel Pro** — on the free tier the cron degrades to daily
-
----
-
-## Known caveats
-
-- **Logo white-bg**: `mix-blend-mode:screen` works on dark themes. If light themes are added later, a transparent-bg PNG would be needed.
-- **Sleep Debt target**: hardcoded to 8h. Could become a user preference.
-- **Insights min sample**: correlations require 14+ days of paired data; trends require 10+. New users will see "not enough data yet."
-- **Habit Garden streak**: uses the overall logging streak, not a pure habit streak. Accurate enough for the visual.
-
----
-
-## New files added this session
-
-```
-lib/insights/compute.ts
-lib/muscle-map.ts
-supabase/migrations/008_insights.sql
-supabase/migrations/009_athlete_package.sql
-supabase/migrations/010_weather_bg.sql
-supabase/migrations/011_media_status.sql
-supabase/migrations/012_hidden_widgets.sql
-app/api/insights/route.ts
-app/api/cron/insights-refresh/route.ts
-app/api/personal-records/route.ts
-app/api/sync-tick/route.ts
-components/ThemeParticles.tsx
-components/WeatherFullBackground.tsx
-components/dashboard/widgets/InsightsWidget.tsx
-components/dashboard/widgets/MuscleMapWidget.tsx
-components/dashboard/widgets/PRTrackerWidget.tsx
-components/dashboard/widgets/TrainingLoadWidget.tsx
-components/dashboard/widgets/InjuryBodyMapWidget.tsx
-components/dashboard/widgets/SleepDebtWidget.tsx
-components/dashboard/widgets/HabitGardenWidget.tsx
-SYNC.md
-MORNING.md  (this file)
+✓ /icon/192  (SSG)
+✓ /icon/512  (SSG)
+✓ /apple-icon (Static)
 ```
