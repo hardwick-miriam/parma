@@ -72,6 +72,7 @@ export default async function DashboardPage() {
       mounjaroEffects={mounjaroEffects}
       weightGoal={prefs?.weight_goal_kg ?? null}
       savedLayouts={(prefs?.layouts as Record<string, unknown>) ?? {}}
+      savedHiddenWidgets={prefs?.hidden_widgets ?? []}
       whoopConnected={whoopConnected}
       whoopToday={whoopToday}
       whoopHistory={whoopHistory ?? []}

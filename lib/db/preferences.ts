@@ -15,6 +15,7 @@ export interface UserPreferences {
   saved_places: SavedPlace[]
   mounjaro_enabled: boolean
   layouts: Record<string, unknown>
+  hidden_widgets: string[]
   theme: string
   updated_at: string
 }
@@ -33,6 +34,7 @@ export async function getUserPreferences(userId: string): Promise<UserPreference
     ...data,
     saved_places: (data.saved_places as SavedPlace[]) ?? [],
     layouts: (data.layouts as Record<string, unknown>) ?? {},
+    hidden_widgets: (data.hidden_widgets as string[]) ?? [],
     theme: (data.theme as string) ?? 'normal',
   }
 }

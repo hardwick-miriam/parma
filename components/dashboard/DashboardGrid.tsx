@@ -51,6 +51,29 @@ import type { WhoopMetrics } from '@/lib/db/whoop'
 
 const ResponsiveGridLayout = WidthProvider(Responsive)
 
+// ─── Widget catalog ───────────────────────────────────────────────────────────
+
+export const WIDGET_CATALOG: Array<{
+  id: string; name: string; description: string; icon: string
+}> = [
+  { id: 'nutr',    name: 'Nutrition',     description: 'Calories and protein tracking',        icon: '🍽️' },
+  { id: 'steps',   name: 'Steps',         description: 'Daily step count and streak',           icon: '👟' },
+  { id: 'sleep',   name: 'Sleep',         description: 'Sleep hours with WHOOP sync',           icon: '🌙' },
+  { id: 'mood',    name: 'Mood',          description: 'Daily mood rating',                     icon: '😊' },
+  { id: 'hydra',   name: 'Hydration',     description: 'Water intake tracker',                  icon: '💧' },
+  { id: 'wt',      name: 'Weight',        description: 'Body weight vs goal',                   icon: '⚖️' },
+  { id: 'work',    name: 'Workouts',      description: 'Today\'s workout sessions',             icon: '💪' },
+  { id: 'weather', name: 'Weather',       description: 'Current local conditions',              icon: '🌤️' },
+  { id: 'hab',     name: 'Habits',        description: 'Habit completion tracking',             icon: '✅' },
+  { id: 'media',   name: 'Media',         description: 'Books, films, shows, songs',            icon: '🎬' },
+  { id: 'supp',    name: 'Supplements',   description: 'Daily supplement log',                  icon: '💊' },
+  { id: 'photos',  name: 'Photos',        description: 'Progress photo library',                icon: '📸' },
+  { id: 'journal', name: 'Journal',       description: 'Daily notes and reflections',           icon: '📓' },
+  { id: 'map',     name: 'World Map',     description: 'Countries visited tracker',             icon: '🗺️' },
+  { id: 'clocks',  name: 'World Clocks',  description: 'Multiple time zone display',            icon: '🕐' },
+  { id: 'whoop',   name: 'WHOOP',         description: 'Recovery, HRV and strain metrics',      icon: '⚡' },
+]
+
 // ─── Default layouts ─────────────────────────────────────────────────────────
 
 const DEFAULT_LG: LayoutItem[] = [
@@ -274,6 +297,91 @@ function PlainWrapper({
   )
 }
 
+// ─── Remove button (shown on each grid item in edit mode) ────────────────────
+
+function RemoveBtn({ id, onHide }: { id: string; onHide: (id: string) => void }) {
+  return (
+    <button
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={(e) => { e.stopPropagation(); onHide(id) }}
+      aria-label="Hide widget"
+      className="absolute top-2 right-2 z-30 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-opacity"
+      style={{
+        background: 'var(--negative)',
+        color: '#fff',
+        opacity: 0.9,
+        pointerEvents: 'auto',
+      }}
+    >
+      ×
+    </button>
+  )
+}
+
+// ─── Widget catalog panel ─────────────────────────────────────────────────────
+
+function WidgetCatalogPanel({
+  hiddenWidgets,
+  onShow,
+  onClose,
+}: {
+  hiddenWidgets: Set<string>
+  onShow: (id: string) => void
+  onClose: () => void
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+      style={{ background: 'rgba(0,0,0,0.6)' }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-5 overflow-y-auto max-h-[80vh]"
+        style={{ background: 'var(--surface)', border: '1px solid var(--border-strong)' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-text">Add widget</h2>
+          <button onClick={onClose} className="text-text-muted hover:text-text transition-colors text-lg leading-none">×</button>
+        </div>
+        <div className="flex flex-col gap-2">
+          {WIDGET_CATALOG.map((w) => {
+            const hidden = hiddenWidgets.has(w.id)
+            return (
+              <div
+                key={w.id}
+                className="flex items-center gap-3 p-3 rounded-xl border transition-colors"
+                style={{
+                  background: hidden ? 'var(--surface-elevated)' : 'var(--accent-dim)',
+                  borderColor: hidden ? 'var(--border)' : 'var(--accent)',
+                  opacity: hidden ? 1 : 0.7,
+                }}
+              >
+                <span className="text-2xl">{w.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-text truncate">{w.name}</p>
+                  <p className="text-xs text-text-subtle truncate">{w.description}</p>
+                </div>
+                {hidden ? (
+                  <button
+                    onClick={() => { onShow(w.id); onClose() }}
+                    className="shrink-0 px-3 py-1 rounded-lg text-xs font-semibold transition-colors"
+                    style={{ background: 'var(--accent)', color: '#fff' }}
+                  >
+                    Add
+                  </button>
+                ) : (
+                  <span className="shrink-0 text-xs font-medium" style={{ color: 'var(--accent)' }}>✓ Showing</span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Edit toggle ──────────────────────────────────────────────────────────────
 
 function EditToggle({ editing, onToggle }: { editing: boolean; onToggle: () => void }) {
@@ -326,6 +434,7 @@ interface DashboardGridProps {
   mounjaroEffects: MounjaroEffect[]
   weightGoal: number | null
   savedLayouts?: Record<string, unknown>
+  savedHiddenWidgets?: string[]
   whoopConnected?: boolean
   whoopToday?: WhoopMetrics | null
   whoopHistory?: WhoopMetrics[]
@@ -348,6 +457,7 @@ export function DashboardGrid({
   mounjaroEffects,
   weightGoal,
   savedLayouts,
+  savedHiddenWidgets,
   whoopConnected = false,
   whoopToday = null,
   whoopHistory = [],
@@ -357,11 +467,59 @@ export function DashboardGrid({
   const fetchedRef = useRef(history.length > 0)
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [editMode, setEditMode] = useState(false)
-  const [layouts, setLayouts] = useState<ResponsiveLayouts>(() => mergeLayouts(savedLayouts ?? {}))
+  const [hiddenWidgets, setHiddenWidgets] = useState<Set<string>>(
+    () => new Set(savedHiddenWidgets ?? [])
+  )
+  const [showCatalog, setShowCatalog] = useState(false)
+  const [layouts, setLayouts] = useState<ResponsiveLayouts>(
+    () => mergeLayouts(savedLayouts ?? {}, new Set(savedHiddenWidgets ?? []))
+  )
   const [lgLayout, setLgLayout] = useState<LayoutItem[]>(
-    () => (mergeLayouts(savedLayouts ?? {}).lg as LayoutItem[]) ?? DEFAULT_LG
+    () => (mergeLayouts(savedLayouts ?? {}, new Set(savedHiddenWidgets ?? [])).lg as LayoutItem[]) ?? DEFAULT_LG
   )
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const persistHidden = useCallback((hidden: Set<string>) => {
+    fetch('/api/layout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hidden_widgets: [...hidden] }),
+    }).catch(() => {})
+  }, [])
+
+  const hideWidget = useCallback((id: string) => {
+    setHiddenWidgets(prev => {
+      const next = new Set(prev)
+      next.add(id)
+      persistHidden(next)
+      return next
+    })
+    setLayouts(curr => ({
+      lg: (curr.lg as LayoutItem[]).filter(i => i.i !== id),
+      sm: (curr.sm as LayoutItem[]).filter(i => i.i !== id),
+    }))
+  }, [persistHidden])
+
+  const showWidget = useCallback((id: string) => {
+    const defLg = DEFAULT_LG.find(i => i.i === id)
+    const defSm = DEFAULT_SM.find(i => i.i === id)
+    setHiddenWidgets(prev => {
+      const next = new Set(prev)
+      next.delete(id)
+      persistHidden(next)
+      return next
+    })
+    setLayouts(curr => {
+      const lgItems = curr.lg as LayoutItem[]
+      const smItems = curr.sm as LayoutItem[]
+      const maxLgY = lgItems.reduce((m, i) => Math.max(m, i.y + i.h), 0)
+      const maxSmY = smItems.reduce((m, i) => Math.max(m, i.y + i.h), 0)
+      return {
+        lg: defLg ? [...lgItems, { ...defLg, y: maxLgY }] : lgItems,
+        sm: defSm ? [...smItems, { ...defSm, y: maxSmY }] : smItems,
+      }
+    })
+  }, [persistHidden])
 
   const openMetric = useCallback(async (id: MetricId) => {
     setActiveMetric(id)
@@ -480,14 +638,21 @@ export function DashboardGrid({
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              className="rounded-xl px-4 py-2.5 text-xs"
+              className="rounded-xl px-4 py-2.5 text-xs flex items-center justify-between gap-3"
               style={{
                 background: 'var(--accent-dim)',
                 border: '1px solid var(--accent)',
                 color: 'var(--accent)',
               }}
             >
-              Drag widgets to rearrange · resize from the bottom-right corner · saves automatically
+              <span>Drag to rearrange · resize from corner · tap × to hide · saves automatically</span>
+              <button
+                onClick={() => setShowCatalog(true)}
+                className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border transition-colors"
+                style={{ background: 'var(--accent)', color: '#fff', borderColor: 'var(--accent)' }}
+              >
+                + Add widget
+              </button>
             </motion.div>
           )}
         </AnimatePresence>
@@ -506,114 +671,147 @@ export function DashboardGrid({
             onLayoutChange={handleLayoutChange}
             useCSSTransforms
           >
-            <div key="nutr" style={{ cursor: 'default' }}>
-              <WidgetWrapper metricId="nutrition" onOpen={openMetric} itemW={gs('nutr').w} itemH={gs('nutr').h} editing={editMode}>
-                <NutritionWidget
-                  calories={stats?.calories ?? 0}
-                  protein_g={stats?.protein_g ?? 0}
-                  proteinStreak={streaks.protein}
-                  calorieComp={calorieComp}
-                  proteinComp={proteinComp}
-                />
-              </WidgetWrapper>
-            </div>
+            {!hiddenWidgets.has('nutr') && (
+              <div key="nutr" className="relative">
+                <WidgetWrapper metricId="nutrition" onOpen={openMetric} itemW={gs('nutr').w} itemH={gs('nutr').h} editing={editMode}>
+                  <NutritionWidget calories={stats?.calories ?? 0} protein_g={stats?.protein_g ?? 0} proteinStreak={streaks.protein} calorieComp={calorieComp} proteinComp={proteinComp} />
+                </WidgetWrapper>
+                {editMode && <RemoveBtn id="nutr" onHide={hideWidget} />}
+              </div>
+            )}
 
-            <div key="steps" style={{ cursor: 'default' }}>
-              <WidgetWrapper metricId="steps" onOpen={openMetric} itemW={gs('steps').w} itemH={gs('steps').h} editing={editMode}>
-                <StepsWidget steps={stats?.steps ?? 0} streak={streaks.steps} comp={stepsComp} />
-              </WidgetWrapper>
-            </div>
+            {!hiddenWidgets.has('steps') && (
+              <div key="steps" className="relative">
+                <WidgetWrapper metricId="steps" onOpen={openMetric} itemW={gs('steps').w} itemH={gs('steps').h} editing={editMode}>
+                  <StepsWidget steps={stats?.steps ?? 0} streak={streaks.steps} comp={stepsComp} />
+                </WidgetWrapper>
+                {editMode && <RemoveBtn id="steps" onHide={hideWidget} />}
+              </div>
+            )}
 
-            <div key="sleep" style={{ cursor: 'default' }}>
-              <WidgetWrapper metricId="sleep" onOpen={openMetric} itemW={gs('sleep').w} itemH={gs('sleep').h} editing={editMode}>
-                <SleepWidget hours={stats?.sleep_hours ?? null} source={stats?.sleep_source ?? null} />
-              </WidgetWrapper>
-            </div>
+            {!hiddenWidgets.has('sleep') && (
+              <div key="sleep" className="relative">
+                <WidgetWrapper metricId="sleep" onOpen={openMetric} itemW={gs('sleep').w} itemH={gs('sleep').h} editing={editMode}>
+                  <SleepWidget hours={stats?.sleep_hours ?? null} source={stats?.sleep_source ?? null} />
+                </WidgetWrapper>
+                {editMode && <RemoveBtn id="sleep" onHide={hideWidget} />}
+              </div>
+            )}
 
-            <div key="mood" style={{ cursor: 'default' }}>
-              <WidgetWrapper metricId="mood" onOpen={openMetric} itemW={gs('mood').w} itemH={gs('mood').h} editing={editMode}>
-                <MoodWidget mood={stats?.mood ?? null} />
-              </WidgetWrapper>
-            </div>
+            {!hiddenWidgets.has('mood') && (
+              <div key="mood" className="relative">
+                <WidgetWrapper metricId="mood" onOpen={openMetric} itemW={gs('mood').w} itemH={gs('mood').h} editing={editMode}>
+                  <MoodWidget mood={stats?.mood ?? null} />
+                </WidgetWrapper>
+                {editMode && <RemoveBtn id="mood" onHide={hideWidget} />}
+              </div>
+            )}
 
-            <div key="hydra" style={{ cursor: 'default' }}>
-              <WidgetWrapper metricId="hydration" onOpen={openMetric} itemW={gs('hydra').w} itemH={gs('hydra').h} editing={editMode}>
-                <HydrationWidget water_ml={stats?.water_ml ?? 0} streak={streaks.hydration} comp={hydraComp} />
-              </WidgetWrapper>
-            </div>
+            {!hiddenWidgets.has('hydra') && (
+              <div key="hydra" className="relative">
+                <WidgetWrapper metricId="hydration" onOpen={openMetric} itemW={gs('hydra').w} itemH={gs('hydra').h} editing={editMode}>
+                  <HydrationWidget water_ml={stats?.water_ml ?? 0} streak={streaks.hydration} comp={hydraComp} />
+                </WidgetWrapper>
+                {editMode && <RemoveBtn id="hydra" onHide={hideWidget} />}
+              </div>
+            )}
 
-            <div key="wt" style={{ cursor: 'default' }}>
-              <WidgetWrapper metricId="weight" onOpen={openMetric} itemW={gs('wt').w} itemH={gs('wt').h} editing={editMode}>
-                <WeightWidget weight_kg={stats?.weight_kg ?? null} goalWeight={weightGoal} />
-              </WidgetWrapper>
-            </div>
+            {!hiddenWidgets.has('wt') && (
+              <div key="wt" className="relative">
+                <WidgetWrapper metricId="weight" onOpen={openMetric} itemW={gs('wt').w} itemH={gs('wt').h} editing={editMode}>
+                  <WeightWidget weight_kg={stats?.weight_kg ?? null} goalWeight={weightGoal} />
+                </WidgetWrapper>
+                {editMode && <RemoveBtn id="wt" onHide={hideWidget} />}
+              </div>
+            )}
 
-            <div key="work" style={{ cursor: 'default' }}>
-              <PlainWrapper itemW={gs('work').w} itemH={gs('work').h}>
-                <WorkoutsWidget workouts={workouts} streak={streaks.workouts} />
-              </PlainWrapper>
-            </div>
+            {!hiddenWidgets.has('work') && (
+              <div key="work" className="relative">
+                <PlainWrapper itemW={gs('work').w} itemH={gs('work').h}>
+                  <WorkoutsWidget workouts={workouts} streak={streaks.workouts} />
+                </PlainWrapper>
+                {editMode && <RemoveBtn id="work" onHide={hideWidget} />}
+              </div>
+            )}
 
-            <div key="weather" style={{ cursor: 'default' }}>
-              <PlainWrapper itemW={gs('weather').w} itemH={gs('weather').h}>
-                <WeatherWidget onData={setWeather} />
-              </PlainWrapper>
-            </div>
+            {!hiddenWidgets.has('weather') && (
+              <div key="weather" className="relative">
+                <PlainWrapper itemW={gs('weather').w} itemH={gs('weather').h}>
+                  <WeatherWidget onData={setWeather} />
+                </PlainWrapper>
+                {editMode && <RemoveBtn id="weather" onHide={hideWidget} />}
+              </div>
+            )}
 
-            <div key="hab" style={{ cursor: 'default' }}>
-              <PlainWrapper itemW={gs('hab').w} itemH={gs('hab').h}>
-                <HabitsWidget
-                  habits_done={stats?.habits_done ?? null}
-                  loggedTimes={habitTimes}
-                  streak={streaks.logging}
-                />
-              </PlainWrapper>
-            </div>
+            {!hiddenWidgets.has('hab') && (
+              <div key="hab" className="relative">
+                <PlainWrapper itemW={gs('hab').w} itemH={gs('hab').h}>
+                  <HabitsWidget habits_done={stats?.habits_done ?? null} loggedTimes={habitTimes} streak={streaks.logging} />
+                </PlainWrapper>
+                {editMode && <RemoveBtn id="hab" onHide={hideWidget} />}
+              </div>
+            )}
 
-            <div key="media" style={{ cursor: 'default' }}>
-              <PlainWrapper itemW={gs('media').w} itemH={gs('media').h}>
-                <MediaWidget />
-              </PlainWrapper>
-            </div>
+            {!hiddenWidgets.has('media') && (
+              <div key="media" className="relative">
+                <PlainWrapper itemW={gs('media').w} itemH={gs('media').h}>
+                  <MediaWidget />
+                </PlainWrapper>
+                {editMode && <RemoveBtn id="media" onHide={hideWidget} />}
+              </div>
+            )}
 
-            <div key="supp" style={{ cursor: 'default' }}>
-              <PlainWrapper itemW={gs('supp').w} itemH={gs('supp').h}>
-                <SupplementsWidget
-                  supplements={stats?.supplements ?? null}
-                  loggedTimes={supTimes}
-                />
-              </PlainWrapper>
-            </div>
+            {!hiddenWidgets.has('supp') && (
+              <div key="supp" className="relative">
+                <PlainWrapper itemW={gs('supp').w} itemH={gs('supp').h}>
+                  <SupplementsWidget supplements={stats?.supplements ?? null} loggedTimes={supTimes} />
+                </PlainWrapper>
+                {editMode && <RemoveBtn id="supp" onHide={hideWidget} />}
+              </div>
+            )}
 
-            <div key="photos" style={{ cursor: 'default' }}>
-              <PlainWrapper itemW={gs('photos').w} itemH={gs('photos').h}>
-                <ProgressPhotos />
-              </PlainWrapper>
-            </div>
+            {!hiddenWidgets.has('photos') && (
+              <div key="photos" className="relative">
+                <PlainWrapper itemW={gs('photos').w} itemH={gs('photos').h}>
+                  <ProgressPhotos />
+                </PlainWrapper>
+                {editMode && <RemoveBtn id="photos" onHide={hideWidget} />}
+              </div>
+            )}
 
-            <div key="journal" style={{ cursor: 'default' }}>
-              <PlainWrapper itemW={gs('journal').w} itemH={gs('journal').h}>
-                <JournalWidget stats={stats} workouts={workouts} history={history} />
-              </PlainWrapper>
-            </div>
+            {!hiddenWidgets.has('journal') && (
+              <div key="journal" className="relative">
+                <PlainWrapper itemW={gs('journal').w} itemH={gs('journal').h}>
+                  <JournalWidget stats={stats} workouts={workouts} history={history} />
+                </PlainWrapper>
+                {editMode && <RemoveBtn id="journal" onHide={hideWidget} />}
+              </div>
+            )}
 
-            <div key="map" style={{ cursor: 'default' }}>
-              <PlainWrapper itemW={gs('map').w} itemH={gs('map').h}>
-                <WorldMapWidget />
-              </PlainWrapper>
-            </div>
+            {!hiddenWidgets.has('map') && (
+              <div key="map" className="relative">
+                <PlainWrapper itemW={gs('map').w} itemH={gs('map').h}>
+                  <WorldMapWidget />
+                </PlainWrapper>
+                {editMode && <RemoveBtn id="map" onHide={hideWidget} />}
+              </div>
+            )}
 
-            <div key="clocks" style={{ cursor: 'default' }}>
-              <PlainWrapper itemW={gs('clocks').w} itemH={gs('clocks').h}>
-                <WorldClocksWidget />
-              </PlainWrapper>
-            </div>
+            {!hiddenWidgets.has('clocks') && (
+              <div key="clocks" className="relative">
+                <PlainWrapper itemW={gs('clocks').w} itemH={gs('clocks').h}>
+                  <WorldClocksWidget />
+                </PlainWrapper>
+                {editMode && <RemoveBtn id="clocks" onHide={hideWidget} />}
+              </div>
+            )}
 
-            {whoopConnected && (
-              <div key="whoop" style={{ cursor: 'default' }}>
+            {whoopConnected && !hiddenWidgets.has('whoop') && (
+              <div key="whoop" className="relative">
                 <PlainWrapper itemW={gs('whoop').w} itemH={gs('whoop').h}>
                   <WhoopWidget today={whoopToday} history={whoopHistory} />
                 </PlainWrapper>
+                {editMode && <RemoveBtn id="whoop" onHide={hideWidget} />}
               </div>
             )}
           </ResponsiveGridLayout>
@@ -640,6 +838,14 @@ export function DashboardGrid({
       />
 
       <MilestoneToast milestones={milestones} />
+
+      {showCatalog && (
+        <WidgetCatalogPanel
+          hiddenWidgets={hiddenWidgets}
+          onShow={showWidget}
+          onClose={() => setShowCatalog(false)}
+        />
+      )}
     </>
   )
 }
