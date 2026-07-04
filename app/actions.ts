@@ -53,13 +53,13 @@ function matchInjury(activeInjuries: Injury[], target: string): Injury | undefin
   return wordMatch
 }
 
-export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ error?: string }> {
+export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ error?: string; entryId?: string }> {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) return { error: 'Not authenticated' }
 
   try {
-    await Promise.all([
+    const [, entryId] = await Promise.all([
       upsertDailyStats(user.id, {
         calories: parsed.calories,
         protein_g: parsed.protein_g,
@@ -204,7 +204,7 @@ export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ err
     }
 
     revalidatePath('/')
-    return {}
+    return { entryId }
   } catch (err) {
     // PostgrestError is a plain object {code, message, details, hint}, not an Error instance
     const pg = err as Record<string, unknown>

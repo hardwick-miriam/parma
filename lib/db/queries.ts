@@ -245,15 +245,16 @@ export async function insertLogEntry(
   userId: string,
   rawText: string,
   parsedJson: unknown
-): Promise<void> {
+): Promise<string> {
   const supabase = await createClient()
-  const { error } = await supabase.from('log_entries').insert({
+  const { data, error } = await supabase.from('log_entries').insert({
     user_id: userId,
     raw_text: rawText,
     parsed_json: parsedJson,
-    logged_at: new Date().toISOString(), // always set so the "today" query can find it
-  })
+    logged_at: new Date().toISOString(),
+  }).select('id').single()
   if (error) throw error
+  return data.id as string
 }
 
 export async function getTodayLogEntries(userId: string): Promise<LogEntry[]> {

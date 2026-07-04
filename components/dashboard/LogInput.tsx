@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import type { ParsedLog } from '@/lib/ai/types'
 
 const QUESTION_RE = /^(how|when|what|show|tell|did|have i|am i|do i|can you|list|give me|which|is my|was my|are my|how many|how much|what's|what is|when did|when was)/i
@@ -13,6 +13,7 @@ function looksLikeQuestion(text: string): boolean {
 interface LogInputProps {
   onParsed: (text: string, parsed: ParsedLog) => void
   onQuestion?: (text: string) => void
+  onVoiceTranscript?: (text: string) => void  // hands-free: auto-submit this transcript
 }
 
 function MicIcon() {
@@ -49,7 +50,79 @@ function SpinnerIcon() {
   )
 }
 
-export function LogInput({ onParsed, onQuestion }: LogInputProps) {
+// Silence detector — resolves when SILENCE_DURATION ms of quiet is detected
+function useSilenceDetector() {
+  const SILENCE_THRESHOLD = 0.012  // RMS amplitude fraction (0–1)
+  const SILENCE_DURATION  = 1400   // ms of silence before auto-stop
+
+  const acRef  = useRef<AudioContext | null>(null)
+  const rafRef = useRef<number>(0)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const start = useCallback((stream: MediaStream, onSilence: () => void) => {
+    const ac = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
+    acRef.current = ac
+    const src = ac.createMediaStreamSource(stream)
+    const analyser = ac.createAnalyser()
+    analyser.fftSize = 256
+    src.connect(analyser)
+    const buf = new Uint8Array(analyser.fftSize)
+
+    function tick() {
+      analyser.getByteTimeDomainData(buf)
+      let sum = 0
+      for (let i = 0; i < buf.length; i++) sum += (buf[i] - 128) ** 2
+      const rms = Math.sqrt(sum / buf.length) / 128
+
+      if (rms < SILENCE_THRESHOLD) {
+        if (!timerRef.current) {
+          timerRef.current = setTimeout(() => { onSilence() }, SILENCE_DURATION)
+        }
+      } else {
+        if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null }
+      }
+      rafRef.current = requestAnimationFrame(tick)
+    }
+    tick()
+  }, [])
+
+  const stop = useCallback(() => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null }
+    acRef.current?.close().catch(() => {})
+    acRef.current = null
+  }, [])
+
+  useEffect(() => () => stop(), [stop])
+
+  return { start, stop }
+}
+
+// Try Web Speech API for on-device transcription (fallback when Groq unavailable)
+type AnySR = {
+  lang: string; interimResults: boolean; maxAlternatives: number
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onresult: (e: any) => void
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onerror: (e: any) => void
+  start(): void
+}
+function speechRecognitionFallback(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const win = window as unknown as { SpeechRecognition?: { new(): AnySR }; webkitSpeechRecognition?: { new(): AnySR } }
+    const SR = win.SpeechRecognition || win.webkitSpeechRecognition
+    if (!SR) { reject(new Error('No speech recognition available')); return }
+    const r = new SR()
+    r.lang = 'en-GB'
+    r.interimResults = false
+    r.maxAlternatives = 1
+    r.onresult = (e: { results: { [i: number]: { [j: number]: { transcript: string } } } }) => resolve(e.results[0]?.[0]?.transcript ?? '')
+    r.onerror = (e: { error: string }) => reject(new Error(e.error))
+    r.start()
+  })
+}
+
+export function LogInput({ onParsed, onQuestion, onVoiceTranscript }: LogInputProps) {
   const [text, setText] = useState('')
   const [recording, setRecording] = useState(false)
   const [transcribing, setTranscribing] = useState(false)
@@ -58,6 +131,7 @@ export function LogInput({ onParsed, onQuestion }: LogInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
+  const { start: startSilence, stop: stopSilence } = useSilenceDetector()
 
   function autoResize(el: HTMLTextAreaElement) {
     el.style.height = 'auto'
@@ -68,6 +142,53 @@ export function LogInput({ onParsed, onQuestion }: LogInputProps) {
     setText(e.target.value)
     autoResize(e.target)
   }
+
+  const processBlob = useCallback(async (blob: Blob, mimeType: string) => {
+    const ext = mimeType.includes('mp4') ? 'm4a' : mimeType.includes('ogg') ? 'ogg' : 'webm'
+    setTranscribing(true)
+    try {
+      const form = new FormData()
+      form.append('audio', blob, `audio.${ext}`)
+      const res = await fetch('/api/transcribe', { method: 'POST', body: form })
+      const data = await res.json()
+
+      if (!res.ok) {
+        // Try Web Speech API fallback if Groq not configured
+        if (res.status === 503) {
+          try {
+            const fallbackText = await speechRecognitionFallback()
+            if (fallbackText) {
+              if (onVoiceTranscript) {
+                onVoiceTranscript(fallbackText)
+              } else {
+                const appended = text ? `${text} ${fallbackText}` : fallbackText
+                setText(appended)
+                setTimeout(() => { if (textareaRef.current) autoResize(textareaRef.current) }, 0)
+              }
+            }
+            return
+          } catch {
+            // fallback also failed — show original error
+          }
+        }
+        throw new Error(data.error ?? 'Transcription failed')
+      }
+
+      if (data.text) {
+        if (onVoiceTranscript) {
+          onVoiceTranscript(data.text)
+        } else {
+          const appended = text ? `${text} ${data.text}` : data.text
+          setText(appended)
+          setTimeout(() => { if (textareaRef.current) autoResize(textareaRef.current) }, 0)
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Transcription failed')
+    } finally {
+      setTranscribing(false)
+    }
+  }, [text, onVoiceTranscript])
 
   async function startRecording() {
     setError(null)
@@ -82,36 +203,24 @@ export function LogInput({ onParsed, onQuestion }: LogInputProps) {
         ? new MediaRecorder(stream, { mimeType })
         : new MediaRecorder(stream)
       chunksRef.current = []
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data)
-      }
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data) }
       recorder.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop())
+        stopSilence()
         const blob = new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' })
         chunksRef.current = []
-        setTranscribing(true)
-        try {
-          const form = new FormData()
-          form.append('audio', blob, 'audio.webm')
-          const res = await fetch('/api/transcribe', { method: 'POST', body: form })
-          const data = await res.json()
-          if (!res.ok) throw new Error(data.error ?? 'Transcription failed')
-          if (data.text) {
-            const appended = text ? `${text} ${data.text}` : data.text
-            setText(appended)
-            setTimeout(() => {
-              if (textareaRef.current) autoResize(textareaRef.current)
-            }, 0)
-          }
-        } catch (err) {
-          setError(err instanceof Error ? err.message : 'Transcription failed')
-        } finally {
-          setTranscribing(false)
-        }
+        await processBlob(blob, recorder.mimeType || 'audio/webm')
       }
       mediaRecorderRef.current = recorder
       recorder.start()
       setRecording(true)
+      // Start silence detection — auto-stop after 1.4s quiet
+      startSilence(stream, () => {
+        if (mediaRecorderRef.current?.state === 'recording') {
+          mediaRecorderRef.current.stop()
+          setRecording(false)
+        }
+      })
     } catch (err) {
       if (err instanceof DOMException && err.name === 'NotAllowedError') {
         setError('Microphone permission denied')
@@ -122,7 +231,10 @@ export function LogInput({ onParsed, onQuestion }: LogInputProps) {
   }
 
   function stopRecording() {
-    mediaRecorderRef.current?.stop()
+    stopSilence()
+    if (mediaRecorderRef.current?.state === 'recording') {
+      mediaRecorderRef.current.stop()
+    }
     setRecording(false)
   }
 
@@ -130,7 +242,6 @@ export function LogInput({ onParsed, onQuestion }: LogInputProps) {
     if (!text.trim() || loading || transcribing) return
     if (recording) stopRecording()
 
-    // Route questions to Q&A handler instead of parse flow
     if (onQuestion && looksLikeQuestion(text)) {
       const q = text.trim()
       setText('')
@@ -151,9 +262,7 @@ export function LogInput({ onParsed, onQuestion }: LogInputProps) {
       if (!res.ok) throw new Error(data.error ?? 'Parse failed')
       onParsed(text, data.parsed)
       setText('')
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto'
-      }
+      if (textareaRef.current) textareaRef.current.style.height = 'auto'
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
@@ -165,13 +274,12 @@ export function LogInput({ onParsed, onQuestion }: LogInputProps) {
 
   return (
     <div className="w-full flex flex-col gap-1.5">
-      {/* Status line — only visible when something is happening */}
       {(recording || transcribing || error) && (
         <div className="flex items-center gap-2 px-1 min-h-[18px]">
           {recording && (
             <>
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shrink-0" />
-              <span className="text-xs text-red-400">Recording — tap stop when done</span>
+              <span className="text-xs text-red-400">Recording — auto-stops on silence</span>
             </>
           )}
           {!recording && transcribing && (
@@ -183,7 +291,6 @@ export function LogInput({ onParsed, onQuestion }: LogInputProps) {
         </div>
       )}
 
-      {/* Pill */}
       <div
         className="flex items-end gap-2 rounded-2xl border px-4 py-3 transition-colors"
         style={{
@@ -205,22 +312,22 @@ export function LogInput({ onParsed, onQuestion }: LogInputProps) {
           }}
         />
 
-        {/* Mic button */}
+        {/* Mic — larger touch target on mobile */}
         <button
           type="button"
           onClick={recording ? stopRecording : startRecording}
           disabled={micBusy}
-          className={`shrink-0 p-2 rounded-xl transition-colors disabled:opacity-40 ${
-            recording
+          className={`shrink-0 rounded-xl transition-colors disabled:opacity-40
+            p-3 sm:p-2
+            ${recording
               ? 'text-red-400 bg-red-500/10 hover:bg-red-500/20'
-              : 'text-text-muted hover:text-accent'
-          }`}
-          title={recording ? 'Stop recording' : 'Record voice note'}
+              : 'text-text-muted hover:text-accent'}`}
+          title={recording ? 'Stop (or wait for silence)' : 'Record voice note'}
         >
           {transcribing ? <SpinnerIcon /> : recording ? <StopIcon /> : <MicIcon />}
         </button>
 
-        {/* Send button */}
+        {/* Send */}
         <button
           type="button"
           onClick={handleSubmit}
