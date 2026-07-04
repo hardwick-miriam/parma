@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
+import { useAutoAnimate } from '@formkit/auto-animate/react'
 
 interface InsightRow {
   id?: string
@@ -47,6 +48,7 @@ function StrengthBadge({ type, strength }: { type: string; strength?: number | n
 export function InsightsWidget() {
   const [insights, setInsights] = useState<InsightRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [listRef] = useAutoAnimate<HTMLDivElement>()
   const [insufficient, setInsufficient] = useState(false)
 
   useEffect(() => {
@@ -83,7 +85,7 @@ export function InsightsWidget() {
       )}
 
       {!loading && insights.length > 0 && (
-        <div className="flex flex-col gap-2 overflow-y-auto">
+        <div ref={listRef} className="flex flex-col gap-2 overflow-y-auto">
           {insights.slice(0, 6).map((ins, i) => (
             <div
               key={ins.id ?? i}

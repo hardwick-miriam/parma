@@ -252,6 +252,22 @@ export function LogInput({ onParsed, onQuestion, onVoiceTranscript }: LogInputPr
       return
     }
 
+    // Queue when offline
+    if (!navigator.onLine) {
+      const { enqueueLog } = await import('@/lib/offlineQueue')
+      await enqueueLog({
+        text,
+        date: new Date().toLocaleDateString('en-CA'),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        createdAt: Date.now(),
+      })
+      window.dispatchEvent(new CustomEvent('parma:queued'))
+      setText('')
+      if (textareaRef.current) textareaRef.current.style.height = 'auto'
+      setError(null)
+      return
+    }
+
     setLoading(true)
     setError(null)
     try {

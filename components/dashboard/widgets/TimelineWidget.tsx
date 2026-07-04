@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { deleteLogEntry } from '@/app/actions'
+import { useAutoAnimate } from '@formkit/auto-animate/react'
 import type { LogEntry } from '@/lib/db/queries'
 
 function formatTime(ts: string) {
@@ -23,6 +24,7 @@ function TrashIcon() {
 export function TimelineWidget({ entries }: { entries: LogEntry[] }) {
   const [confirmId, setConfirmId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [listRef] = useAutoAnimate<HTMLOListElement>()
 
   function handleDelete(id: string) {
     startTransition(async () => {
@@ -37,7 +39,7 @@ export function TimelineWidget({ entries }: { entries: LogEntry[] }) {
       {entries.length === 0 ? (
         <p className="text-text-subtle text-sm">Nothing logged yet — speak or type below</p>
       ) : (
-        <ol className="flex flex-col divide-y divide-border">
+        <ol ref={listRef} className="flex flex-col divide-y divide-border">
           {entries.map((entry) => (
             <li key={entry.id} className="group flex items-start gap-3 py-3 first:pt-0 last:pb-0">
               <span className="text-xs text-text-subtle tabular-nums pt-0.5 w-16 shrink-0">

@@ -4,6 +4,7 @@ import { SignOutButton } from '@/components/dashboard/SignOutButton'
 import { LogFlow } from '@/components/dashboard/LogFlow'
 import { NavBar } from '@/components/dashboard/NavBar'
 import { PaletteWrapper } from '@/components/dashboard/PaletteWrapper'
+import { OfflineQueue } from '@/components/OfflineQueue'
 
 export default async function DashboardLayout({
   children,
@@ -93,6 +94,9 @@ export default async function DashboardLayout({
           </div>
         </div>
       </div>
+
+      {/* Offline indicator + queue */}
+      <OfflineQueue />
 
       {/* Command palette — ⌘K / Ctrl+K, mobile search button */}
       <PaletteWrapper />

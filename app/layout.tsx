@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { QueryProvider } from '@/components/QueryProvider'
 import { Toaster } from 'sonner'
+import { SWRegister } from '@/components/SWRegister'
 import './globals.css'
 
 const inter = Inter({
@@ -66,6 +67,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <ThemeProvider initialTheme={theme}>
           <QueryProvider>
             {children}
+            <SWRegister />
             <Toaster
               position="bottom-center"
               offset={{ bottom: 140 }}
