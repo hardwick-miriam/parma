@@ -32,11 +32,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 const THEMES: { id: Theme; label: string; desc: string; preview: string }[] = [
-  { id: 'normal',        label: 'Normal',          desc: 'Deep violet on dark slate',     preview: '#111113/#8b5cf6' },
-  { id: 'hacker',        label: 'Hacker',           desc: 'Green phosphor · monospace',    preview: '#000000/#00ff41' },
-  { id: 'brutalism',     label: 'Modern Brutalism', desc: 'Black on white · raw energy',   preview: '#ffffff/#000000' },
-  { id: 'old-money',     label: 'Old Money',        desc: 'Deep green · gold accents',     preview: '#0f1a08/#c9a84c' },
-  { id: 'dark-academia', label: 'Dark Academia',    desc: 'Warm brown · candle amber',     preview: '#13100a/#d4930a' },
+  { id: 'normal',          label: 'Normal',           desc: 'Deep violet on dark slate',     preview: '#111113/#8b5cf6' },
+  { id: 'hacker',          label: 'Hacker',            desc: 'Green phosphor · monospace',    preview: '#000000/#00ff41' },
+  { id: 'brutalism',       label: 'Modern Brutalism',  desc: 'Black on white · raw energy',   preview: '#ffffff/#000000' },
+  { id: 'old-money',       label: 'Old Money',         desc: 'Deep green · gold accents',     preview: '#0f1a08/#c9a84c' },
+  { id: 'dark-academia',   label: 'Dark Academia',     desc: 'Warm brown · candle amber',     preview: '#13100a/#d4930a' },
+  { id: 'midnight-ocean',  label: 'Midnight Ocean',    desc: 'Deep navy · sky blue glow',     preview: '#020c18/#38bdf8' },
+  { id: 'synthwave',       label: 'Synthwave',         desc: 'Neon purple · cyberpunk glow',  preview: '#0a0012/#e879f9' },
 ]
 
 export function SettingsClient({ currentEmail, initialPrefs, whoopConnection }: Props) {

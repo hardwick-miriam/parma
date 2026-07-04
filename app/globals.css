@@ -319,6 +319,59 @@ body {
   letter-spacing: 0.01em;
 }
 
+/* ─── MIDNIGHT OCEAN theme ─────────────────────────────────────────────── */
+[data-theme="midnight-ocean"] {
+  --bg: #020c18;
+  --surface: #061525;
+  --surface-elevated: #0a2035;
+  --surface-hover: #0e2a40;
+  --border: rgba(56, 189, 248, 0.16);
+  --border-strong: rgba(56, 189, 248, 0.32);
+  --text: #cce8f8;
+  --text-muted: rgba(204, 232, 248, 0.55);
+  --text-subtle: rgba(204, 232, 248, 0.3);
+  --accent: #38bdf8;
+  --accent-dim: rgba(56, 189, 248, 0.1);
+  --accent-glow: rgba(56, 189, 248, 0.25);
+  --positive: #34d399;
+  --positive-dim: rgba(52, 211, 153, 0.12);
+  --negative: #f87171;
+  --negative-dim: rgba(248, 113, 113, 0.12);
+  --warning: #fbbf24;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.8), 0 0 8px rgba(56,189,248,0.06);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.85), 0 0 24px rgba(56,189,248,0.08);
+  --shadow-lg: 0 12px 48px rgba(0,0,0,0.95), 0 0 48px rgba(56,189,248,0.1);
+}
+
+/* ─── SYNTHWAVE theme ───────────────────────────────────────────────────── */
+[data-theme="synthwave"] {
+  --bg: #0a0012;
+  --surface: #120020;
+  --surface-elevated: #1a002d;
+  --surface-hover: #220038;
+  --border: rgba(232, 121, 249, 0.18);
+  --border-strong: rgba(232, 121, 249, 0.38);
+  --text: #f3d0ff;
+  --text-muted: rgba(243, 208, 255, 0.55);
+  --text-subtle: rgba(243, 208, 255, 0.3);
+  --accent: #e879f9;
+  --accent-dim: rgba(232, 121, 249, 0.1);
+  --accent-glow: rgba(232, 121, 249, 0.3);
+  --positive: #4ade80;
+  --positive-dim: rgba(74, 222, 128, 0.12);
+  --negative: #f87171;
+  --negative-dim: rgba(248, 113, 113, 0.12);
+  --warning: #fbbf24;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(232,121,249,0.1);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.95), 0 0 24px rgba(232,121,249,0.12);
+  --shadow-lg: 0 12px 48px rgba(0,0,0,1), 0 0 48px rgba(232,121,249,0.16);
+}
+
+[data-theme="synthwave"] body {
+  font-family: var(--font-jetbrains), 'Courier New', monospace;
+}
+
+
 /* ─── react-grid-layout overrides ──────────────────────────────────────── */
 .react-grid-layout {
   position: relative;

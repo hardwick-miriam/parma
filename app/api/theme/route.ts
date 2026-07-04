@@ -5,7 +5,7 @@ import { upsertUserPreferences } from '@/lib/db/preferences'
 
 export const dynamic = 'force-dynamic'
 
-const VALID_THEMES = ['normal', 'hacker', 'brutalism', 'old-money', 'dark-academia']
+const VALID_THEMES = ['normal', 'hacker', 'brutalism', 'old-money', 'dark-academia', 'midnight-ocean', 'synthwave']
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()

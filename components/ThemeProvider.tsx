@@ -3,8 +3,9 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { DigitalRain } from './DigitalRain'
 import { FlyingBirds } from './FlyingBirds'
+import { ThemeParticles } from './ThemeParticles'
 
-export type Theme = 'normal' | 'hacker' | 'brutalism' | 'old-money' | 'dark-academia'
+export type Theme = 'normal' | 'hacker' | 'brutalism' | 'old-money' | 'dark-academia' | 'midnight-ocean' | 'synthwave'
 
 interface ThemeContextValue {
   theme: Theme
@@ -30,7 +31,11 @@ export function ThemeProvider({
 
   useEffect(() => {
     setMounted(true)
-    setReduced(window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduced(mq.matches)
+    const onChange = (e: MediaQueryListEvent) => setReduced(e.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
   }, [])
 
   useEffect(() => {
@@ -49,11 +54,17 @@ export function ThemeProvider({
 
   // Mobile: skip heavy background effects
   const isMobile = mounted && typeof window !== 'undefined' && window.innerWidth < 768
+  const showEffects = mounted && !isMobile && !reduced
+
+  const PARTICLE_THEMES: Theme[] = ['old-money', 'dark-academia', 'midnight-ocean', 'synthwave']
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>
-      {mounted && !isMobile && theme === 'hacker' && <DigitalRain reduced={reduced} />}
-      {mounted && !isMobile && theme === 'brutalism' && <FlyingBirds reduced={reduced} />}
+      {showEffects && theme === 'hacker'    && <DigitalRain reduced={reduced} />}
+      {showEffects && theme === 'brutalism' && <FlyingBirds reduced={reduced} />}
+      {showEffects && PARTICLE_THEMES.includes(theme) && (
+        <ThemeParticles theme={theme} reduced={reduced} />
+      )}
       {children}
     </ThemeContext.Provider>
   )
