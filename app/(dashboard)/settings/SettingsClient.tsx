@@ -87,7 +87,7 @@ export function SettingsClient({ currentEmail, initialPrefs, whoopConnection }: 
         if (data.skipped_open) parts.push(`${data.skipped_open} open`)
         if (errors > 0) {
           const firstErr = (data.upsert_errors as Array<{date: string; error: string}>)[0]
-          parts.push(`${errors} error${errors === 1 ? `: ${firstErr?.error}` : 's'}`)
+          parts.push(`${errors} error${errors > 1 ? 's' : ''}: ${firstErr?.error}`)
         }
         setWhoopSyncMsg(`Synced · ${parts.join(' · ')}`)
         setWhoop(w => w ? { ...w, lastSyncAt: new Date().toISOString() } : w)
