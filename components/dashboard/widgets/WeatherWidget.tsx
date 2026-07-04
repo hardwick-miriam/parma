@@ -114,6 +114,8 @@ function makeStars(n: number, w: number, h: number): Star[] {
 
 // ─── Canvas hook ──────────────────────────────────────────────────────────────
 
+export { getCondition, BG }
+
 function useWeatherCanvas(
   condition: ConditionKey,
   reduced: boolean
@@ -418,7 +420,7 @@ function injectKeyframes() {
 
 // ─── Weather background orchestrator ─────────────────────────────────────────
 
-function WeatherBackground({ condition, reduced }: { condition: ConditionKey; reduced: boolean }) {
+export function WeatherBackground({ condition, reduced }: { condition: ConditionKey; reduced: boolean }) {
   useEffect(() => { injectKeyframes() }, [])
   const canvasRef = useWeatherCanvas(condition, reduced)
 

@@ -77,6 +77,7 @@ export default async function DashboardPage() {
       whoopConnected={whoopConnected}
       whoopToday={whoopToday}
       whoopHistory={whoopHistory ?? []}
+      weatherBgEnabled={prefs?.weather_bg_enabled ?? false}
     />
     </>
   )

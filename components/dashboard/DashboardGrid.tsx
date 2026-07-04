@@ -31,6 +31,7 @@ import { WorldMapWidget } from './WorldMapWidget'
 import { JournalWidget } from './JournalWidget'
 import { WorldClocksWidget } from './widgets/WorldClocksWidget'
 import { InsightsWidget } from './widgets/InsightsWidget'
+import { WeatherFullBackground } from '@/components/WeatherFullBackground'
 import { MuscleMapWidget } from './widgets/MuscleMapWidget'
 import { PRTrackerWidget } from './widgets/PRTrackerWidget'
 import { TrainingLoadWidget } from './widgets/TrainingLoadWidget'
@@ -459,6 +460,7 @@ interface DashboardGridProps {
   whoopConnected?: boolean
   whoopToday?: WhoopMetrics | null
   whoopHistory?: WhoopMetrics[]
+  weatherBgEnabled?: boolean
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -483,6 +485,7 @@ export function DashboardGrid({
   whoopConnected = false,
   whoopToday = null,
   whoopHistory = [],
+  weatherBgEnabled = false,
 }: DashboardGridProps) {
   const [activeMetric, setActiveMetric] = useState<MetricId | null>(null)
   const [detailHistory, setDetailHistory] = useState<DailyStats[]>(history)
@@ -604,6 +607,7 @@ export function DashboardGrid({
 
   return (
     <>
+      {weatherBgEnabled && <WeatherFullBackground />}
       <motion.div
         className="flex flex-col gap-4"
         variants={containerVariants}

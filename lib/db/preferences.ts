@@ -17,6 +17,7 @@ export interface UserPreferences {
   layouts: Record<string, unknown>
   hidden_widgets: string[]
   theme: string
+  weather_bg_enabled: boolean
   updated_at: string
 }
 
@@ -36,6 +37,7 @@ export async function getUserPreferences(userId: string): Promise<UserPreference
     layouts: (data.layouts as Record<string, unknown>) ?? {},
     hidden_widgets: (data.hidden_widgets as string[]) ?? [],
     theme: (data.theme as string) ?? 'normal',
+    weather_bg_enabled: (data.weather_bg_enabled as boolean) ?? false,
   }
 }
 

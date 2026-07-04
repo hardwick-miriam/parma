@@ -15,6 +15,7 @@ interface Props {
     savedPlaces: SavedPlace[]
     mounjaroEnabled: boolean
     theme: string
+    weatherBgEnabled: boolean
   }
   whoopConnection: {
     displayName: string | null
@@ -44,6 +45,7 @@ const THEMES: { id: Theme; label: string; desc: string; preview: string }[] = [
 export function SettingsClient({ currentEmail, initialPrefs, whoopConnection }: Props) {
   const [weightGoal, setWeightGoal] = useState(initialPrefs.weightGoal?.toString() ?? '')
   const [mounjaroEnabled, setMounjaroEnabled] = useState(initialPrefs.mounjaroEnabled)
+  const [weatherBgEnabled, setWeatherBgEnabled] = useState(initialPrefs.weatherBgEnabled)
   const [token, setToken] = useState(initialPrefs.token)
   const { theme, setTheme } = useTheme()
   const [places, setPlaces] = useState<SavedPlace[]>(initialPrefs.savedPlaces)
@@ -115,6 +117,7 @@ export function SettingsClient({ currentEmail, initialPrefs, whoopConnection }: 
     await saveSettings({
       weight_goal_kg: weightGoal ? parseFloat(weightGoal) : null,
       mounjaro_enabled: mounjaroEnabled,
+      weather_bg_enabled: weatherBgEnabled,
     })
     setSaving(false)
     setSaved(true)
@@ -237,6 +240,23 @@ export function SettingsClient({ currentEmail, initialPrefs, whoopConnection }: 
           >
             <span
               className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${mounjaroEnabled ? 'translate-x-4' : ''}`}
+            />
+          </button>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <p className="text-sm text-text-muted">Weather background</p>
+            <p className="text-xs text-text-subtle">Fill the dashboard with an animated weather scene (desktop only)</p>
+          </div>
+          <button
+            role="switch"
+            aria-checked={weatherBgEnabled}
+            onClick={() => setWeatherBgEnabled((v) => !v)}
+            className={`relative w-10 h-6 rounded-full transition-colors ${weatherBgEnabled ? 'bg-accent' : 'bg-surface-elevated border border-border'}`}
+          >
+            <span
+              className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${weatherBgEnabled ? 'translate-x-4' : ''}`}
             />
           </button>
         </div>

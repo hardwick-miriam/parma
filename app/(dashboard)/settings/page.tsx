@@ -26,6 +26,7 @@ export default async function SettingsPage() {
         savedPlaces: prefs?.saved_places ?? [],
         mounjaroEnabled: prefs?.mounjaro_enabled ?? false,
         theme: (prefs?.theme as string) ?? 'normal',
+        weatherBgEnabled: prefs?.weather_bg_enabled ?? false,
       }}
       whoopConnection={whoopConn ? {
         displayName: whoopConn.whoop_display_name,

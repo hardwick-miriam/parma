@@ -16,6 +16,7 @@ async function getUser() {
 export async function saveSettings(updates: {
   weight_goal_kg?: number | null
   mounjaro_enabled?: boolean
+  weather_bg_enabled?: boolean
 }): Promise<void> {
   const user = await getUser()
   await upsertUserPreferences(user.id, updates)
