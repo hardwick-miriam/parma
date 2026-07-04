@@ -178,8 +178,8 @@ export class ClaudeProvider implements AIProvider {
     }
 
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
+      model: 'claude-haiku-4-5',
+      max_tokens: 512,
       tool_choice: { type: 'tool', name: 'parse_health_log' },
       tools: [PARSE_TOOL],
       system,
