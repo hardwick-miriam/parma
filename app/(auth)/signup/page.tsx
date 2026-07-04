@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 
 export default function SignupPage() {
@@ -31,7 +32,16 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg px-4">
       <div className="w-full max-w-sm">
-        <h1 className="text-3xl font-bold text-text mb-2">Parma</h1>
+        <Image
+          src="/logo.png"
+          alt="Parma"
+          width={56}
+          height={56}
+          quality={100}
+          className="mb-4"
+          style={{ mixBlendMode: 'screen', borderRadius: 8 }}
+          priority
+        />
         <p className="text-text-muted text-sm mb-8">Create your account</p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">

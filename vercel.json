@@ -1,8 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/cron/whoop-sync",
-      "schedule": "0 5 * * *"
+      "path": "/api/sync-tick",
+      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/insights-refresh",
