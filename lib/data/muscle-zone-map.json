@@ -1,0 +1,20 @@
+{
+  "abdominals":   ["abs-upper", "abs-lower"],
+  "abductors":    ["glutes-l", "glutes-r"],
+  "adductors":    ["adductors-l", "adductors-r"],
+  "biceps":       ["biceps-l", "biceps-r"],
+  "calves":       ["calves-l", "calves-r", "calves-front-l", "calves-front-r"],
+  "chest":        ["chest-l", "chest-r"],
+  "forearms":     ["forearms-l", "forearms-r"],
+  "glutes":       ["glutes-l", "glutes-r"],
+  "hamstrings":   ["hamstrings-l", "hamstrings-r"],
+  "lats":         ["lats-l", "lats-r"],
+  "lower back":   ["lower-back"],
+  "middle back":  ["rhomboids"],
+  "neck":         ["traps"],
+  "quadriceps":   ["quads-l", "quads-r"],
+  "shoulders":    ["front-delts-l", "front-delts-r", "rear-delts-l", "rear-delts-r"],
+  "traps":        ["traps"],
+  "triceps":      ["triceps-l", "triceps-r"],
+  "obliques":     ["obliques-l", "obliques-r"]
+}

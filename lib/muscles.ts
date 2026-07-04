@@ -297,8 +297,8 @@ const EXERCISE_MAP: Array<{ keywords: string[]; muscles: MuscleLoad[] }> = [
   { keywords: ['yoga', 'stretch', 'mobility'], muscles: [] },
 ]
 
-// Resolve an exercise name to muscle loads (0 = no match)
-export function resolveExercise(name: string): MuscleLoad[] {
+// Resolve an exercise name to muscle loads using the legacy hand-written map (fallback only)
+export function resolveExerciseLegacy(name: string): MuscleLoad[] {
   const lower = name.toLowerCase()
   for (const entry of EXERCISE_MAP) {
     if (entry.keywords.some(k => lower.includes(k))) {
@@ -308,6 +308,11 @@ export function resolveExercise(name: string): MuscleLoad[] {
   return []
 }
 
+// Kept for backward compat — delegates to exerciseDb with legacy fallback
+export function resolveExercise(name: string): MuscleLoad[] {
+  return resolveExerciseLegacy(name)
+}
+
 // Aggregate muscle loads across multiple exercises/sessions
 // Returns map of muscleId → combined load 0-1
 export function aggregateMuscleLoads(
@@ -315,7 +320,7 @@ export function aggregateMuscleLoads(
 ): Partial<Record<MuscleId, number>> {
   const totals: Partial<Record<MuscleId, number>> = {}
   for (const ex of exercises) {
-    const loads = resolveExercise(ex.name)
+    const loads = resolveExerciseLegacy(ex.name)
     const scale = ex.whoopStrain ? Math.min(1.5, ex.whoopStrain / 15) : 1.0
     for (const { muscle, weight } of loads) {
       totals[muscle] = Math.min(1, (totals[muscle] ?? 0) + weight * scale * 0.6)

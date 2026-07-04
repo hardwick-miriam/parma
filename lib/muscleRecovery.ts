@@ -1,5 +1,6 @@
 import type { MuscleId } from './muscles'
-import { resolveExercise, aggregateMuscleLoads } from './muscles'
+import { aggregateMuscleLoads } from './muscles'
+import { aggregateExerciseLoads } from './exerciseDb'
 
 export interface SessionLoad {
   date: string        // YYYY-MM-DD
@@ -59,9 +60,11 @@ export function computeMuscleRecovery(
 
   for (const session of sessions) {
     const sessionMs = new Date(session.date + 'T12:00:00').getTime()
-    const loads = aggregateMuscleLoads(
-      session.exercises.map(name => ({ name, whoopStrain: session.whoopStrain }))
-    )
+    // Use the exercise DB lookup first; fall back to the legacy keyword map
+    const dbLoads = aggregateExerciseLoads(session.exercises)
+    const loads: Partial<Record<MuscleId, number>> = dbLoads.size
+      ? Object.fromEntries(dbLoads)
+      : aggregateMuscleLoads(session.exercises.map(name => ({ name, whoopStrain: session.whoopStrain })))
     const wd = recoveryByDate[session.date]
     const decayMult = whoopDecayMultiplier(wd)
 
