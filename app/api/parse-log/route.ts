@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getAIProvider } from '@/lib/ai'
 import { getActiveInjuries } from '@/lib/db/queries'
+import { ParseLogPayloadSchema, ParsedLogSchema } from '@/lib/schemas'
+import { getLocalDate, getWeekdayName } from '@/lib/date'
 
 export const maxDuration = 60
 
@@ -13,17 +15,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { text, date, timezone } = await request.json()
-  if (!text?.trim()) {
-    return NextResponse.json({ error: 'No text provided' }, { status: 400 })
+  const raw = await request.json()
+  const payloadResult = ParseLogPayloadSchema.safeParse(raw)
+  if (!payloadResult.success) {
+    console.error('[parse-log] invalid payload:', payloadResult.error.flatten())
+    return NextResponse.json({ error: 'Invalid payload', detail: payloadResult.error.flatten() }, { status: 400 })
   }
+  const { text, date, timezone } = payloadResult.data
 
-  // Resolve today's date in the user's timezone
   const tz = (typeof timezone === 'string' && timezone) ? timezone : 'Europe/London'
-  const today = (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date))
-    ? date
-    : new Date().toLocaleDateString('en-CA', { timeZone: tz }) // en-CA gives YYYY-MM-DD
-  const weekday = new Date(today + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long' })
+  const today = date ?? getLocalDate(tz)
+  const weekday = getWeekdayName(today)
 
   try {
     const [provider, activeInjuries] = await Promise.all([
@@ -31,7 +33,7 @@ export async function POST(request: NextRequest) {
       getActiveInjuries(user.id).catch(() => []),
     ])
 
-    const parsed = await provider.parseLog(text, {
+    const rawParsed = await provider.parseLog(text, {
       activeInjuries: activeInjuries.map((inj) => ({
         id: inj.id,
         description: inj.description,
@@ -41,6 +43,13 @@ export async function POST(request: NextRequest) {
       timezone: tz,
       weekday,
     })
+
+    const parseResult = ParsedLogSchema.safeParse(rawParsed)
+    if (!parseResult.success) {
+      console.error('[parse-log] AI output failed schema validation:', parseResult.error.flatten(), 'raw:', rawParsed)
+      return NextResponse.json({ error: 'AI returned invalid shape', detail: parseResult.error.flatten() }, { status: 502 })
+    }
+    const parsed = parseResult.data
 
     return NextResponse.json({ parsed })
   } catch (err) {

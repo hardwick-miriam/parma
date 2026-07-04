@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, JetBrains_Mono, Playfair_Display, Libre_Baskerville } from 'next/font/google'
 import { cookies } from 'next/headers'
 import { ThemeProvider } from '@/components/ThemeProvider'
+import { QueryProvider } from '@/components/QueryProvider'
 import './globals.css'
 
 const inter = Inter({
@@ -62,7 +63,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en" className={`h-full ${fontVars}`} data-theme={theme} suppressHydrationWarning>
       <body className="min-h-full">
         <ThemeProvider initialTheme={theme}>
-          {children}
+          <QueryProvider>
+            {children}
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>
