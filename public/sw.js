@@ -1,4 +1,4 @@
-// Parma service worker — offline shell cache
+// Parma service worker — offline shell cache + push notifications
 const CACHE = 'parma-v1'
 const SHELL = ['/', '/login', '/manifest.webmanifest', '/logo.png']
 
@@ -38,6 +38,32 @@ self.addEventListener('fetch', (e) => {
         return res
       })
       return cached ?? networkFetch
+    })
+  )
+})
+
+// Push notifications
+self.addEventListener('push', (e) => {
+  if (!e.data) return
+  let data
+  try { data = e.data.json() } catch { data = { title: 'Parma', body: e.data.text() } }
+  e.waitUntil(
+    self.registration.showNotification(data.title ?? 'Parma', {
+      body: data.body,
+      icon: data.icon ?? '/logo.png',
+      badge: data.badge ?? '/logo.png',
+      tag: data.tag ?? 'parma',
+    })
+  )
+})
+
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close()
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window' }).then((clients) => {
+      const win = clients.find((c) => c.url.includes(self.location.origin))
+      if (win) return win.focus()
+      return self.clients.openWindow('/')
     })
   )
 })
