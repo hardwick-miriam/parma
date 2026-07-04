@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { SignOutButton } from '@/components/dashboard/SignOutButton'
 import { LogFlow } from '@/components/dashboard/LogFlow'
 import { NavBar } from '@/components/dashboard/NavBar'
+import { PaletteWrapper } from '@/components/dashboard/PaletteWrapper'
 
 export default async function DashboardLayout({
   children,
@@ -92,6 +93,9 @@ export default async function DashboardLayout({
           </div>
         </div>
       </div>
+
+      {/* Command palette — ⌘K / Ctrl+K, mobile search button */}
+      <PaletteWrapper />
     </div>
   )
 }

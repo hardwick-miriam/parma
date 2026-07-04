@@ -43,6 +43,7 @@ import { detectMilestones } from '@/lib/milestones'
 import { weekOverWeek } from '@/lib/comparison'
 import { computeRecovery } from '@/lib/recovery'
 import { computeMuscleRecovery } from '@/lib/muscleRecovery'
+import { CommandPalette } from '@/components/CommandPalette'
 import type { MetricId } from './DetailView'
 import type {
   DailyStats,
