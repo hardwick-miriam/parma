@@ -4,6 +4,7 @@ import { getAIProvider } from '@/lib/ai'
 import { getActiveInjuries } from '@/lib/db/queries'
 import { ParseLogPayloadSchema, ParsedLogSchema } from '@/lib/schemas'
 import { getLocalDate, getWeekdayName } from '@/lib/date'
+import { chronoParseDate } from '@/lib/chronoParse'
 
 export const maxDuration = 60
 
@@ -27,6 +28,10 @@ export async function POST(request: NextRequest) {
   const today = date ?? getLocalDate(tz)
   const weekday = getWeekdayName(today)
 
+  // Pre-parse date expressions locally — gives AI ground truth, shrinks prompt
+  const chrono = chronoParseDate(text, tz)
+  const resolvedDate = chrono.resolvedDate ?? today
+
   try {
     const [provider, activeInjuries] = await Promise.all([
       Promise.resolve(getAIProvider()),
@@ -42,6 +47,7 @@ export async function POST(request: NextRequest) {
       today,
       timezone: tz,
       weekday,
+      resolvedDate,
     })
 
     const parseResult = ParsedLogSchema.safeParse(rawParsed)

@@ -177,6 +177,12 @@ export class ClaudeProvider implements AIProvider {
         `"Tuesday" → most recent Tuesday before today. Set log_date only when the entry is clearly about a past day.`
     }
 
+    // chrono-node pre-resolved a date expression — treat as authoritative ground truth
+    if (context?.resolvedDate && context.resolvedDate !== context?.today) {
+      system += `\n\nDate pre-resolved by the client: this log entry belongs to ${context.resolvedDate}. ` +
+        `Set log_date = "${context.resolvedDate}" unless the entry is clearly about today.`
+    }
+
     if (context?.activeInjuries?.length) {
       const list = context.activeInjuries
         .map((inj) => {

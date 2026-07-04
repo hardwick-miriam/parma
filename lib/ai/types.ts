@@ -68,9 +68,10 @@ export interface InjuryContext {
 
 export interface ParseContext {
   activeInjuries?: InjuryContext[]
-  today?: string      // YYYY-MM-DD in user's timezone
-  timezone?: string   // IANA tz name, e.g. 'Europe/London'
-  weekday?: string    // e.g. 'Monday' for relative-day resolution
+  today?: string         // YYYY-MM-DD in user's timezone
+  timezone?: string      // IANA tz name, e.g. 'Europe/London'
+  weekday?: string       // e.g. 'Monday' for relative-day resolution
+  resolvedDate?: string  // YYYY-MM-DD pre-resolved by chrono-node — AI should use this as log_date
 }
 
 export interface AIProvider {
