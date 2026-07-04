@@ -3,7 +3,7 @@ import { getValidConnectionService, whoopListAll, whoopGet } from './client'
 
 interface WhoopRecoveryRecord {
   cycle_id: number
-  sleep_id: number
+  sleep_id: string   // WHOOP sleep IDs are UUIDs
   user_id: number
   created_at: string
   updated_at: string
@@ -36,7 +36,7 @@ interface WhoopCycleRecord {
 }
 
 interface WhoopSleepRecord {
-  id: number
+  id: string   // WHOOP sleep IDs are UUIDs
   user_id: number
   created_at: string
   updated_at: string
@@ -194,7 +194,7 @@ export async function syncWhoopUser(userId: string): Promise<SyncResult> {
     const sleeps = await whoopListAll<WhoopSleepRecord>('/activity/sleep', conn.access_token, params)
 
     // sleepById: for whoop_metrics rollup (recovery link)
-    const sleepById: Record<number, WhoopSleepRecord> = {}
+    const sleepById: Record<string, WhoopSleepRecord> = {}
     for (const s of sleeps) {
       if (!s.nap && s.score_state === 'SCORED' && s.score) {
         sleepById[s.id] = s
@@ -417,7 +417,7 @@ export async function syncRecoveryByCycleId(userId: string, cycleId: number): Pr
     }, { onConflict: 'user_id,date' })
 }
 
-export async function syncSleepById(userId: string, sleepId: number): Promise<void> {
+export async function syncSleepById(userId: string, sleepId: string): Promise<void> {
   const conn = await getValidConnectionService(userId)
   const supabase = createServiceClient()
 

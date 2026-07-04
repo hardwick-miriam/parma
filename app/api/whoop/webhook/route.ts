@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
         await syncRecoveryByCycleId(userId, Number(event.id))
         break
       case 'sleep.updated':
-        await syncSleepById(userId, Number(event.id))
+        await syncSleepById(userId, String(event.id))
         break
       case 'workout.updated':
         await syncWorkoutById(userId, String(event.id))
