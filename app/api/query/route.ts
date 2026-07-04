@@ -1,20 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import Anthropic from '@anthropic-ai/sdk'
+import { createAnthropic } from '@ai-sdk/anthropic'
+import { streamText } from 'ai'
 import { getDailyStatsHistory } from '@/lib/db/history'
 import { getRecentWorkouts } from '@/lib/db/queries'
 
 export const maxDuration = 30
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const anthropic = createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!user) return new Response('Unauthorized', { status: 401 })
 
   const { question } = await request.json()
-  if (!question?.trim()) return NextResponse.json({ error: 'No question' }, { status: 400 })
+  if (!question?.trim()) return new Response('No question', { status: 400 })
 
   try {
     const [history, workouts] = await Promise.all([
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
 
     const statsLines = history.map((d) => {
       const parts = [
-        `${d.date}`,
+        d.date,
         d.calories > 0 ? `cal=${d.calories}` : null,
         d.protein_g > 0 ? `prot=${d.protein_g}g` : null,
         d.steps > 0 ? `steps=${d.steps}` : null,
@@ -46,23 +47,24 @@ export async function POST(request: NextRequest) {
       return parts.join(' — ')
     })
 
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 300,
-      system: `You are Parma, a personal health assistant. Answer the user's question about their data in 1-3 sentences — direct, honest, conversational. No bullet points. No preamble like "Based on your data". If data is missing or the window is too short, say so plainly.
+    const systemPrompt = `You are Parma, a personal health assistant. Answer the user's question about their data in 1-3 sentences — direct, honest, conversational. No bullet points. No preamble like "Based on your data". If data is missing or the window is too short, say so plainly.
 
 User data (last 30 days, most recent last):
 ${statsLines.join('\n') || 'No data yet'}
 
 Recent workouts:
-${workoutLines.join('\n') || 'No workouts recorded'}`,
+${workoutLines.join('\n') || 'No workouts recorded'}`
+
+    const result = streamText({
+      model: anthropic('claude-haiku-4-5'),
+      system: systemPrompt,
       messages: [{ role: 'user', content: question }],
+      maxOutputTokens: 300,
     })
 
-    const answer = response.content.find((b) => b.type === 'text')?.text ?? 'No answer generated.'
-    return NextResponse.json({ answer })
+    return result.toTextStreamResponse()
   } catch (err) {
     console.error('query error:', err)
-    return NextResponse.json({ error: 'Failed to answer — check Anthropic credits' }, { status: 500 })
+    return new Response('Failed to answer — check Anthropic credits', { status: 500 })
   }
 }

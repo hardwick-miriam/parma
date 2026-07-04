@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 interface QnAResultProps {
   question: string
-  answer: string | null
+  answer: string
   loading: boolean
   onClose: () => void
 }
@@ -12,7 +12,7 @@ interface QnAResultProps {
 export function QnAResult({ question, answer, loading, onClose }: QnAResultProps) {
   return (
     <AnimatePresence>
-      {(loading || answer) && (
+      {(loading || answer !== '') && (
         <motion.div
           className="fixed inset-0 z-[90] flex items-end sm:items-center justify-center"
           initial={{ opacity: 0 }}
@@ -53,7 +53,7 @@ export function QnAResult({ question, answer, loading, onClose }: QnAResultProps
               className="rounded-xl p-4"
               style={{ background: 'var(--accent-dim)', border: '1px solid rgba(139,92,246,0.2)' }}
             >
-              {loading ? (
+              {loading && answer === '' ? (
                 <div className="flex items-center gap-2 text-sm text-text-muted">
                   <svg className="w-4 h-4 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -62,7 +62,18 @@ export function QnAResult({ question, answer, loading, onClose }: QnAResultProps
                   Looking through your data…
                 </div>
               ) : (
-                <p className="text-sm text-text leading-relaxed">{answer}</p>
+                <p className="text-sm text-text leading-relaxed">
+                  {answer}
+                  {loading && (
+                    <span
+                      className="inline-block w-[2px] h-[1em] ml-[1px] align-middle"
+                      style={{
+                        background: 'var(--accent)',
+                        animation: 'blink 0.8s step-end infinite',
+                      }}
+                    />
+                  )}
+                </p>
               )}
             </div>
           </motion.div>
