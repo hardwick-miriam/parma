@@ -30,6 +30,7 @@ import { ProgressPhotos } from './ProgressPhotos'
 import { WorldMapWidget } from './WorldMapWidget'
 import { JournalWidget } from './JournalWidget'
 import { WorldClocksWidget } from './widgets/WorldClocksWidget'
+import { InsightsWidget } from './widgets/InsightsWidget'
 import { MilestoneToast } from './MilestoneToast'
 import { GridItemSizeContext } from './GridItemSizeContext'
 import { detectMilestones } from '@/lib/milestones'
@@ -72,6 +73,7 @@ export const WIDGET_CATALOG: Array<{
   { id: 'map',     name: 'World Map',     description: 'Countries visited tracker',             icon: '🗺️' },
   { id: 'clocks',  name: 'World Clocks',  description: 'Multiple time zone display',            icon: '🕐' },
   { id: 'whoop',   name: 'WHOOP',         description: 'Recovery, HRV and strain metrics',      icon: '⚡' },
+  { id: 'insights', name: 'Insights',    description: 'Correlations and trends from your data', icon: '🔍' },
 ]
 
 // ─── Default layouts ─────────────────────────────────────────────────────────
@@ -93,6 +95,7 @@ const DEFAULT_LG: LayoutItem[] = [
   { i: 'map',     x: 8,  y: 12, w: 4, h: 4, minW: 3, minH: 3 },
   { i: 'clocks',  x: 0,  y: 16, w: 12, h: 3, minW: 3, minH: 2 },
   { i: 'whoop',   x: 0,  y: 19, w: 4,  h: 4, minW: 2, minH: 3 },
+  { i: 'insights', x: 4, y: 19, w: 8,  h: 4, minW: 3, minH: 3 },
 ]
 
 const DEFAULT_SM: LayoutItem[] = [
@@ -112,6 +115,7 @@ const DEFAULT_SM: LayoutItem[] = [
   { i: 'map',     x: 0, y: 47, w: 4, h: 3 },
   { i: 'clocks',  x: 0, y: 50, w: 4, h: 3 },
   { i: 'whoop',   x: 0, y: 53, w: 4, h: 4 },
+  { i: 'insights', x: 0, y: 57, w: 4, h: 4 },
 ]
 
 const DEFAULT_LAYOUTS: ResponsiveLayouts = { lg: DEFAULT_LG, sm: DEFAULT_SM }
@@ -812,6 +816,14 @@ export function DashboardGrid({
                   <WhoopWidget today={whoopToday} history={whoopHistory} />
                 </PlainWrapper>
                 {editMode && <RemoveBtn id="whoop" onHide={hideWidget} />}
+              </div>
+            )}
+            {!hiddenWidgets.has('insights') && (
+              <div key="insights" className="relative">
+                <PlainWrapper itemW={gs('insights').w} itemH={gs('insights').h}>
+                  <InsightsWidget />
+                </PlainWrapper>
+                {editMode && <RemoveBtn id="insights" onHide={hideWidget} />}
               </div>
             )}
           </ResponsiveGridLayout>
