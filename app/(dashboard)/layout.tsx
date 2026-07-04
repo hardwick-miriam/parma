@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { SignOutButton } from '@/components/dashboard/SignOutButton'
 import { LogFlow } from '@/components/dashboard/LogFlow'
@@ -26,7 +27,16 @@ export default async function DashboardLayout({
       >
         <div className="max-w-5xl mx-auto px-4 h-11 flex items-center gap-2 min-w-0">
           {/* Brand — never shrinks */}
-          <span className="font-bold text-accent text-sm tracking-tight shrink-0 pr-1">parma</span>
+          <Image
+            src="/logo.png"
+            alt="Parma"
+            width={28}
+            height={28}
+            quality={100}
+            className="shrink-0"
+            style={{ mixBlendMode: 'screen', borderRadius: 4 }}
+            priority
+          />
 
           {/* Nav — scrollable on mobile so nothing clips */}
           <div

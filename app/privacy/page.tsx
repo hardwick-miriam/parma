@@ -17,11 +17,15 @@ export default function PrivacyPage() {
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '4rem 1.5rem 5rem' }}>
         {/* Header */}
         <div style={{ marginBottom: '2.5rem' }}>
-          <a
-            href="/"
-            style={{ color: '#8b5cf6', fontWeight: 700, fontSize: 14, textDecoration: 'none', letterSpacing: '-0.01em' }}
-          >
-            parma
+          <a href="/" style={{ display: 'inline-block' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="Parma"
+              width={32}
+              height={32}
+              style={{ mixBlendMode: 'screen', borderRadius: 4, display: 'block' }}
+            />
           </a>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 700, marginTop: '1.25rem', marginBottom: '0.5rem', color: '#fff' }}>
             Privacy Policy
