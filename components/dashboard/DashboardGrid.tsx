@@ -31,6 +31,10 @@ import { WorldMapWidget } from './WorldMapWidget'
 import { JournalWidget } from './JournalWidget'
 import { WorldClocksWidget } from './widgets/WorldClocksWidget'
 import { InsightsWidget } from './widgets/InsightsWidget'
+import { MuscleMapWidget } from './widgets/MuscleMapWidget'
+import { PRTrackerWidget } from './widgets/PRTrackerWidget'
+import { TrainingLoadWidget } from './widgets/TrainingLoadWidget'
+import { InjuryBodyMapWidget } from './widgets/InjuryBodyMapWidget'
 import { MilestoneToast } from './MilestoneToast'
 import { GridItemSizeContext } from './GridItemSizeContext'
 import { detectMilestones } from '@/lib/milestones'
@@ -73,7 +77,11 @@ export const WIDGET_CATALOG: Array<{
   { id: 'map',     name: 'World Map',     description: 'Countries visited tracker',             icon: '🗺️' },
   { id: 'clocks',  name: 'World Clocks',  description: 'Multiple time zone display',            icon: '🕐' },
   { id: 'whoop',   name: 'WHOOP',         description: 'Recovery, HRV and strain metrics',      icon: '⚡' },
-  { id: 'insights', name: 'Insights',    description: 'Correlations and trends from your data', icon: '🔍' },
+  { id: 'insights',    name: 'Insights',      description: 'Correlations and trends from your data', icon: '🔍' },
+  { id: 'musclemap',  name: 'Muscle Map',   description: 'SVG body map of recently worked muscles', icon: '💪' },
+  { id: 'prtracker',  name: 'PR Tracker',   description: 'Personal records for exercises',           icon: '🏆' },
+  { id: 'trainload',  name: 'Training Load',description: '14-day training volume and AC ratio',      icon: '📊' },
+  { id: 'injurymap',  name: 'Injury Map',   description: 'Active injuries shown on body map',        icon: '🩹' },
 ]
 
 // ─── Default layouts ─────────────────────────────────────────────────────────
@@ -95,7 +103,11 @@ const DEFAULT_LG: LayoutItem[] = [
   { i: 'map',     x: 8,  y: 12, w: 4, h: 4, minW: 3, minH: 3 },
   { i: 'clocks',  x: 0,  y: 16, w: 12, h: 3, minW: 3, minH: 2 },
   { i: 'whoop',   x: 0,  y: 19, w: 4,  h: 4, minW: 2, minH: 3 },
-  { i: 'insights', x: 4, y: 19, w: 8,  h: 4, minW: 3, minH: 3 },
+  { i: 'insights',   x: 4,  y: 19, w: 8,  h: 4, minW: 3, minH: 3 },
+  { i: 'musclemap',  x: 0,  y: 23, w: 4,  h: 5, minW: 2, minH: 4 },
+  { i: 'prtracker',  x: 4,  y: 23, w: 4,  h: 5, minW: 2, minH: 3 },
+  { i: 'trainload',  x: 8,  y: 23, w: 4,  h: 5, minW: 3, minH: 3 },
+  { i: 'injurymap',  x: 0,  y: 28, w: 4,  h: 5, minW: 2, minH: 4 },
 ]
 
 const DEFAULT_SM: LayoutItem[] = [
@@ -115,7 +127,11 @@ const DEFAULT_SM: LayoutItem[] = [
   { i: 'map',     x: 0, y: 47, w: 4, h: 3 },
   { i: 'clocks',  x: 0, y: 50, w: 4, h: 3 },
   { i: 'whoop',   x: 0, y: 53, w: 4, h: 4 },
-  { i: 'insights', x: 0, y: 57, w: 4, h: 4 },
+  { i: 'insights',  x: 0, y: 57, w: 4, h: 4 },
+  { i: 'musclemap', x: 0, y: 61, w: 4, h: 5 },
+  { i: 'prtracker', x: 0, y: 66, w: 4, h: 5 },
+  { i: 'trainload', x: 0, y: 71, w: 4, h: 5 },
+  { i: 'injurymap', x: 0, y: 76, w: 4, h: 5 },
 ]
 
 const DEFAULT_LAYOUTS: ResponsiveLayouts = { lg: DEFAULT_LG, sm: DEFAULT_SM }
@@ -426,6 +442,7 @@ function EditToggle({ editing, onToggle }: { editing: boolean; onToggle: () => v
 interface DashboardGridProps {
   stats: DailyStats | null
   workouts: WorkoutSession[]
+  recentWorkouts?: WorkoutSession[]
   health: HealthStatus | null
   logEntries: LogEntry[]
   injuries: InjuryWithCheckins[]
@@ -449,6 +466,7 @@ interface DashboardGridProps {
 export function DashboardGrid({
   stats,
   workouts,
+  recentWorkouts = [],
   health,
   logEntries,
   injuries,
@@ -824,6 +842,38 @@ export function DashboardGrid({
                   <InsightsWidget />
                 </PlainWrapper>
                 {editMode && <RemoveBtn id="insights" onHide={hideWidget} />}
+              </div>
+            )}
+            {!hiddenWidgets.has('musclemap') && (
+              <div key="musclemap" className="relative">
+                <PlainWrapper itemW={gs('musclemap').w} itemH={gs('musclemap').h}>
+                  <MuscleMapWidget recentWorkouts={recentWorkouts} />
+                </PlainWrapper>
+                {editMode && <RemoveBtn id="musclemap" onHide={hideWidget} />}
+              </div>
+            )}
+            {!hiddenWidgets.has('prtracker') && (
+              <div key="prtracker" className="relative">
+                <PlainWrapper itemW={gs('prtracker').w} itemH={gs('prtracker').h}>
+                  <PRTrackerWidget />
+                </PlainWrapper>
+                {editMode && <RemoveBtn id="prtracker" onHide={hideWidget} />}
+              </div>
+            )}
+            {!hiddenWidgets.has('trainload') && (
+              <div key="trainload" className="relative">
+                <PlainWrapper itemW={gs('trainload').w} itemH={gs('trainload').h}>
+                  <TrainingLoadWidget recentWorkouts={recentWorkouts} />
+                </PlainWrapper>
+                {editMode && <RemoveBtn id="trainload" onHide={hideWidget} />}
+              </div>
+            )}
+            {!hiddenWidgets.has('injurymap') && (
+              <div key="injurymap" className="relative">
+                <PlainWrapper itemW={gs('injurymap').w} itemH={gs('injurymap').h}>
+                  <InjuryBodyMapWidget activeInjuries={injuries} allInjuries={[...injuries, ...pastInjuries]} />
+                </PlainWrapper>
+                {editMode && <RemoveBtn id="injurymap" onHide={hideWidget} />}
               </div>
             )}
           </ResponsiveGridLayout>

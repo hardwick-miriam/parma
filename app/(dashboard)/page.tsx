@@ -60,6 +60,7 @@ export default async function DashboardPage() {
     <DashboardGrid
       stats={stats}
       workouts={workouts ?? []}
+      recentWorkouts={recentWorkouts ?? []}
       health={health}
       logEntries={logEntries ?? []}
       injuries={injuries ?? []}
