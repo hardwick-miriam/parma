@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { getDailyStatsHistory } from '@/lib/db/history'
 
+export const maxDuration = 30
+
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export async function POST(request: NextRequest) {

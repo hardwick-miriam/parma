@@ -477,6 +477,7 @@ export function WeatherWidget({ onData }: { onData?: (d: WeatherData) => void })
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [reduced, setReduced] = useState(false)
+  const [retryKey, setRetryKey] = useState(0)
 
   useEffect(() => {
     setReduced(window.matchMedia('(prefers-reduced-motion: reduce)').matches)
@@ -484,6 +485,8 @@ export function WeatherWidget({ onData }: { onData?: (d: WeatherData) => void })
 
   useEffect(() => {
     let cancelled = false
+    setError(null)
+    setLoading(true)
 
     function fetchWeather(lat: string, lon: string) {
       if (_cache && _cache.lat === lat && _cache.lon === lon && Date.now() - _cache.ts < CACHE_TTL) {
@@ -508,18 +511,29 @@ export function WeatherWidget({ onData }: { onData?: (d: WeatherData) => void })
         })
     }
 
-    if (!navigator.geolocation) { setError('Geolocation unavailable'); setLoading(false); return }
+    if (!navigator.geolocation) { setError('Geolocation not supported by this browser'); setLoading(false); return }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        if (cancelled) return
         const lat = pos.coords.latitude.toFixed(4)
         const lon = pos.coords.longitude.toFixed(4)
         fetchWeather(lat, lon)
       },
-      () => { if (!cancelled) { setError('Location denied'); setLoading(false) } },
-      { timeout: 8000 }
+      (err) => {
+        if (cancelled) return
+        if (err.code === 1) {
+          setError('Location access denied — allow location in browser & system settings')
+        } else if (err.code === 2) {
+          setError('Location unavailable — check your network or system location settings')
+        } else {
+          setError('Location request timed out — tap retry')
+        }
+        setLoading(false)
+      },
+      { timeout: 12000, maximumAge: 300000 }
     )
     return () => { cancelled = true }
-  }, [])
+  }, [retryKey])
 
   const condition = data ? getCondition(data.conditionCode, data.isDay) : 'clear-night'
 
@@ -549,8 +563,14 @@ export function WeatherWidget({ onData }: { onData?: (d: WeatherData) => void })
         )}
 
         {error && !loading && (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex flex-col items-center justify-center gap-2">
             <span className="text-white/40 text-xs text-center">{error}</span>
+            <button
+              onClick={() => setRetryKey((k) => k + 1)}
+              className="text-[11px] text-white/50 hover:text-white/80 underline underline-offset-2 transition-colors"
+            >
+              Retry
+            </button>
           </div>
         )}
 

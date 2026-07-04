@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { getAIProvider } from '@/lib/ai'
 import { getActiveInjuries } from '@/lib/db/queries'
 
+export const maxDuration = 60
+
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

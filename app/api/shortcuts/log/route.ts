@@ -5,6 +5,8 @@ import { upsertDailyStats, insertLogEntry, insertWorkout, upsertHealthStatus, ge
 import { insertMounjaroDose, upsertMounjaroEffects } from '@/lib/db/mounjaro'
 import type { ParsedLog } from '@/lib/ai/types'
 
+export const maxDuration = 60
+
 export async function POST(request: NextRequest) {
   // Validate Bearer token
   const auth = request.headers.get('Authorization') ?? ''
