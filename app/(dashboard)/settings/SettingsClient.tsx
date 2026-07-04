@@ -85,7 +85,10 @@ export function SettingsClient({ currentEmail, initialPrefs, whoopConnection }: 
         if (workouts > 0) parts.push(`${workouts} workout${workouts === 1 ? '' : 's'}`)
         if (slps > 0) parts.push(`${slps} sleep${slps === 1 ? '' : 's'}`)
         if (data.skipped_open) parts.push(`${data.skipped_open} open`)
-        if (errors > 0) parts.push(`${errors} write error${errors === 1 ? '' : 's'}`)
+        if (errors > 0) {
+          const firstErr = (data.upsert_errors as Array<{date: string; error: string}>)[0]
+          parts.push(`${errors} error${errors === 1 ? `: ${firstErr?.error}` : 's'}`)
+        }
         setWhoopSyncMsg(`Synced · ${parts.join(' · ')}`)
         setWhoop(w => w ? { ...w, lastSyncAt: new Date().toISOString() } : w)
         setTimeout(() => setWhoopSyncMsg(null), 6000)
