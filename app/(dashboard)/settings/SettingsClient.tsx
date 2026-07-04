@@ -91,7 +91,8 @@ export function SettingsClient({ currentEmail, initialPrefs, whoopConnection }: 
         }
         setWhoopSyncMsg(`Synced · ${parts.join(' · ')}`)
         setWhoop(w => w ? { ...w, lastSyncAt: new Date().toISOString() } : w)
-        setTimeout(() => setWhoopSyncMsg(null), 6000)
+        // Only auto-clear if there were no errors — keep errors visible until next action
+        if (errors === 0) setTimeout(() => setWhoopSyncMsg(null), 6000)
       }
     } catch (err) {
       setWhoopSyncing(false)
