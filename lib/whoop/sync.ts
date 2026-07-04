@@ -61,7 +61,7 @@ interface WhoopSleepRecord {
 }
 
 interface WhoopWorkoutRecord {
-  id: number
+  id: string   // WHOOP workout IDs are UUIDs, not integers
   user_id: number
   created_at: string
   updated_at: string
@@ -435,7 +435,7 @@ export async function syncSleepById(userId: string, sleepId: number): Promise<vo
     }, { onConflict: 'user_id,date' })
 }
 
-export async function syncWorkoutById(userId: string, workoutId: number): Promise<void> {
+export async function syncWorkoutById(userId: string, workoutId: string): Promise<void> {
   const conn = await getValidConnectionService(userId)
   const supabase = createServiceClient()
 

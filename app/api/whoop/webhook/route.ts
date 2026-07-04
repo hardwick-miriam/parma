@@ -6,7 +6,7 @@ import { syncRecoveryByCycleId, syncSleepById, syncWorkoutById } from '@/lib/who
 type WebhookEvent = {
   type: string
   user_id: number
-  id: number
+  id: string | number  // workout events use UUID strings; cycle/sleep/recovery use integers
 }
 
 async function validateSignature(request: NextRequest, body: string): Promise<boolean> {
@@ -54,16 +54,16 @@ export async function POST(request: NextRequest) {
   try {
     switch (event.type) {
       case 'recovery.updated':
-        await syncRecoveryByCycleId(userId, event.id)
+        await syncRecoveryByCycleId(userId, Number(event.id))
         break
       case 'sleep.updated':
-        await syncSleepById(userId, event.id)
+        await syncSleepById(userId, Number(event.id))
         break
       case 'workout.updated':
-        await syncWorkoutById(userId, event.id)
+        await syncWorkoutById(userId, String(event.id))
         break
       case 'cycle.updated':
-        await syncRecoveryByCycleId(userId, event.id)
+        await syncRecoveryByCycleId(userId, Number(event.id))
         break
       default:
         // Unknown event — ack without acting

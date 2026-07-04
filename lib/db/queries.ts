@@ -28,7 +28,7 @@ export interface WorkoutSession {
   feeling: string | null
   exercises: string[] | null
   source: string
-  whoop_id: number | null
+  whoop_id: string | null
   started_at: string | null
 }
 
