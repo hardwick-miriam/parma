@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { ShareButton } from '@/components/ui/ShareButton'
 
 interface PR {
   id: string
@@ -135,6 +136,7 @@ export function PRTrackerWidget() {
             <div className="flex items-center gap-2 shrink-0">
               <span className="text-sm font-mono font-semibold" style={{ color: 'var(--accent)' }}>{formatPR(pr)}</span>
               <span className="text-xs text-text-subtle">{new Date(pr.logged_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+              <ShareButton type="pr" exercise={pr.exercise} className="text-text-muted hover:text-accent transition-colors" />
             </div>
           </div>
         ))}

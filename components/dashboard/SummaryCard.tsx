@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import type { DailyStats } from '@/lib/db/queries'
+import { ShareButton } from '@/components/ui/ShareButton'
 
 interface SummaryCardProps {
   stats: DailyStats | null
@@ -76,13 +77,21 @@ export function SummaryCard({ stats, history }: SummaryCardProps) {
           <p className="text-sm text-text leading-relaxed">{summary}</p>
         )}
       </div>
-      <button
-        onClick={() => setDismissed(true)}
-        className="shrink-0 text-text-subtle hover:text-text transition-colors text-lg leading-none px-1 mt-0.5"
-        aria-label="Dismiss"
-      >
-        ×
-      </button>
+      <div className="shrink-0 flex items-center gap-1 mt-0.5">
+        {!loading && summary && (
+          <ShareButton
+            type={isWeekly ? 'weekly' : 'daily'}
+            className="text-text-subtle hover:text-accent transition-colors p-1 rounded"
+          />
+        )}
+        <button
+          onClick={() => setDismissed(true)}
+          className="text-text-subtle hover:text-text transition-colors text-lg leading-none px-1"
+          aria-label="Dismiss"
+        >
+          ×
+        </button>
+      </div>
     </div>
   )
 }
