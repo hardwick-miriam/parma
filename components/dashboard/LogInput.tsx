@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import type { ParsedLog } from '@/lib/ai/types'
+import type { OFFProduct } from '@/lib/openFoodFacts'
 
 const QUESTION_RE = /^(how|when|what|show|tell|did|have i|am i|do i|can you|list|give me|which|is my|was my|are my|how many|how much|what's|what is|when did|when was)/i
 
@@ -128,6 +129,7 @@ export function LogInput({ onParsed, onQuestion, onVoiceTranscript }: LogInputPr
   const [transcribing, setTranscribing] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showScanner, setShowScanner] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
@@ -276,6 +278,17 @@ export function LogInput({ onParsed, onQuestion, onVoiceTranscript }: LogInputPr
 
   const micBusy = transcribing || loading
 
+  function handleBarcodeResult(product: OFFProduct, barcode: string) {
+    setShowScanner(false)
+    const portion = product.serving_size_g ?? 100
+    const kcal = Math.round(product.kcal_per_100g * portion / 100)
+    const protein = Math.round(product.protein_per_100g * portion / 100 * 10) / 10
+    const label = product.brand ? `${product.brand} ${product.name}` : product.name
+    const entry = `${label} (barcode ${barcode}) — ${portion}g, ~${kcal} kcal, ${protein}g protein`
+    setText((prev) => prev ? `${prev}; ${entry}` : entry)
+    setTimeout(() => { if (textareaRef.current) autoResize(textareaRef.current) }, 0)
+  }
+
   return (
     <div className="w-full flex flex-col gap-1.5">
       {(recording || transcribing || error) && (
@@ -331,6 +344,20 @@ export function LogInput({ onParsed, onQuestion, onVoiceTranscript }: LogInputPr
           {transcribing ? <SpinnerIcon /> : recording ? <StopIcon /> : <MicIcon />}
         </button>
 
+        {/* Barcode scan */}
+        <button
+          type="button"
+          onClick={() => setShowScanner(true)}
+          disabled={micBusy}
+          className="shrink-0 rounded-xl p-3 sm:p-2 text-text-muted hover:text-accent transition-colors disabled:opacity-40"
+          title="Scan barcode"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z" />
+          </svg>
+        </button>
+
         {/* Send */}
         <button
           type="button"
@@ -342,6 +369,25 @@ export function LogInput({ onParsed, onQuestion, onVoiceTranscript }: LogInputPr
           {loading ? <SpinnerIcon /> : <SendIcon />}
         </button>
       </div>
+
+      {/* Barcode scanner modal — lazy loaded */}
+      {showScanner && (
+        <BarcodeScannerLazy
+          onResult={handleBarcodeResult}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
     </div>
   )
+}
+
+function BarcodeScannerLazy(props: { onResult: (p: OFFProduct, b: string) => void; onClose: () => void }) {
+  const [Comp, setComp] = useState<React.ComponentType<{ onResult: (p: OFFProduct, b: string) => void; onClose: () => void }> | null>(null)
+
+  useEffect(() => {
+    import('@/components/BarcodeScanner').then((m) => setComp(() => m.BarcodeScanner))
+  }, [])
+
+  if (!Comp) return null
+  return <Comp {...props} />
 }
