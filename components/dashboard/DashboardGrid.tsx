@@ -32,10 +32,9 @@ import { JournalWidget } from './JournalWidget'
 import { WorldClocksWidget } from './widgets/WorldClocksWidget'
 import { InsightsWidget } from './widgets/InsightsWidget'
 import { WeatherFullBackground } from '@/components/WeatherFullBackground'
-import { MuscleMapWidget } from './widgets/MuscleMapWidget'
+import { BodyWidget } from './widgets/BodyWidget'
 import { PRTrackerWidget } from './widgets/PRTrackerWidget'
 import { TrainingLoadWidget } from './widgets/TrainingLoadWidget'
-import { InjuryBodyMapWidget } from './widgets/InjuryBodyMapWidget'
 import { SleepDebtWidget } from './widgets/SleepDebtWidget'
 import { HabitGardenWidget } from './widgets/HabitGardenWidget'
 import { MilestoneToast } from './MilestoneToast'
@@ -43,6 +42,7 @@ import { GridItemSizeContext } from './GridItemSizeContext'
 import { detectMilestones } from '@/lib/milestones'
 import { weekOverWeek } from '@/lib/comparison'
 import { computeRecovery } from '@/lib/recovery'
+import { computeMuscleRecovery } from '@/lib/muscleRecovery'
 import type { MetricId } from './DetailView'
 import type {
   DailyStats,
@@ -81,10 +81,9 @@ export const WIDGET_CATALOG: Array<{
   { id: 'clocks',  name: 'World Clocks',  description: 'Multiple time zone display',            icon: '🕐' },
   { id: 'whoop',   name: 'WHOOP',         description: 'Recovery, HRV and strain metrics',      icon: '⚡' },
   { id: 'insights',    name: 'Insights',      description: 'Correlations and trends from your data', icon: '🔍' },
-  { id: 'musclemap',  name: 'Muscle Map',   description: 'SVG body map of recently worked muscles', icon: '💪' },
+  { id: 'body',        name: 'Body',         description: 'Muscle load + injury overlays on anatomical figure', icon: '🫁' },
   { id: 'prtracker',  name: 'PR Tracker',   description: 'Personal records for exercises',           icon: '🏆' },
   { id: 'trainload',  name: 'Training Load',description: '14-day training volume and AC ratio',      icon: '📊' },
-  { id: 'injurymap',  name: 'Injury Map',   description: 'Active injuries shown on body map',        icon: '🩹' },
   { id: 'sleepdebt',  name: 'Sleep Debt',   description: '14-day rolling sleep deficit tracker',      icon: '💤' },
   { id: 'habitgarden',name: 'Habit Garden', description: 'SVG plant that grows with your habits',     icon: '🌱' },
 ]
@@ -109,10 +108,9 @@ const DEFAULT_LG: LayoutItem[] = [
   { i: 'clocks',  x: 0,  y: 16, w: 12, h: 3, minW: 3, minH: 2 },
   { i: 'whoop',   x: 0,  y: 19, w: 4,  h: 4, minW: 2, minH: 3 },
   { i: 'insights',   x: 4,  y: 19, w: 8,  h: 4, minW: 3, minH: 3 },
-  { i: 'musclemap',  x: 0,  y: 23, w: 4,  h: 5, minW: 2, minH: 4 },
+  { i: 'body',        x: 0,  y: 23, w: 4,  h: 8, minW: 2, minH: 5 },
   { i: 'prtracker',  x: 4,  y: 23, w: 4,  h: 5, minW: 2, minH: 3 },
   { i: 'trainload',  x: 8,  y: 23, w: 4,  h: 5, minW: 3, minH: 3 },
-  { i: 'injurymap',  x: 0,  y: 28, w: 4,  h: 5, minW: 2, minH: 4 },
   { i: 'sleepdebt',  x: 4,  y: 28, w: 4,  h: 5, minW: 2, minH: 3 },
   { i: 'habitgarden',x: 8,  y: 28, w: 4,  h: 5, minW: 2, minH: 3 },
 ]
@@ -135,12 +133,11 @@ const DEFAULT_SM: LayoutItem[] = [
   { i: 'clocks',  x: 0, y: 50, w: 4, h: 3 },
   { i: 'whoop',   x: 0, y: 53, w: 4, h: 4 },
   { i: 'insights',  x: 0, y: 57, w: 4, h: 4 },
-  { i: 'musclemap', x: 0, y: 61, w: 4, h: 5 },
-  { i: 'prtracker', x: 0, y: 66, w: 4, h: 5 },
-  { i: 'trainload', x: 0, y: 71, w: 4, h: 5 },
-  { i: 'injurymap',   x: 0, y: 76, w: 4, h: 5 },
-  { i: 'sleepdebt',   x: 0, y: 81, w: 4, h: 5 },
-  { i: 'habitgarden', x: 0, y: 86, w: 4, h: 5 },
+  { i: 'body',        x: 0, y: 61, w: 4, h: 8 },
+  { i: 'prtracker',   x: 0, y: 69, w: 4, h: 5 },
+  { i: 'trainload',   x: 0, y: 74, w: 4, h: 5 },
+  { i: 'sleepdebt',   x: 0, y: 79, w: 4, h: 5 },
+  { i: 'habitgarden', x: 0, y: 84, w: 4, h: 5 },
 ]
 
 const DEFAULT_LAYOUTS: ResponsiveLayouts = { lg: DEFAULT_LG, sm: DEFAULT_SM }
@@ -593,6 +590,16 @@ export function DashboardGrid({
   }, [])
 
   const { supTimes, habitTimes } = buildEntryTimestamps(logEntries)
+  const muscleRecoveryMap = useMemo(() => {
+    const sessions = recentWorkouts.map(w => ({
+      date: w.date,
+      exercises: w.exercises ?? [],
+      whoopStrain: (w as WorkoutSession & { whoop_strain?: number }).whoop_strain,
+    }))
+    const whoopHist = whoopHistory.map(wh => ({ date: wh.date, score: wh.recovery_score ?? 0 }))
+    return computeMuscleRecovery(sessions, [], whoopHist, {})
+  }, [recentWorkouts, whoopHistory])
+
   const calorieComp = useMemo(() => weekOverWeek(history, (d) => d.calories), [history])
   const proteinComp = useMemo(() => weekOverWeek(history, (d) => d.protein_g), [history])
   const stepsComp = useMemo(() => weekOverWeek(history, (d) => d.steps), [history])
@@ -860,12 +867,12 @@ export function DashboardGrid({
                 {editMode && <RemoveBtn id="insights" onHide={hideWidget} />}
               </div>
             )}
-            {!hiddenWidgets.has('musclemap') && (
-              <div key="musclemap" className="relative">
-                <PlainWrapper itemW={gs('musclemap').w} itemH={gs('musclemap').h}>
-                  <MuscleMapWidget recentWorkouts={recentWorkouts} />
+            {!hiddenWidgets.has('body') && (
+              <div key="body" className="relative">
+                <PlainWrapper itemW={gs('body').w} itemH={gs('body').h}>
+                  <BodyWidget recentWorkouts={recentWorkouts} activeInjuries={injuries} recoveryMap={muscleRecoveryMap} />
                 </PlainWrapper>
-                {editMode && <RemoveBtn id="musclemap" onHide={hideWidget} />}
+                {editMode && <RemoveBtn id="body" onHide={hideWidget} />}
               </div>
             )}
             {!hiddenWidgets.has('prtracker') && (
@@ -882,14 +889,6 @@ export function DashboardGrid({
                   <TrainingLoadWidget recentWorkouts={recentWorkouts} />
                 </PlainWrapper>
                 {editMode && <RemoveBtn id="trainload" onHide={hideWidget} />}
-              </div>
-            )}
-            {!hiddenWidgets.has('injurymap') && (
-              <div key="injurymap" className="relative">
-                <PlainWrapper itemW={gs('injurymap').w} itemH={gs('injurymap').h}>
-                  <InjuryBodyMapWidget activeInjuries={injuries} allInjuries={[...injuries, ...pastInjuries]} />
-                </PlainWrapper>
-                {editMode && <RemoveBtn id="injurymap" onHide={hideWidget} />}
               </div>
             )}
             {!hiddenWidgets.has('sleepdebt') && (

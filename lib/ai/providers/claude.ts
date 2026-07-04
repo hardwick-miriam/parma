@@ -118,6 +118,25 @@ const PARSE_TOOL: Anthropic.Tool = {
         type: 'string',
         description: 'Set ONLY when the log entry clearly refers to a different day than today. Use YYYY-MM-DD format. Examples: "yesterday I did legs" → yesterday\'s date. "on Tuesday I weighed 85kg" → the date of the most recent Tuesday. "this morning" usually means today. "last night\'s sleep" → today (sleep from last night belongs to today\'s record). Leave absent if the entry is about today.',
       },
+      muscle_soreness: {
+        type: 'array',
+        description: 'Muscle soreness reports. Use when the user mentions a muscle or muscle group being sore, tight, aching, cooked, stiff, or fatigued. E.g. "triceps still cooked" → [{muscle_id:"triceps-l",intensity:7},{muscle_id:"triceps-r",intensity:7}]. "my left hamstring is a bit sore" → [{muscle_id:"hamstrings-l",intensity:4}]. Use bilateral IDs (e.g. both -l and -r) unless the user specifies one side.',
+        items: {
+          type: 'object',
+          properties: {
+            muscle_id: {
+              type: 'string',
+              description: 'Muscle group ID. One of: chest-l, chest-r, front-delts-l, front-delts-r, biceps-l, biceps-r, triceps-l, triceps-r, forearms-l, forearms-r, abs-upper, abs-lower, obliques-l, obliques-r, quads-l, quads-r, adductors-l, adductors-r, calves-front-l, calves-front-r, tibialis-l, tibialis-r, traps, rear-delts-l, rear-delts-r, lats-l, lats-r, rhomboids, lower-back, glutes-l, glutes-r, hamstrings-l, hamstrings-r, calves-l, calves-r',
+            },
+            intensity: {
+              type: 'number',
+              description: 'Soreness intensity 1-10. "a bit sore" → 3-4, "pretty sore" → 6-7, "very sore/cooked/destroyed" → 8-9, "can barely move it" → 10',
+            },
+          },
+          required: ['muscle_id', 'intensity'],
+          additionalProperties: false,
+        },
+      },
       estimates: {
         type: 'array',
         items: { type: 'string' },

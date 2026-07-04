@@ -179,6 +179,33 @@ export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ err
       await upsertMounjaroEffects(user.id, parsed.mounjaro_side_effects)
     }
 
+    if (parsed.muscle_soreness?.length) {
+      const rows = parsed.muscle_soreness.map(s => ({
+        user_id: user.id,
+        muscle_id: s.muscle_id,
+        intensity: Math.min(10, Math.max(1, Math.round(s.intensity))),
+        source: 'log',
+      }))
+      await supabase.from('muscle_soreness').insert(rows)
+      for (const row of rows) {
+        const { data: ex } = await supabase
+          .from('muscle_soreness_multipliers')
+          .select('multiplier, reports')
+          .eq('user_id', user.id)
+          .eq('muscle_id', row.muscle_id)
+          .single()
+        const nm = row.intensity / 5
+        if (ex) {
+          await supabase
+            .from('muscle_soreness_multipliers')
+            .update({ multiplier: ex.multiplier * 0.6 + nm * 0.4, reports: ex.reports + 1, updated_at: new Date().toISOString() })
+            .eq('user_id', user.id).eq('muscle_id', row.muscle_id)
+        } else {
+          await supabase.from('muscle_soreness_multipliers').insert({ user_id: user.id, muscle_id: row.muscle_id, multiplier: nm, reports: 1 })
+        }
+      }
+    }
+
     if (parsed.injury_resolved) {
       const { body_part } = parsed.injury_resolved
       const activeInjuries = await getActiveInjuries(user.id)

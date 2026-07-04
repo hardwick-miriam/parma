@@ -57,6 +57,7 @@ export interface ParsedLog {
   }
   log_date?: string      // YYYY-MM-DD — when the entry belongs to a past/future date
   estimates?: string[]   // field names that are AI-inferred estimates (not stated by user)
+  muscle_soreness?: Array<{ muscle_id: string; intensity: number }>
 }
 
 export interface InjuryContext {
