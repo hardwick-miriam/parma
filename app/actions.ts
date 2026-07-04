@@ -186,22 +186,38 @@ export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ err
         intensity: Math.min(10, Math.max(1, Math.round(s.intensity))),
         source: 'log',
       }))
-      await supabase.from('muscle_soreness').insert(rows)
+      const { error: soreErr } = await supabase.from('muscle_soreness').insert(rows)
+      if (soreErr) {
+        console.error('saveLog muscle_soreness insert error:', soreErr.code, soreErr.message)
+        // Surface migration-missing errors as a visible warning rather than silently dropping
+        if (soreErr.code === 'PGRST205' || soreErr.code === '42P01') {
+          throw new Error(`muscle_soreness table missing — run migration 013 in the Supabase SQL editor. Details: ${soreErr.message}`)
+        }
+        throw new Error(`Failed to save muscle soreness: ${soreErr.message}`)
+      }
       for (const row of rows) {
-        const { data: ex } = await supabase
+        const { data: ex, error: fetchErr } = await supabase
           .from('muscle_soreness_multipliers')
           .select('multiplier, reports')
           .eq('user_id', user.id)
           .eq('muscle_id', row.muscle_id)
-          .single()
+          .maybeSingle()
+        if (fetchErr) {
+          console.error('saveLog multiplier fetch error:', fetchErr.message)
+          continue
+        }
         const nm = row.intensity / 5
         if (ex) {
-          await supabase
+          const { error: updErr } = await supabase
             .from('muscle_soreness_multipliers')
             .update({ multiplier: ex.multiplier * 0.6 + nm * 0.4, reports: ex.reports + 1, updated_at: new Date().toISOString() })
             .eq('user_id', user.id).eq('muscle_id', row.muscle_id)
+          if (updErr) console.error('saveLog multiplier update error:', updErr.message)
         } else {
-          await supabase.from('muscle_soreness_multipliers').insert({ user_id: user.id, muscle_id: row.muscle_id, multiplier: nm, reports: 1 })
+          const { error: insErr } = await supabase
+            .from('muscle_soreness_multipliers')
+            .insert({ user_id: user.id, muscle_id: row.muscle_id, multiplier: nm, reports: 1 })
+          if (insErr) console.error('saveLog multiplier insert error:', insErr.message)
         }
       }
     }

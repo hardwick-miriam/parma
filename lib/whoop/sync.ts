@@ -1,5 +1,7 @@
 import { createServiceClient } from '@/lib/supabase/service'
 import { getValidConnectionService, whoopListAll, whoopGet } from './client'
+import { matchRoutineSession } from '@/lib/routineParser'
+import type { RoutineSession } from '@/lib/routineParser'
 
 interface WhoopRecoveryRecord {
   cycle_id: number
@@ -258,6 +260,20 @@ export async function syncWhoopUser(userId: string): Promise<SyncResult> {
     // ── 6. Write WHOOP workouts → workout_sessions ────────────────────────────
     let workouts_synced = 0
 
+    // Fetch the active routine once for exercise fallback
+    let activeSessions: RoutineSession[] = []
+    try {
+      const { data: activeRoutine } = await supabase
+        .from('routines')
+        .select('sessions')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .maybeSingle()
+      if (activeRoutine?.sessions) {
+        activeSessions = activeRoutine.sessions as RoutineSession[]
+      }
+    } catch { /* non-fatal — fallback stays empty */ }
+
     for (const workout of workouts) {
       if (!workout.end) continue
 
@@ -266,6 +282,26 @@ export async function syncWhoopUser(userId: string): Promise<SyncResult> {
       const durationMinutes = Math.round(
         (new Date(workout.end).getTime() - new Date(workout.start).getTime()) / 60_000
       )
+
+      // Check if a parma log already has exercises for this date
+      const { data: existingSession } = await supabase
+        .from('workout_sessions')
+        .select('exercises')
+        .eq('user_id', userId)
+        .eq('date', date)
+        .neq('source', 'whoop')
+        .maybeSingle()
+
+      // If no parma-logged exercises, pull from the active routine
+      let exercises: string[] | null = existingSession?.exercises ?? null
+      let fromRoutine = false
+      if (!exercises?.length && activeSessions.length) {
+        const routineSession = matchRoutineSession(activeSessions, date, sportName)
+        if (routineSession) {
+          exercises = routineSession.exercises.map(e => e.name)
+          fromRoutine = true
+        }
+      }
 
       const { error: wErr } = await supabase
         .from('workout_sessions')
@@ -278,6 +314,7 @@ export async function syncWhoopUser(userId: string): Promise<SyncResult> {
             source: 'whoop',
             whoop_id: workout.id,
             started_at: workout.start,
+            ...(exercises?.length ? { exercises, notes: fromRoutine ? 'exercises from routine' : null } : {}),
           },
           { onConflict: 'user_id,whoop_id' }
         )

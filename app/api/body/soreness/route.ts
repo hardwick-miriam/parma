@@ -24,33 +24,41 @@ export async function POST(request: NextRequest) {
   }))
 
   const { error: insertErr } = await supabase.from('muscle_soreness').insert(rows)
-  if (insertErr) return NextResponse.json({ error: insertErr.message }, { status: 500 })
+  if (insertErr) {
+    console.error('[body/soreness POST] insert error:', insertErr.code, insertErr.message)
+    return NextResponse.json(
+      { error: `Failed to log soreness: ${insertErr.message} (${insertErr.code})` },
+      { status: insertErr.code === 'PGRST205' ? 503 : 500 }
+    )
+  }
 
-  // Update soreness multipliers — exponential moving avg of intensity
   for (const row of rows) {
-    const { data: existing } = await supabase
+    const { data: existing, error: fetchErr } = await supabase
       .from('muscle_soreness_multipliers')
       .select('multiplier, reports')
       .eq('user_id', user.id)
       .eq('muscle_id', row.muscle_id)
-      .single()
+      .maybeSingle()
 
-    const newMultiplier = (row.intensity / 5) // 1.0 = moderate, >1 = longer recovery
+    if (fetchErr) {
+      console.error('[body/soreness POST] multiplier fetch error:', fetchErr.message)
+      continue
+    }
+
+    const newMultiplier = row.intensity / 5
     if (existing) {
-      const alpha = 0.4
-      const blended = existing.multiplier * (1 - alpha) + newMultiplier * alpha
-      await supabase
+      const blended = existing.multiplier * 0.6 + newMultiplier * 0.4
+      const { error: updErr } = await supabase
         .from('muscle_soreness_multipliers')
         .update({ multiplier: blended, reports: existing.reports + 1, updated_at: new Date().toISOString() })
         .eq('user_id', user.id)
         .eq('muscle_id', row.muscle_id)
+      if (updErr) console.error('[body/soreness POST] multiplier update error:', updErr.message)
     } else {
-      await supabase.from('muscle_soreness_multipliers').insert({
-        user_id: user.id,
-        muscle_id: row.muscle_id,
-        multiplier: newMultiplier,
-        reports: 1,
+      const { error: insErr } = await supabase.from('muscle_soreness_multipliers').insert({
+        user_id: user.id, muscle_id: row.muscle_id, multiplier: newMultiplier, reports: 1,
       })
+      if (insErr) console.error('[body/soreness POST] multiplier insert error:', insErr.message)
     }
   }
 
@@ -64,7 +72,7 @@ export async function GET() {
 
   const since = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString()
 
-  const [{ data: soreness }, { data: multipliers }] = await Promise.all([
+  const [soreRes, multRes] = await Promise.all([
     supabase
       .from('muscle_soreness')
       .select('muscle_id, intensity, logged_at, source')
@@ -77,5 +85,20 @@ export async function GET() {
       .eq('user_id', user.id),
   ])
 
-  return NextResponse.json({ soreness: soreness ?? [], multipliers: multipliers ?? [] })
+  if (soreRes.error) {
+    console.error('[body/soreness GET] soreness fetch error:', soreRes.error.message)
+    return NextResponse.json(
+      { error: `Failed to fetch soreness data: ${soreRes.error.message}` },
+      { status: soreRes.error.code === 'PGRST205' ? 503 : 500 }
+    )
+  }
+  if (multRes.error) {
+    console.error('[body/soreness GET] multipliers fetch error:', multRes.error.message)
+    // Multipliers failing is non-fatal — return soreness without them
+  }
+
+  return NextResponse.json({
+    soreness: soreRes.data ?? [],
+    multipliers: multRes.data ?? [],
+  })
 }

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { saveSettings, generateToken, addPlace, removePlace, changeEmail, changePassword } from './actions'
 import { useTheme } from '@/components/ThemeProvider'
+import { RoutineSection } from '@/components/settings/RoutineSection'
 import type { SavedPlace } from '@/lib/db/preferences'
 import type { Theme } from '@/components/ThemeProvider'
 
@@ -308,6 +309,14 @@ export function SettingsClient({ currentEmail, initialPrefs, whoopConnection }: 
             )
           })}
         </div>
+      </Section>
+
+      {/* Workout routine */}
+      <Section title="My Workout Routine">
+        <p className="text-xs text-text-subtle leading-relaxed">
+          Add your training plan so Parma can predict muscle load, match WHOOP workouts to exercises, and nudge you when a session is overdue.
+        </p>
+        <RoutineSection />
       </Section>
 
       {/* WHOOP */}
