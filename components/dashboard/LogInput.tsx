@@ -256,7 +256,11 @@ export function LogInput({ onParsed, onQuestion, onVoiceTranscript }: LogInputPr
       const res = await fetch('/api/parse-log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({
+          text,
+          date: new Date().toLocaleDateString('en-CA'),
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Parse failed')

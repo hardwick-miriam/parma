@@ -113,6 +113,15 @@ const PARSE_TOOL: Anthropic.Tool = {
         },
         additionalProperties: false,
       },
+      log_date: {
+        type: 'string',
+        description: 'Set ONLY when the log entry clearly refers to a different day than today. Use YYYY-MM-DD format. Examples: "yesterday I did legs" → yesterday\'s date. "on Tuesday I weighed 85kg" → the date of the most recent Tuesday. "this morning" usually means today. "last night\'s sleep" → today (sleep from last night belongs to today\'s record). Leave absent if the entry is about today.',
+      },
+      estimates: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'List of field names where the value was AI-estimated rather than explicitly stated by the user. E.g. if the user said "had a chicken salad" and you estimated 400 calories and 35g protein, include ["calories","protein_g"]. If the user said "ate 450 calories", do NOT include "calories" here. Only include fields that were estimated.',
+      },
     },
     additionalProperties: false,
   },
@@ -120,15 +129,33 @@ const PARSE_TOOL: Anthropic.Tool = {
 
 const BASE_SYSTEM =
   "You are a health data extraction assistant. Parse the user's natural-language log entry and extract every health and habit metric you can identify.\n\n" +
-  "General rule: omit fields when the information is genuinely absent — do not invent steps, sleep, mood, weight, or water that weren't mentioned.\n\n" +
-  "NUTRITION EXCEPTION — this overrides the general rule: whenever the user mentions eating or drinking anything with nutritional value, you MUST populate BOTH calories AND protein_g using your nutritional knowledge. " +
-  "A vague food description is not an excuse to omit protein — estimate from what you know (e.g. a 15cm ham pizza slice ≈ 400 kcal, 20 g protein; a chicken breast ≈ 165 kcal, 31 g protein; scrambled eggs × 2 ≈ 180 kcal, 12 g protein). " +
-  "It is always better to give a reasonable estimate than to leave protein_g absent or at 0 when food was clearly eaten. The user can correct the estimate in the confirmation step.\n\n" +
-  "For water: convert to ml (1L=1000ml, 1 glass=250ml). For weight: convert to kg if given in lbs."
+  "GENERAL RULE: omit fields when the information is genuinely absent — do not invent steps, sleep, mood, weight, or water that weren't mentioned.\n\n" +
+  "NUTRITION EXCEPTION — whenever the user mentions eating or drinking anything with nutritional value, you MUST populate BOTH calories AND protein_g using your nutritional knowledge. " +
+  "Estimate from what you know (e.g. a 15cm ham pizza slice ≈ 400 kcal, 20 g protein; a chicken breast ≈ 165 kcal, 31 g protein; scrambled eggs × 2 ≈ 180 kcal, 12 g protein). " +
+  "If you estimate because the user didn't state the exact number, add the field name to the estimates array.\n\n" +
+  "UK CONVENTIONS: The user is UK-based. Convert stone and pounds to kg (1 stone = 6.35 kg; '13 stone 4 lbs' = 84.37 kg). " +
+  "Recognise UK food terms: 'crisps' = potato chips, 'chips' = thick-cut fries, 'biscuit' = cookie, 'jacket potato' = baked potato, 'full English' ≈ 900 kcal 45 g protein, 'beans on toast' ≈ 300 kcal 15 g protein, 'fish and chips' ≈ 900 kcal 40 g protein. " +
+  "Dates may be in DD/MM format — interpret accordingly.\n\n" +
+  "For water: convert to ml (1L=1000ml, 1 glass=250ml, 1 pint=568ml). For weight: convert to kg."
+
+function subtractDay(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00')
+  d.setDate(d.getDate() - 1)
+  return d.toISOString().split('T')[0]
+}
 
 export class ClaudeProvider implements AIProvider {
   async parseLog(text: string, context?: ParseContext): Promise<ParsedLog> {
     let system = BASE_SYSTEM
+
+    // Date context — helps the AI resolve relative references like "yesterday", "Tuesday"
+    if (context?.today) {
+      const tz = context.timezone ?? 'Europe/London'
+      const wd = context.weekday ?? ''
+      system += `\n\nToday is ${context.today} (${wd}), timezone ${tz}. ` +
+        `Use this to resolve relative dates: "yesterday" → ${subtractDay(context.today)}, "this morning/last night" → today, ` +
+        `"Tuesday" → most recent Tuesday before today. Set log_date only when the entry is clearly about a past day.`
+    }
 
     if (context?.activeInjuries?.length) {
       const list = context.activeInjuries

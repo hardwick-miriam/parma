@@ -59,6 +59,8 @@ export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ err
   if (authError || !user) return { error: 'Not authenticated' }
 
   try {
+    const logDate = parsed.log_date ?? undefined
+
     const [, entryId] = await Promise.all([
       upsertDailyStats(user.id, {
         calories: parsed.calories,
@@ -71,7 +73,7 @@ export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ err
         supplements: parsed.supplements,
         habits_done: parsed.habits_done,
         notes: parsed.notes,
-      }),
+      }, logDate),
       insertLogEntry(user.id, rawText, parsed),
     ])
 

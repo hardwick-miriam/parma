@@ -105,16 +105,17 @@ export async function getHealthStatus(userId: string): Promise<HealthStatus | nu
 
 export async function upsertDailyStats(
   userId: string,
-  updates: Partial<Omit<DailyStats, 'id' | 'user_id' | 'date'>>
+  updates: Partial<Omit<DailyStats, 'id' | 'user_id' | 'date'>>,
+  date?: string
 ): Promise<void> {
   const supabase = await createClient()
-  const today = new Date().toISOString().split('T')[0]
+  const targetDate = date ?? new Date().toISOString().split('T')[0]
 
   const { data: existing } = await supabase
     .from('daily_stats')
     .select('calories, protein_g, steps, water_ml, supplements, habits_done')
     .eq('user_id', userId)
-    .eq('date', today)
+    .eq('date', targetDate)
     .maybeSingle()
 
   // Additive: calories, protein, water
@@ -123,7 +124,7 @@ export async function upsertDailyStats(
   // Overwrite: mood, sleep_hours, weight_kg, notes
   const merged: Record<string, unknown> = {
     user_id: userId,
-    date: today,
+    date: targetDate,
     calories: (existing?.calories ?? 0) + (updates.calories ?? 0),
     protein_g: (existing?.protein_g ?? 0) + (updates.protein_g ?? 0),
     steps: updates.steps != null

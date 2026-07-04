@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { LogInput } from './LogInput'
 import { ConfirmationDrawer } from './ConfirmationDrawer'
 import { QnAResult } from './QnAResult'
@@ -12,6 +12,8 @@ export function LogFlow() {
   const [qna, setQna] = useState<{ question: string; answer: string | null; loading: boolean } | null>(null)
   const [voiceToast, setVoiceToast] = useState<{ text: string; entryId: string | null } | null>(null)
   const [voiceParsing, setVoiceParsing] = useState(false)
+  // Duplicate guard: { norm: string; ts: number }[]
+  const recentSubmissions = useRef<Array<{ norm: string; ts: number }>>([])
 
   // Auto-dismiss voice toast after 5s
   useEffect(() => {
@@ -39,19 +41,37 @@ export function LogFlow() {
     }
   }
 
+  function isDuplicate(text: string): boolean {
+    const norm = text.toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim()
+    const cutoff = Date.now() - 60 * 60 * 1000
+    recentSubmissions.current = recentSubmissions.current.filter((r) => r.ts > cutoff)
+    return recentSubmissions.current.some((r) => r.norm === norm)
+  }
+
+  function trackSubmission(text: string) {
+    const norm = text.toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim()
+    recentSubmissions.current.push({ norm, ts: Date.now() })
+  }
+
   // Hands-free voice flow: parse then immediately save, show brief undo toast
   async function handleVoiceTranscript(transcript: string) {
     if (!transcript.trim() || voiceParsing) return
+    if (isDuplicate(transcript)) return  // skip exact duplicate within 60 min
     setVoiceParsing(true)
     try {
+      const dateCtx = {
+        date: new Date().toLocaleDateString('en-CA'),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      }
       const res = await fetch('/api/parse-log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: transcript }),
+        body: JSON.stringify({ text: transcript, ...dateCtx }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Parse failed')
       const result = await saveLog(transcript, data.parsed)
+      trackSubmission(transcript)
       setVoiceToast({ text: transcript, entryId: (result as { entryId?: string }).entryId ?? null })
       window.dispatchEvent(new CustomEvent('parma:saved'))
     } catch {
@@ -60,7 +80,11 @@ export function LogFlow() {
         const res = await fetch('/api/parse-log', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: transcript }),
+          body: JSON.stringify({
+            text: transcript,
+            date: new Date().toLocaleDateString('en-CA'),
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          }),
         })
         const data = await res.json()
         if (res.ok) setPending({ text: transcript, parsed: data.parsed })
