@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useTheme, type Theme } from '@/components/ThemeProvider'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -45,19 +46,32 @@ function getCondition(wmo: number, isDay: boolean): ConditionKey {
 }
 
 // ─── Background gradients ─────────────────────────────────────────────────────
+// Base sky colours — correct for time of day. Theme tints layer on top via THEME_TINT.
 
 const BG: Record<ConditionKey, string> = {
-  'clear-day':           'linear-gradient(170deg, #0d0820 0%, #1e0f42 45%, #2d1505 100%)',
-  'clear-night':         'linear-gradient(170deg, #020408 0%, #04091c 55%, #060b24 100%)',
-  'partly-cloudy-day':   'linear-gradient(170deg, #0b0820 0%, #16102e 50%, #1a1430 100%)',
-  'partly-cloudy-night': 'linear-gradient(170deg, #030408 0%, #05070f 55%, #07091a 100%)',
-  'clouds':              'linear-gradient(170deg, #0c0f18 0%, #131720 55%, #161c28 100%)',
-  'drizzle':             'linear-gradient(170deg, #090d18 0%, #0e1424 55%, #121a2e 100%)',
-  'rain':                'linear-gradient(170deg, #060c18 0%, #0a1220 55%, #0e1828 100%)',
-  'heavy-rain':          'linear-gradient(170deg, #040810 0%, #060c18 55%, #090f20 100%)',
-  'thunderstorm':        'linear-gradient(170deg, #020308 0%, #040610 55%, #060918 100%)',
-  'snow':                'linear-gradient(170deg, #0a0d14 0%, #0e1220 55%, #131828 100%)',
-  'fog':                 'linear-gradient(170deg, #0c0e14 0%, #111420 55%, #161928 100%)',
+  // ── Daytime ──────────────────────────────────────────────────────────────────
+  'clear-day':           'linear-gradient(175deg, #1a7fc0 0%, #4ab0e0 38%, #90d0f0 72%, #c8ecf8 100%)',
+  'partly-cloudy-day':   'linear-gradient(175deg, #3878a8 0%, #6098c0 40%, #90b8d8 75%, #b8d8ea 100%)',
+  'clouds':              'linear-gradient(175deg, #546878 0%, #7090a0 50%, #90aab8 80%, #aabec8 100%)',
+  'drizzle':             'linear-gradient(175deg, #485a6c 0%, #607888 50%, #7892a0 80%, #90a8b4 100%)',
+  'rain':                'linear-gradient(175deg, #2a3848 0%, #3c5060 50%, #506070 80%, #607882 100%)',
+  'heavy-rain':          'linear-gradient(175deg, #14202a 0%, #1e2e3c 55%, #28384a 100%)',
+  'thunderstorm':        'linear-gradient(175deg, #0e1620 0%, #181e2e 55%, #1c1826 100%)',
+  'snow':                'linear-gradient(175deg, #8aaac8 0%, #b0cad8 50%, #d0e4ee 80%, #e4f0f6 100%)',
+  'fog':                 'linear-gradient(175deg, #7a8c98 0%, #9eb0bc 55%, #b8c8d0 100%)',
+  // ── Nighttime ────────────────────────────────────────────────────────────────
+  'clear-night':         'linear-gradient(175deg, #020612 0%, #04091e 50%, #060c26 100%)',
+  'partly-cloudy-night': 'linear-gradient(175deg, #040810 0%, #060c1a 55%, #0a1022 100%)',
+}
+
+// Colour overlay applied on top of the sky — gives each theme a distinct tint
+const THEME_TINTS: Partial<Record<Theme, string>> = {
+  hacker:           'rgba(0, 70, 0, 0.22)',
+  brutalism:        'rgba(220, 50, 0, 0.14)',
+  'old-money':      'rgba(100, 70, 20, 0.18)',
+  'dark-academia':  'rgba(55, 35, 10, 0.22)',
+  'midnight-ocean': 'rgba(0, 20, 90, 0.24)',
+  synthwave:        'rgba(140, 0, 255, 0.20)',
 }
 
 // ─── Canvas particle animations ───────────────────────────────────────────────
@@ -423,6 +437,9 @@ function injectKeyframes() {
 export function WeatherBackground({ condition, reduced }: { condition: ConditionKey; reduced: boolean }) {
   useEffect(() => { injectKeyframes() }, [])
   const canvasRef = useWeatherCanvas(condition, reduced)
+  const { theme } = useTheme()
+
+  const tintColor = THEME_TINTS[theme] ?? null
 
   const showSun = !reduced && condition === 'clear-day'
   const showMoon = !reduced && (condition === 'clear-night' || condition === 'partly-cloudy-night')
@@ -433,8 +450,13 @@ export function WeatherBackground({ condition, reduced }: { condition: Condition
 
   return (
     <div className="absolute inset-0 overflow-hidden rounded-2xl" style={{ zIndex: 0 }}>
-      {/* Gradient base */}
+      {/* Sky gradient */}
       <div className="absolute inset-0" style={{ background: BG[condition] }} />
+
+      {/* Theme colour tint */}
+      {tintColor && (
+        <div className="absolute inset-0 pointer-events-none" style={{ background: tintColor }} />
+      )}
 
       {showSun && <SunElement />}
       {showMoon && <MoonElement />}
@@ -450,11 +472,11 @@ export function WeatherBackground({ condition, reduced }: { condition: Condition
         />
       )}
 
-      {/* Vignette — pulls attention to content */}
+      {/* Bottom-to-mid vignette — darkens content area while preserving sky at top */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.45) 0%, transparent 70%)',
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0) 25%, rgba(0,0,0,0.52) 100%)',
         }}
       />
     </div>

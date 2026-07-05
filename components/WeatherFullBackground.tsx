@@ -39,10 +39,10 @@ export function WeatherFullBackground() {
       <div className="absolute inset-0 overflow-hidden" style={{ borderRadius: 0 }}>
         <WeatherBackground condition={condition} reduced={reduced} />
       </div>
-      {/* Darkening overlay so dashboard widgets remain readable */}
+      {/* Graduated overlay — sky shows at top, darker at bottom for widget readability */}
       <div
         className="absolute inset-0"
-        style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'none' }}
+        style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.62) 100%)' }}
       />
     </div>
   )
