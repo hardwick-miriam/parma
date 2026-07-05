@@ -42,5 +42,9 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  // Exclude static assets AND machine-callable API endpoints that authenticate
+  // via their own secret header/param rather than user session cookies.
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|api/sync-tick|api/whoop/webhook|api/cron/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }
