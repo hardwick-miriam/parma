@@ -26,8 +26,8 @@ export function NutritionWidget({
   calorieComp,
   proteinComp,
 }: NutritionWidgetProps) {
-  const { w } = useGridItemSize()
-  const compact = w <= 2
+  const { w, h } = useGridItemSize()
+  const compact = w <= 2 || h <= 4
 
   if (compact) {
     const calPct = Math.round(Math.min((calories / calorieTarget) * 100, 100))

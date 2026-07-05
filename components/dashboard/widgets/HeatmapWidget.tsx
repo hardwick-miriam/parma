@@ -99,7 +99,8 @@ export function HeatmapWidget({ history, workouts, calorieTarget = 2000, stepsTa
   const { w, h } = useGridItemSize()
   const [metric, setMetric] = useState<HeatmapMetric>('logged')
 
-  const compact = w <= 2 || h <= 3
+  // w < 6 catches the SM 4-col breakpoint (minW=6 on LG prevents false positive there)
+  const compact = w < 6 || h <= 3
 
   const data = useMemo(
     () => buildActivity(history, workouts, metric, calorieTarget, stepsTarget),

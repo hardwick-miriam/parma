@@ -15,8 +15,8 @@ interface StepsWidgetProps {
 }
 
 export function StepsWidget({ steps, target = 10000, streak = 0, comp }: StepsWidgetProps) {
-  const { w } = useGridItemSize()
-  const compact = w <= 2
+  const { w, h } = useGridItemSize()
+  const compact = w <= 2 || h <= 4
   const pct = Math.round(Math.min((steps / target) * 100, 100))
 
   if (compact) {
