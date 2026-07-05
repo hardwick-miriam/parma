@@ -144,7 +144,6 @@ export function ThemeParticles({ theme, reduced }: { theme: Theme; reduced: bool
 
   useEffect(() => {
     if (reduced) return
-    if (typeof window !== 'undefined' && window.innerWidth < 768) return
     const factory = THEME_CONFIGS[theme]
     if (!factory) return
 

@@ -49,7 +49,7 @@ export function SettingsClient({ currentEmail, initialPrefs, whoopConnection }: 
   const [mounjaroEnabled, setMounjaroEnabled] = useState(initialPrefs.mounjaroEnabled)
   const [weatherBgEnabled, setWeatherBgEnabled] = useState(initialPrefs.weatherBgEnabled)
   const [token, setToken] = useState(initialPrefs.token)
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme, bgEffectsMobile, setBgEffectsMobile } = useTheme()
   const [places, setPlaces] = useState<SavedPlace[]>(initialPrefs.savedPlaces)
   const [newPlaceName, setNewPlaceName] = useState('')
   const [newPlaceAction, setNewPlaceAction] = useState('')
@@ -259,6 +259,23 @@ export function SettingsClient({ currentEmail, initialPrefs, whoopConnection }: 
           >
             <span
               className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${weatherBgEnabled ? 'translate-x-4' : ''}`}
+            />
+          </button>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <p className="text-sm text-text-muted">Background effects on mobile</p>
+            <p className="text-xs text-text-subtle">Run theme animations on phone (off by default to save battery)</p>
+          </div>
+          <button
+            role="switch"
+            aria-checked={bgEffectsMobile}
+            onClick={() => setBgEffectsMobile(!bgEffectsMobile)}
+            className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${bgEffectsMobile ? 'bg-accent' : 'bg-surface-elevated border border-border'}`}
+          >
+            <span
+              className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${bgEffectsMobile ? 'translate-x-4' : ''}`}
             />
           </button>
         </div>
