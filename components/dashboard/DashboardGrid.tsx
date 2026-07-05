@@ -46,6 +46,7 @@ import { weekOverWeek } from '@/lib/comparison'
 import { computeRecovery } from '@/lib/recovery'
 import { computeMuscleRecovery } from '@/lib/muscleRecovery'
 import { CommandPalette } from '@/components/CommandPalette'
+import { WidgetDetailRouter, type WidgetId } from './WidgetDetailSheets'
 import type { MetricId } from './DetailView'
 import type {
   DailyStats,
@@ -329,6 +330,34 @@ function PlainWrapper({
   )
 }
 
+function TappableWrapper({
+  widgetId,
+  onOpen,
+  itemW,
+  itemH,
+  editing,
+  children,
+}: {
+  widgetId: WidgetId
+  onOpen: (id: WidgetId) => void
+  itemW: number
+  itemH: number
+  editing: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <GridItemSizeContext.Provider value={{ w: itemW, h: itemH }}>
+      <motion.div
+        variants={itemVariants}
+        className={`h-full overflow-hidden${editing ? '' : ' cursor-pointer transition-transform duration-150 hover:scale-[1.015] active:scale-[0.985]'}`}
+        onClick={(e) => { if (!editing && !isInteractiveTarget(e.target)) onOpen(widgetId) }}
+      >
+        {children}
+      </motion.div>
+    </GridItemSizeContext.Provider>
+  )
+}
+
 // ─── Remove button (shown on each grid item in edit mode) ────────────────────
 
 function RemoveBtn({ id, onHide }: { id: string; onHide: (id: string) => void }) {
@@ -503,6 +532,7 @@ export function DashboardGrid({
   weatherBgEnabled = false,
 }: DashboardGridProps) {
   const [activeMetric, setActiveMetric] = useState<MetricId | null>(null)
+  const [activeWidget, setActiveWidget] = useState<WidgetId | null>(null)
   const [detailHistory, setDetailHistory] = useState<DailyStats[]>(history)
   const fetchedRef = useRef(history.length > 0)
   const [weather, setWeather] = useState<WeatherData | null>(null)
@@ -576,6 +606,9 @@ export function DashboardGrid({
   }, [])
 
   const closeMetric = useCallback(() => setActiveMetric(null), [])
+
+  const openWidget = useCallback((id: WidgetId) => setActiveWidget(id), [])
+  const closeWidget = useCallback(() => setActiveWidget(null), [])
 
   const handleLayoutChange = useCallback((currentLayout: readonly LayoutItem[], allLayouts: ResponsiveLayouts) => {
     setLgLayout([...currentLayout])
@@ -779,146 +812,146 @@ export function DashboardGrid({
 
             {!hiddenWidgets.has('work') && (
               <div key="work" className="relative">
-                <PlainWrapper itemW={gs('work').w} itemH={gs('work').h}>
+                <TappableWrapper widgetId="work" onOpen={openWidget} itemW={gs('work').w} itemH={gs('work').h} editing={editMode}>
                   <WorkoutsWidget workouts={workouts} streak={streaks.workouts} />
-                </PlainWrapper>
+                </TappableWrapper>
                 {editMode && <RemoveBtn id="work" onHide={hideWidget} />}
               </div>
             )}
 
             {!hiddenWidgets.has('weather') && (
               <div key="weather" className="relative">
-                <PlainWrapper itemW={gs('weather').w} itemH={gs('weather').h}>
+                <TappableWrapper widgetId="weather" onOpen={openWidget} itemW={gs('weather').w} itemH={gs('weather').h} editing={editMode}>
                   <WeatherWidget onData={setWeather} />
-                </PlainWrapper>
+                </TappableWrapper>
                 {editMode && <RemoveBtn id="weather" onHide={hideWidget} />}
               </div>
             )}
 
             {!hiddenWidgets.has('hab') && (
               <div key="hab" className="relative">
-                <PlainWrapper itemW={gs('hab').w} itemH={gs('hab').h}>
+                <TappableWrapper widgetId="hab" onOpen={openWidget} itemW={gs('hab').w} itemH={gs('hab').h} editing={editMode}>
                   <HabitsWidget habits_done={stats?.habits_done ?? null} loggedTimes={habitTimes} streak={streaks.logging} />
-                </PlainWrapper>
+                </TappableWrapper>
                 {editMode && <RemoveBtn id="hab" onHide={hideWidget} />}
               </div>
             )}
 
             {!hiddenWidgets.has('media') && (
               <div key="media" className="relative">
-                <PlainWrapper itemW={gs('media').w} itemH={gs('media').h}>
+                <TappableWrapper widgetId="media" onOpen={openWidget} itemW={gs('media').w} itemH={gs('media').h} editing={editMode}>
                   <MediaWidget />
-                </PlainWrapper>
+                </TappableWrapper>
                 {editMode && <RemoveBtn id="media" onHide={hideWidget} />}
               </div>
             )}
 
             {!hiddenWidgets.has('supp') && (
               <div key="supp" className="relative">
-                <PlainWrapper itemW={gs('supp').w} itemH={gs('supp').h}>
+                <TappableWrapper widgetId="supp" onOpen={openWidget} itemW={gs('supp').w} itemH={gs('supp').h} editing={editMode}>
                   <SupplementsWidget supplements={stats?.supplements ?? null} loggedTimes={supTimes} />
-                </PlainWrapper>
+                </TappableWrapper>
                 {editMode && <RemoveBtn id="supp" onHide={hideWidget} />}
               </div>
             )}
 
             {!hiddenWidgets.has('photos') && (
               <div key="photos" className="relative">
-                <PlainWrapper itemW={gs('photos').w} itemH={gs('photos').h}>
+                <TappableWrapper widgetId="photos" onOpen={openWidget} itemW={gs('photos').w} itemH={gs('photos').h} editing={editMode}>
                   <ProgressPhotos />
-                </PlainWrapper>
+                </TappableWrapper>
                 {editMode && <RemoveBtn id="photos" onHide={hideWidget} />}
               </div>
             )}
 
             {!hiddenWidgets.has('journal') && (
               <div key="journal" className="relative">
-                <PlainWrapper itemW={gs('journal').w} itemH={gs('journal').h}>
+                <TappableWrapper widgetId="journal" onOpen={openWidget} itemW={gs('journal').w} itemH={gs('journal').h} editing={editMode}>
                   <JournalWidget stats={stats} workouts={workouts} history={history} />
-                </PlainWrapper>
+                </TappableWrapper>
                 {editMode && <RemoveBtn id="journal" onHide={hideWidget} />}
               </div>
             )}
 
             {!hiddenWidgets.has('map') && (
               <div key="map" className="relative">
-                <PlainWrapper itemW={gs('map').w} itemH={gs('map').h}>
+                <TappableWrapper widgetId="map" onOpen={openWidget} itemW={gs('map').w} itemH={gs('map').h} editing={editMode}>
                   <GlobeWidget />
-                </PlainWrapper>
+                </TappableWrapper>
                 {editMode && <RemoveBtn id="map" onHide={hideWidget} />}
               </div>
             )}
 
             {!hiddenWidgets.has('clocks') && (
               <div key="clocks" className="relative">
-                <PlainWrapper itemW={gs('clocks').w} itemH={gs('clocks').h}>
+                <TappableWrapper widgetId="clocks" onOpen={openWidget} itemW={gs('clocks').w} itemH={gs('clocks').h} editing={editMode}>
                   <WorldClocksWidget />
-                </PlainWrapper>
+                </TappableWrapper>
                 {editMode && <RemoveBtn id="clocks" onHide={hideWidget} />}
               </div>
             )}
 
             {whoopConnected && !hiddenWidgets.has('whoop') && (
               <div key="whoop" className="relative">
-                <PlainWrapper itemW={gs('whoop').w} itemH={gs('whoop').h}>
+                <TappableWrapper widgetId="whoop" onOpen={openWidget} itemW={gs('whoop').w} itemH={gs('whoop').h} editing={editMode}>
                   <WhoopWidget today={whoopToday} history={whoopHistory} />
-                </PlainWrapper>
+                </TappableWrapper>
                 {editMode && <RemoveBtn id="whoop" onHide={hideWidget} />}
               </div>
             )}
             {!hiddenWidgets.has('insights') && (
               <div key="insights" className="relative">
-                <PlainWrapper itemW={gs('insights').w} itemH={gs('insights').h}>
+                <TappableWrapper widgetId="insights" onOpen={openWidget} itemW={gs('insights').w} itemH={gs('insights').h} editing={editMode}>
                   <InsightsWidget />
-                </PlainWrapper>
+                </TappableWrapper>
                 {editMode && <RemoveBtn id="insights" onHide={hideWidget} />}
               </div>
             )}
             {!hiddenWidgets.has('body') && (
               <div key="body" className="relative">
-                <PlainWrapper itemW={gs('body').w} itemH={gs('body').h}>
+                <TappableWrapper widgetId="body" onOpen={openWidget} itemW={gs('body').w} itemH={gs('body').h} editing={editMode}>
                   <BodyWidget recentWorkouts={recentWorkouts} activeInjuries={injuries} recoveryMap={muscleRecoveryMap} />
-                </PlainWrapper>
+                </TappableWrapper>
                 {editMode && <RemoveBtn id="body" onHide={hideWidget} />}
               </div>
             )}
             {!hiddenWidgets.has('prtracker') && (
               <div key="prtracker" className="relative">
-                <PlainWrapper itemW={gs('prtracker').w} itemH={gs('prtracker').h}>
+                <TappableWrapper widgetId="prtracker" onOpen={openWidget} itemW={gs('prtracker').w} itemH={gs('prtracker').h} editing={editMode}>
                   <PRTrackerWidget />
-                </PlainWrapper>
+                </TappableWrapper>
                 {editMode && <RemoveBtn id="prtracker" onHide={hideWidget} />}
               </div>
             )}
             {!hiddenWidgets.has('trainload') && (
               <div key="trainload" className="relative">
-                <PlainWrapper itemW={gs('trainload').w} itemH={gs('trainload').h}>
+                <TappableWrapper widgetId="trainload" onOpen={openWidget} itemW={gs('trainload').w} itemH={gs('trainload').h} editing={editMode}>
                   <TrainingLoadWidget recentWorkouts={recentWorkouts} />
-                </PlainWrapper>
+                </TappableWrapper>
                 {editMode && <RemoveBtn id="trainload" onHide={hideWidget} />}
               </div>
             )}
             {!hiddenWidgets.has('sleepdebt') && (
               <div key="sleepdebt" className="relative">
-                <PlainWrapper itemW={gs('sleepdebt').w} itemH={gs('sleepdebt').h}>
+                <TappableWrapper widgetId="sleepdebt" onOpen={openWidget} itemW={gs('sleepdebt').w} itemH={gs('sleepdebt').h} editing={editMode}>
                   <SleepDebtWidget history={history} />
-                </PlainWrapper>
+                </TappableWrapper>
                 {editMode && <RemoveBtn id="sleepdebt" onHide={hideWidget} />}
               </div>
             )}
             {!hiddenWidgets.has('habitgarden') && (
               <div key="habitgarden" className="relative">
-                <PlainWrapper itemW={gs('habitgarden').w} itemH={gs('habitgarden').h}>
+                <TappableWrapper widgetId="habitgarden" onOpen={openWidget} itemW={gs('habitgarden').w} itemH={gs('habitgarden').h} editing={editMode}>
                   <HabitGardenWidget history={history} todayHabits={stats?.habits_done} streak={streaks.logging} />
-                </PlainWrapper>
+                </TappableWrapper>
                 {editMode && <RemoveBtn id="habitgarden" onHide={hideWidget} />}
               </div>
             )}
             {!hiddenWidgets.has('heatmap') && (
               <div key="heatmap" className="relative">
-                <PlainWrapper itemW={gs('heatmap').w} itemH={gs('heatmap').h}>
+                <TappableWrapper widgetId="heatmap" onOpen={openWidget} itemW={gs('heatmap').w} itemH={gs('heatmap').h} editing={editMode}>
                   <HeatmapWidget history={history} workouts={workouts} />
-                </PlainWrapper>
+                </TappableWrapper>
                 {editMode && <RemoveBtn id="heatmap" onHide={hideWidget} />}
               </div>
             )}
@@ -943,6 +976,17 @@ export function DashboardGrid({
         weightGoal={weightGoal}
         todayStats={stats}
         logEntries={logEntries}
+      />
+
+      <WidgetDetailRouter
+        widget={activeWidget}
+        onClose={closeWidget}
+        workouts={workouts}
+        recentWorkouts={recentWorkouts}
+        history={history}
+        whoopHistory={whoopHistory}
+        streaks={streaks}
+        injuries={injuries}
       />
 
       <MilestoneToast milestones={milestones} />
