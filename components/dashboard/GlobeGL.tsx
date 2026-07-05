@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import Globe from 'react-globe.gl'
 import type { GlobeMethods } from 'react-globe.gl'
+import { useTheme, type Theme } from '@/components/ThemeProvider'
 
 interface GlobeGLProps {
   visitedCountries: string[]
@@ -16,12 +17,26 @@ interface CountryFeature {
   geometry: unknown
 }
 
-const ACCENT = '#8b5cf6'
-const ACCENT_SIDE = 'rgba(139,92,246,0.4)'
-const OCEAN = '#111118'
-const BASE_LAND = '#232330'
-const BASE_SIDE = 'rgba(0,0,0,0.5)'
-const HOVER_LAND = '#3a3a52'
+// Per-theme globe colour palette
+const THEME_PALETTE: Record<Theme, {
+  ocean: string
+  baseLand: string
+  baseSide: string
+  accentLand: string
+  accentSide: string
+  hoverLand: string
+  atmosphere: string
+  tooltipBg: string
+  tooltipBorder: string
+}> = {
+  normal:           { ocean: '#0d0d14', baseLand: '#1e1e2e', baseSide: 'rgba(0,0,0,0.5)',    accentLand: '#8b5cf6', accentSide: 'rgba(139,92,246,0.4)',  hoverLand: '#3a3a52', atmosphere: 'rgba(139,92,246,0.4)',  tooltipBg: 'rgba(10,10,20,0.88)',    tooltipBorder: 'rgba(139,92,246,0.5)' },
+  hacker:           { ocean: '#010d01', baseLand: '#081208', baseSide: 'rgba(0,18,0,0.5)',    accentLand: '#00ff41', accentSide: 'rgba(0,255,65,0.35)',   hoverLand: '#0f2a0f', atmosphere: 'rgba(0,255,65,0.35)',   tooltipBg: 'rgba(0,10,0,0.88)',      tooltipBorder: 'rgba(0,255,65,0.5)' },
+  brutalism:        { ocean: '#080808', baseLand: '#181818', baseSide: 'rgba(0,0,0,0.6)',    accentLand: '#e11d48', accentSide: 'rgba(225,29,72,0.4)',   hoverLand: '#282828', atmosphere: 'rgba(225,29,72,0.35)',  tooltipBg: 'rgba(8,8,8,0.9)',        tooltipBorder: 'rgba(225,29,72,0.6)' },
+  'old-money':      { ocean: '#181208', baseLand: '#2a2010', baseSide: 'rgba(10,5,0,0.5)',   accentLand: '#c8a840', accentSide: 'rgba(200,168,64,0.4)',  hoverLand: '#3c3020', atmosphere: 'rgba(200,168,64,0.35)', tooltipBg: 'rgba(20,15,5,0.88)',     tooltipBorder: 'rgba(200,168,64,0.5)' },
+  'dark-academia':  { ocean: '#120e08', baseLand: '#1e180e', baseSide: 'rgba(8,5,0,0.5)',    accentLand: '#b87a30', accentSide: 'rgba(184,122,48,0.4)',  hoverLand: '#2e2418', atmosphere: 'rgba(184,122,48,0.35)', tooltipBg: 'rgba(15,10,5,0.88)',     tooltipBorder: 'rgba(184,122,48,0.5)' },
+  'midnight-ocean': { ocean: '#020610', baseLand: '#08162a', baseSide: 'rgba(0,8,20,0.5)',   accentLand: '#22d3ee', accentSide: 'rgba(34,211,238,0.4)',  hoverLand: '#102238', atmosphere: 'rgba(34,211,238,0.4)',  tooltipBg: 'rgba(2,6,18,0.88)',      tooltipBorder: 'rgba(34,211,238,0.5)' },
+  synthwave:        { ocean: '#08001a', baseLand: '#12082a', baseSide: 'rgba(15,0,35,0.5)',  accentLand: '#e879f9', accentSide: 'rgba(232,121,249,0.4)', hoverLand: '#1e0a3a', atmosphere: 'rgba(232,121,249,0.45)', tooltipBg: 'rgba(8,0,20,0.88)',      tooltipBorder: 'rgba(232,121,249,0.5)' },
+}
 
 export default function GlobeGL({ visitedCountries, compact, onToggle }: GlobeGLProps) {
   const globeRef = useRef<GlobeMethods | undefined>(undefined)
@@ -30,6 +45,8 @@ export default function GlobeGL({ visitedCountries, compact, onToggle }: GlobeGL
   const [size, setSize] = useState({ w: 300, h: 300 })
   const [hovered, setHovered] = useState<CountryFeature | null>(null)
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
+  const { theme } = useTheme()
+  const pal = THEME_PALETTE[theme] ?? THEME_PALETTE.normal
   const visitedSet = new Set(visitedCountries.map((c) => c.toUpperCase()))
 
   // Load vendored GeoJSON
@@ -78,13 +95,13 @@ export default function GlobeGL({ visitedCountries, compact, onToggle }: GlobeGL
 
   function polygonColor(feat: object): string {
     const iso = getIso(feat)
-    if (iso === hovered?.properties?.ISO_A3?.toUpperCase()) return HOVER_LAND
-    return visitedSet.has(iso) ? ACCENT : BASE_LAND
+    if (iso === hovered?.properties?.ISO_A3?.toUpperCase()) return pal.hoverLand
+    return visitedSet.has(iso) ? pal.accentLand : pal.baseLand
   }
 
   function polygonSideColor(feat: object): string {
     const iso = getIso(feat)
-    return visitedSet.has(iso) ? ACCENT_SIDE : BASE_SIDE
+    return visitedSet.has(iso) ? pal.accentSide : pal.baseSide
   }
 
   function polygonAltitude(feat: object): number {
@@ -97,7 +114,6 @@ export default function GlobeGL({ visitedCountries, compact, onToggle }: GlobeGL
     if (!iso || iso === '-99') return
     const nowVisited = !visitedSet.has(iso)
     onToggle?.(iso, nowVisited)
-    // Pause autorotate briefly
     if (globeRef.current) {
       globeRef.current.controls().autoRotate = false
       setTimeout(() => {
@@ -120,8 +136,8 @@ export default function GlobeGL({ visitedCountries, compact, onToggle }: GlobeGL
     const iso = getIso(feat)
     const name = getName(feat)
     const visited = visitedSet.has(iso)
-    return `<div style="background:rgba(10,10,20,0.85);border:1px solid rgba(139,92,246,0.4);border-radius:6px;padding:4px 8px;font-size:11px;color:#fff;white-space:nowrap">${name}${visited ? ' ✓' : ''}</div>`
-  }, [getIso, getName, visitedSet])
+    return `<div style="background:${pal.tooltipBg};border:1px solid ${pal.tooltipBorder};border-radius:6px;padding:4px 8px;font-size:11px;color:#fff;white-space:nowrap">${name}${visited ? ' ✓' : ''}</div>`
+  }, [getIso, getName, visitedSet, pal])
 
   return (
     <div
@@ -133,8 +149,8 @@ export default function GlobeGL({ visitedCountries, compact, onToggle }: GlobeGL
         ref={globeRef}
         width={size.w}
         height={size.h}
-        backgroundColor={OCEAN}
-        atmosphereColor="rgba(139,92,246,0.4)"
+        backgroundColor={pal.ocean}
+        atmosphereColor={pal.atmosphere}
         atmosphereAltitude={0.15}
         globeImageUrl=""
         polygonsData={countries?.features ?? []}
@@ -154,8 +170,8 @@ export default function GlobeGL({ visitedCountries, compact, onToggle }: GlobeGL
           style={{
             left: tooltipPos.x,
             top: tooltipPos.y,
-            background: 'rgba(10,10,20,0.9)',
-            border: '1px solid rgba(139,92,246,0.4)',
+            background: pal.tooltipBg,
+            border: `1px solid ${pal.tooltipBorder}`,
             whiteSpace: 'nowrap',
             zIndex: 10,
           }}

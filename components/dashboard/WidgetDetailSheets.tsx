@@ -1,11 +1,13 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback, lazy, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MetricAreaChart } from '@/components/ui/MetricAreaChart'
 import type { DailyStats, WorkoutSession, InjuryWithCheckins } from '@/lib/db/queries'
 import type { WhoopMetrics } from '@/lib/db/whoop'
 import type { StreakData } from '@/lib/streaks'
+
+const GlobeGL = lazy(() => import('./GlobeGL'))
 
 // ─── Shell ────────────────────────────────────────────────────────────────────
 
@@ -322,7 +324,7 @@ export function HeatmapDetail({ history, onClose }: { history: DailyStats[]; onC
 }
 
 export function GlobeDetail({ visitedCountries: initialVisited = [], onClose }: { visitedCountries?: string[]; onClose: () => void }) {
-  const [countries, setCountries] = useState<Array<{ ISO_A3: string; ADMIN: string }>>([])
+  const [countryNames, setCountryNames] = useState<Array<{ ISO_A3: string; ADMIN: string }>>([])
   const [visitedCountries, setVisitedCountries] = useState<string[]>(initialVisited)
 
   useEffect(() => {
@@ -334,14 +336,27 @@ export function GlobeDetail({ visitedCountries: initialVisited = [], onClose }: 
     fetch('/geo/world.geojson')
       .then((r) => r.json())
       .then((d: { features: Array<{ properties: { ISO_A3: string; ADMIN: string } }> }) =>
-        setCountries(d.features.map((f) => f.properties))
+        setCountryNames(d.features.map((f) => f.properties))
       )
       .catch(() => {})
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const handleToggle = useCallback((isoA3: string, nowVisited: boolean) => {
+    setVisitedCountries((prev) =>
+      nowVisited ? [...prev.filter((c) => c !== isoA3), isoA3] : prev.filter((c) => c !== isoA3)
+    )
+    if (nowVisited) {
+      fetch('/api/countries', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ codes: [isoA3] }) })
+        .catch(() => setVisitedCountries((prev) => prev.filter((c) => c !== isoA3)))
+    } else {
+      fetch(`/api/countries?code=${isoA3}`, { method: 'DELETE' })
+        .catch(() => setVisitedCountries((prev) => [...prev, isoA3]))
+    }
+  }, [])
+
   const visited = visitedCountries.map((iso) => {
-    const match = countries.find((c) => c.ISO_A3 === iso)
+    const match = countryNames.find((c) => c.ISO_A3 === iso)
     return { iso, name: match?.ADMIN ?? iso }
   }).sort((a, b) => a.name.localeCompare(b.name))
 
@@ -349,6 +364,13 @@ export function GlobeDetail({ visitedCountries: initialVisited = [], onClose }: 
 
   return (
     <WidgetShell title="World" onClose={onClose}>
+      {/* Themed interactive globe */}
+      <div className="relative rounded-2xl overflow-hidden" style={{ height: 260 }}>
+        <Suspense fallback={<div className="flex items-center justify-center h-full text-xs text-text-muted">Loading globe…</div>}>
+          <GlobeGL visitedCountries={visitedCountries} compact={false} onToggle={handleToggle} />
+        </Suspense>
+      </div>
+
       <div className="grid grid-cols-3 gap-2">
         {[
           { label: 'Countries', value: String(visitedCountries.length) },
