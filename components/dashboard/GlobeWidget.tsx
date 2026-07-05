@@ -1,16 +1,14 @@
 'use client'
 
-import { useEffect, useState, Suspense, lazy } from 'react'
+import { useEffect, useState, Suspense, lazy, useCallback } from 'react'
 import { useGridItemSize } from './GridItemSizeContext'
 
 interface GlobeWidgetProps {
-  visitedCountries?: string[] // ISO alpha-3 codes — if not passed, fetched from /api/countries
+  visitedCountries?: string[]
 }
 
-// Lazy-load the heavy WebGL globe
 const GlobeGL = lazy(() => import('./GlobeGL'))
 
-// Static SVG fallback (from original WorldMapWidget, simplified)
 function StaticMapFallback({ count }: { count: number }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-2">
@@ -28,7 +26,7 @@ export function GlobeWidget({ visitedCountries: initialCountries }: GlobeWidgetP
   const [visitedCountries, setVisitedCountries] = useState<string[]>(initialCountries ?? [])
 
   useEffect(() => {
-    if (initialCountries !== undefined) return // passed in — no fetch needed
+    if (initialCountries !== undefined) return
     fetch('/api/countries')
       .then((r) => r.json())
       .then((d) => { if (d.countries) setVisitedCountries(d.countries) })
@@ -42,6 +40,30 @@ export function GlobeWidget({ visitedCountries: initialCountries }: GlobeWidgetP
       setWebglOk(!!gl)
     } catch {
       setWebglOk(false)
+    }
+  }, [])
+
+  const handleToggle = useCallback((isoA3: string, nowVisited: boolean) => {
+    // Optimistic update
+    setVisitedCountries((prev) =>
+      nowVisited
+        ? [...prev.filter((c) => c !== isoA3), isoA3]
+        : prev.filter((c) => c !== isoA3)
+    )
+    // Persist
+    if (nowVisited) {
+      fetch('/api/countries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codes: [isoA3] }),
+      }).catch(() => {
+        // Revert on failure
+        setVisitedCountries((prev) => prev.filter((c) => c !== isoA3))
+      })
+    } else {
+      fetch(`/api/countries?code=${isoA3}`, { method: 'DELETE' }).catch(() => {
+        setVisitedCountries((prev) => [...prev, isoA3])
+      })
     }
   }, [])
 
@@ -62,12 +84,20 @@ export function GlobeWidget({ visitedCountries: initialCountries }: GlobeWidgetP
           </div>
         ) : webglOk ? (
           <Suspense fallback={<div className="flex-1 flex items-center justify-center h-full"><span className="text-xs text-text-muted">Loading globe…</span></div>}>
-            <GlobeGL visitedCountries={visitedCountries} compact={compact} />
+            <GlobeGL
+              visitedCountries={visitedCountries}
+              compact={compact}
+              onToggle={handleToggle}
+            />
           </Suspense>
         ) : (
           <StaticMapFallback count={visitedCountries.length} />
         )}
       </div>
+
+      {!compact && (
+        <p className="text-center text-[10px] text-text-subtle pb-2 shrink-0">Tap a country to toggle visited</p>
+      )}
     </div>
   )
 }
