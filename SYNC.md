@@ -1,6 +1,6 @@
 # WHOOP Sync Architecture
 
-Parma pulls WHOOP data through two complementary mechanisms: a real-time webhook and a 15-minute polling cron. Either one alone keeps the dashboard current; together they are resilient to missed events.
+Parma pulls WHOOP data through two mechanisms: a real-time webhook and an external polling cron. Either alone keeps the dashboard current; together they are resilient to missed events.
 
 ## How data flows
 
@@ -22,25 +22,61 @@ The webhook handler validates the HMAC-SHA256 signature (`WHOOP_WEBHOOK_SECRET`)
 POST https://api.prod.whoop.com/developer/v1/webhook
 Authorization: Bearer <your-access-token>
 {
-  "url": "https://parma-seven.vercel.app/api/whoop/webhook",
+  "url": "https://parma.ink/api/whoop/webhook",
   "event_types": ["recovery.updated","sleep.updated","workout.updated","cycle.updated"]
 }
 ```
 
 Set `WHOOP_WEBHOOK_SECRET` in Vercel environment variables to match the secret returned by that call.
 
-### 2. Polling cron (every 15 minutes)
+### 2. External polling cron (every 15 minutes) — cron-job.org recipe
 
-`/api/sync-tick` is called by Vercel Cron on `*/15 * * * *`. It:
+The Vercel Hobby plan only allows daily cron schedules. Use **[cron-job.org](https://cron-job.org)** (free tier) to call `/api/sync-tick` every 15 minutes instead.
 
-1. Authenticates via `CRON_SECRET` in the `Authorization` header
-2. Fetches all rows from `whoop_connections`
-3. Calls `syncWhoopUser(userId)` for each connected account in parallel
-4. Returns `{ users, succeeded, failed, ts }`
+#### Step-by-step setup
 
-This cron catches any events the webhook missed (network blips, WHOOP retries, app restarts).
+1. Sign up at **cron-job.org** (free, no credit card).
 
-**Requires Vercel Pro plan** — the free tier only supports daily cron schedules. On a free plan the schedule silently degrades to once daily; set it to `0 5 * * *` if on free tier.
+2. Click **Create cronjob**.
+
+3. Fill in the form:
+   - **URL**: `https://parma.ink/api/sync-tick?secret=YOUR_CRON_SECRET`
+     *(substitute your actual `CRON_SECRET` value from Vercel → Project → Environment Variables)*
+   - **Schedule**: every 15 minutes  
+     → select **Every minute** → set to `*/15` interval  
+     (or use the expression `*/15 * * * *`)
+   - **Method**: `GET`
+   - **Request timeout**: 30 seconds
+   - **Save responses**: enable (lets you debug failures in the dashboard)
+
+4. Click **Create** and leave the cronjob enabled.
+
+**That's it.** The endpoint accepts the secret via `?secret=` query parameter OR via `Authorization: Bearer` header — either works from cron-job.org.
+
+#### Testing
+
+To test immediately before setting up the cron, run:
+```bash
+curl "https://parma.ink/api/sync-tick?secret=YOUR_CRON_SECRET"
+```
+
+Expected response:
+```json
+{
+  "synced_users": 1,
+  "skipped": 0,
+  "failed": 0,
+  "records": 3,
+  "took_ms": 1240,
+  "ts": "2026-06-29T06:00:00.000Z"
+}
+```
+
+If `CRON_SECRET` is wrong you'll get `401 Unauthorized`.
+
+#### Skip logic
+
+If a user's `last_sync_at` is less than 10 minutes old, their sync is skipped and counted in `skipped`. This prevents hammering the WHOOP API if two cron triggers overlap (e.g., cron-job.org re-fires after a timeout).
 
 ### 3. Manual sync
 
@@ -65,12 +101,18 @@ Token refresh is transparent — the new tokens are written back to `whoop_conne
 | `WHOOP_CLIENT_ID` | OAuth app client ID (Vercel + .env.local) |
 | `WHOOP_CLIENT_SECRET` | OAuth app client secret (Vercel + .env.local) |
 | `WHOOP_WEBHOOK_SECRET` | HMAC secret for webhook signature validation |
-| `CRON_SECRET` | Bearer token Vercel sends with every cron request |
+| `CRON_SECRET` | Secret sent by the external cron with every request |
 
 All four must be set in the Vercel Environment Variables dashboard. None are ever exposed client-side.
 
 ## Debugging
 
 - **`/api/whoop/debug`** — shows the current token state and last sync timestamp for the authenticated user
-- **Vercel logs** — each cron invocation logs `succeeded` / `failed` counts
+- **cron-job.org dashboard** — shows execution history, HTTP status, and saved response bodies
+- **Response fields explained**:
+  - `synced_users` — accounts that were synced this tick
+  - `skipped` — accounts skipped because last sync was < 10 min ago
+  - `failed` — accounts where sync threw an error
+  - `records` — total WHOOP data rows written
+  - `took_ms` — wall-clock time for the entire request
 - **`WHOOP_WEBHOOK_SECRET` unset** — the webhook skips signature validation and accepts all requests; safe for local dev, insecure in production
