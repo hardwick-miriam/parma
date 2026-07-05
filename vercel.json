@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/sync-tick",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 6 * * *"
     },
     {
       "path": "/api/cron/insights-refresh",
