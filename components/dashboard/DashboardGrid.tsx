@@ -43,6 +43,7 @@ import { HeatmapWidget } from './widgets/HeatmapWidget'
 import { MilestoneToast } from './MilestoneToast'
 import { GridItemSizeContext } from './GridItemSizeContext'
 import { detectMilestones } from '@/lib/milestones'
+import { getLocalDate } from '@/lib/date'
 import { weekOverWeek } from '@/lib/comparison'
 import { computeRecovery } from '@/lib/recovery'
 import { computeMuscleRecovery } from '@/lib/muscleRecovery'
@@ -648,7 +649,7 @@ export function DashboardGrid({
   const stepsComp = useMemo(() => weekOverWeek(history, (d) => d.steps), [history])
   const hydraComp = useMemo(() => weekOverWeek(history, (d) => d.water_ml ?? 0), [history])
 
-  const todayInHistory = history.find((d) => d.date === new Date().toISOString().split('T')[0]) ?? stats
+  const todayInHistory = history.find((d) => d.date === getLocalDate()) ?? stats
   const milestones = useMemo(
     () => detectMilestones(todayInHistory ?? null, history, streaks),
     // eslint-disable-next-line react-hooks/exhaustive-deps

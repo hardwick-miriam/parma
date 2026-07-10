@@ -1,12 +1,13 @@
 'use client'
 
 import { useGridItemSize } from '@/components/dashboard/GridItemSizeContext'
+import { getLocalDate } from '@/lib/date'
 import type { DailyStats } from '@/lib/db/queries'
 
 const TARGET = 8
 
 function toKey(d: Date) {
-  return d.toISOString().split('T')[0]
+  return getLocalDate(undefined, d)
 }
 
 function getLast14Days(): string[] {

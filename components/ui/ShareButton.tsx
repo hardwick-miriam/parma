@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { getLocalDate } from '@/lib/date'
 
 interface ShareButtonProps {
   type: 'daily' | 'weekly' | 'pr'
@@ -35,7 +36,7 @@ export function ShareButton({ type, exercise, className, label }: ShareButtonPro
         // Desktop: download the image
         const a = document.createElement('a')
         a.href = url
-        a.download = `parma-${type}-${new Date().toISOString().split('T')[0]}.png`
+        a.download = `parma-${type}-${getLocalDate()}.png`
         a.click()
         toast.success('Card downloaded')
       }

@@ -1,5 +1,6 @@
 'use client'
 
+import { getLocalDate } from '@/lib/date'
 import type { WorkoutSession } from '@/lib/db/queries'
 
 const FEELING_INTENSITY: Record<string, number> = {
@@ -26,7 +27,7 @@ export function TrainingLoadWidget({ recentWorkouts }: TrainingLoadWidgetProps) 
   for (let i = 13; i >= 0; i--) {
     const d = new Date(today)
     d.setDate(d.getDate() - i)
-    const dateStr = d.toISOString().split('T')[0]
+    const dateStr = getLocalDate(undefined, d)
     const dayWorkouts = recentWorkouts.filter((w) => w.date === dateStr)
     days.push({
       label: d.toLocaleDateString('en-GB', { weekday: 'short' }).slice(0, 1),
@@ -69,7 +70,7 @@ export function TrainingLoadWidget({ recentWorkouts }: TrainingLoadWidgetProps) 
       <div className="flex items-end gap-0.5 h-16 flex-1 min-h-0">
         {days.map((d) => {
           const heightPct = maxLoad > 0 ? (d.load / maxLoad) * 100 : 0
-          const isToday = d.date === today.toISOString().split('T')[0]
+          const isToday = d.date === getLocalDate()
           return (
             <div key={d.date} className="flex flex-col items-center gap-0.5 flex-1">
               <div className="w-full flex items-end" style={{ height: '52px' }}>

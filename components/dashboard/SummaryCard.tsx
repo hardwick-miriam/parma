@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { getLocalDate } from '@/lib/date'
 import type { DailyStats } from '@/lib/db/queries'
 import { ShareButton } from '@/components/ui/ShareButton'
 
@@ -25,7 +26,7 @@ export function SummaryCard({ stats, history }: SummaryCardProps) {
     if (!isEvening) return
 
     const period = isWeekly ? 'weekly' : 'daily'
-    const cacheKey = `parma-summary-${period}-${new Date().toISOString().split('T')[0]}`
+    const cacheKey = `parma-summary-${period}-${getLocalDate()}`
 
     const cached = (() => {
       try { return localStorage.getItem(cacheKey) } catch { return null }

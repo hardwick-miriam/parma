@@ -51,8 +51,11 @@ export default async function DashboardPage() {
   const workoutDates = new Set((recentWorkouts ?? []).map((w) => w.date))
   const streaks = calculateStreaks(history ?? [], workoutDates)
 
+  // Explicit timeZone — without it this resolves in the server's local zone
+  // (UTC on Vercel), showing the wrong weekday/date for up to an hour after
+  // local midnight in the UK.
   const today = new Date().toLocaleDateString('en-US', {
-    weekday: 'long', month: 'long', day: 'numeric',
+    weekday: 'long', month: 'long', day: 'numeric', timeZone: 'Europe/London',
   })
 
   return (

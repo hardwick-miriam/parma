@@ -1,5 +1,6 @@
 'use client'
 
+import { getLocalDate } from '@/lib/date'
 import type { MounjaroDose, MounjaroEffect } from '@/lib/db/mounjaro'
 
 function fmt(dateStr: string) {
@@ -26,7 +27,7 @@ interface MounjaroWidgetProps {
 
 export function MounjaroWidget({ doses, effects }: MounjaroWidgetProps) {
   const lastDose = doses[0] ?? null
-  const todayStr = new Date().toISOString().split('T')[0]
+  const todayStr = getLocalDate()
   const todayEffect = effects.find((e) => e.logged_date === todayStr)
   const latestEffect = todayEffect ?? effects[0]
 

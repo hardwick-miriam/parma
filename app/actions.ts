@@ -74,18 +74,18 @@ export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ err
         habits_done: parsed.habits_done,
         notes: parsed.notes,
       }, logDate),
-      insertLogEntry(user.id, rawText, parsed),
+      insertLogEntry(user.id, rawText, parsed, logDate),
     ])
 
     if (parsed.workouts?.length) {
-      await Promise.all(parsed.workouts.map((w) => insertWorkout(user.id, w)))
+      await Promise.all(parsed.workouts.map((w) => insertWorkout(user.id, w, logDate)))
     }
 
     if (parsed.sick !== undefined) {
       await upsertHealthStatus(user.id, {
         sick: parsed.sick,
         sick_estimated_days: parsed.sick_estimated_days,
-      })
+      }, logDate)
     }
 
     if (parsed.injury_checkin) {
@@ -101,7 +101,7 @@ export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ err
         matched = await createInjury(user.id, body_part ?? 'injury', body_part ?? null, null)
       }
 
-      await insertInjuryCheckin(matched.id, user.id, feeling_pct, activity ?? null, notes ?? null)
+      await insertInjuryCheckin(matched.id, user.id, feeling_pct, activity ?? null, notes ?? null, logDate)
     }
 
     if (parsed.injured === true && !parsed.injury_checkin) {
@@ -109,7 +109,7 @@ export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ err
         injured: true,
         injury_description: parsed.injury_description,
         injury_estimated_days: parsed.injury_estimated_days,
-      })
+      }, logDate)
       const activeInjuries = await getActiveInjuries(user.id)
       const desc = parsed.injury_description ?? 'Injury'
       // Only create a new injury record if there isn't already one that matches
@@ -172,11 +172,11 @@ export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ err
     }
 
     if (parsed.mounjaro_dose_mg != null) {
-      await insertMounjaroDose(user.id, parsed.mounjaro_dose_mg, parsed.mounjaro_feeling ?? null, null)
+      await insertMounjaroDose(user.id, parsed.mounjaro_dose_mg, parsed.mounjaro_feeling ?? null, null, logDate)
     }
 
     if (parsed.mounjaro_side_effects) {
-      await upsertMounjaroEffects(user.id, parsed.mounjaro_side_effects)
+      await upsertMounjaroEffects(user.id, parsed.mounjaro_side_effects, undefined, logDate)
     }
 
     if (parsed.muscle_soreness?.length) {

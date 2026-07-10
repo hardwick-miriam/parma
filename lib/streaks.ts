@@ -1,3 +1,4 @@
+import { getLocalDate } from './date'
 import type { DailyStats } from './db/queries'
 
 export interface StreakData {
@@ -8,50 +9,50 @@ export interface StreakData {
   workouts: number
 }
 
-// UTC date string — consistent with how daily_stats.date is stored
-function utcDateStr(d: Date): string {
-  return d.toISOString().split('T')[0]
+// One day earlier than a YYYY-MM-DD string, still in Europe/London terms.
+function dayBefore(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00Z')
+  d.setUTCDate(d.getUTCDate() - 1)
+  return getLocalDate(undefined, d)
 }
 
 function calcStreak(
   byDate: Map<string, DailyStats>,
   check: (d: DailyStats) => boolean
 ): number {
-  // Use UTC midnight so the date string matches what's stored in daily_stats.date
-  const cursor = new Date()
-  cursor.setUTCHours(0, 0, 0, 0)
+  // daily_stats.date is now always written via getLocalDate() (Europe/London),
+  // so streak math must walk the same local calendar, not UTC — otherwise the
+  // two disagree on what "today" is for up to an hour after local midnight.
+  let cursor = getLocalDate()
   let streak = 0
 
   // If today has no qualifying entry yet, start from yesterday
-  if (!byDate.has(utcDateStr(cursor))) {
-    cursor.setUTCDate(cursor.getUTCDate() - 1)
+  if (!byDate.has(cursor)) {
+    cursor = dayBefore(cursor)
   }
 
   while (streak <= 365) {
-    const dateStr = utcDateStr(cursor)
-    const day = byDate.get(dateStr)
+    const day = byDate.get(cursor)
     if (!day || !check(day)) break
     streak++
-    cursor.setUTCDate(cursor.getUTCDate() - 1)
+    cursor = dayBefore(cursor)
   }
 
   return streak
 }
 
 function calcWorkoutStreak(workoutDates: Set<string>): number {
-  const cursor = new Date()
-  cursor.setUTCHours(0, 0, 0, 0)
+  let cursor = getLocalDate()
   let streak = 0
 
-  if (!workoutDates.has(utcDateStr(cursor))) {
-    cursor.setUTCDate(cursor.getUTCDate() - 1)
+  if (!workoutDates.has(cursor)) {
+    cursor = dayBefore(cursor)
   }
 
   while (streak <= 365) {
-    const dateStr = utcDateStr(cursor)
-    if (!workoutDates.has(dateStr)) break
+    if (!workoutDates.has(cursor)) break
     streak++
-    cursor.setUTCDate(cursor.getUTCDate() - 1)
+    cursor = dayBefore(cursor)
   }
 
   return streak

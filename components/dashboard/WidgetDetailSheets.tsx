@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback, lazy, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MetricAreaChart } from '@/components/ui/MetricAreaChart'
+import { getLocalDate } from '@/lib/date'
 import type { DailyStats, WorkoutSession, InjuryWithCheckins } from '@/lib/db/queries'
 import type { WhoopMetrics } from '@/lib/db/whoop'
 import type { StreakData } from '@/lib/streaks'
@@ -156,7 +157,7 @@ export function WhoopDetail({ whoopHistory, onClose }: { whoopHistory: WhoopMetr
 }
 
 export function SleepDebtDetail({ history, target = 8, onClose }: { history: DailyStats[]; target?: number; onClose: () => void }) {
-  const toKey = (d: Date) => d.toISOString().split('T')[0]
+  const toKey = (d: Date) => getLocalDate(undefined, d)
   const last30 = Array.from({ length: 30 }, (_, i) => {
     const d = new Date()
     d.setDate(d.getDate() - (29 - i))
@@ -439,7 +440,7 @@ export function TrainingLoadDetail({ recentWorkouts, onClose }: { recentWorkouts
   const shortDate = (iso: string) => new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
   // Build weekly volume over last 4 weeks
-  const toKey = (d: Date) => d.toISOString().split('T')[0]
+  const toKey = (d: Date) => getLocalDate(undefined, d)
   const last28 = Array.from({ length: 28 }, (_, i) => {
     const d = new Date()
     d.setDate(d.getDate() - (27 - i))

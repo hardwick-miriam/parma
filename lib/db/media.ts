@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getLocalDate } from '@/lib/date'
 
 export type MediaCategory = 'book' | 'film' | 'show' | 'song'
 export type MediaStatus = 'want-to' | 'in-progress' | 'finished'
@@ -59,7 +60,7 @@ export async function insertMediaEntry(
       rating: entry.rating ?? null,
       note: entry.note ?? null,
       status: entry.status ?? 'finished',
-      added_date: entry.added_date ?? new Date().toISOString().split('T')[0],
+      added_date: entry.added_date ?? getLocalDate(),
     })
     .select()
     .single()

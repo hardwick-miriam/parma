@@ -1,10 +1,11 @@
 'use client'
 
 import { useMemo } from 'react'
+import { getLocalDate } from '@/lib/date'
 import type { DailyStats } from '@/lib/db/queries'
 
 function toKey(d: Date) {
-  return d.toISOString().split('T')[0]
+  return getLocalDate(undefined, d)
 }
 
 function getLast30Days(): string[] {

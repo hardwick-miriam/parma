@@ -1,5 +1,16 @@
 import { createClient } from '@/lib/supabase/server'
+import { getLocalDate } from '@/lib/date'
 import type { ParsedLog } from '@/lib/ai/types'
+import type { SupabaseClient } from '@supabase/supabase-js'
+
+// Every writer below defaults to the cookie-scoped (RLS-enforced) client.
+// Callers with no Supabase session — e.g. /api/shortcuts/log, which
+// authenticates via a per-user secret token instead — must pass an explicit
+// client (usually the service-role client) or these calls will silently
+// match zero rows once RLS is enabled on a table.
+async function resolveClient(client?: SupabaseClient) {
+  return client ?? (await createClient())
+}
 
 export interface DailyStats {
   id: string
@@ -46,7 +57,7 @@ export interface HealthStatus {
 
 export async function getTodayStats(userId: string): Promise<DailyStats | null> {
   const supabase = await createClient()
-  const today = new Date().toISOString().split('T')[0]
+  const today = getLocalDate()
 
   const { data, error } = await supabase
     .from('daily_stats')
@@ -61,7 +72,7 @@ export async function getTodayStats(userId: string): Promise<DailyStats | null> 
 
 export async function getTodayWorkouts(userId: string): Promise<WorkoutSession[]> {
   const supabase = await createClient()
-  const today = new Date().toISOString().split('T')[0]
+  const today = getLocalDate()
 
   const { data, error } = await supabase
     .from('workout_sessions')
@@ -106,17 +117,23 @@ export async function getHealthStatus(userId: string): Promise<HealthStatus | nu
 export async function upsertDailyStats(
   userId: string,
   updates: Partial<Omit<DailyStats, 'id' | 'user_id' | 'date'>>,
-  date?: string
+  date?: string,
+  client?: SupabaseClient
 ): Promise<void> {
-  const supabase = await createClient()
-  const targetDate = date ?? new Date().toISOString().split('T')[0]
+  const supabase = await resolveClient(client)
+  const targetDate = date ?? getLocalDate()
 
-  const { data: existing } = await supabase
+  const { data: existing, error: readError } = await supabase
     .from('daily_stats')
     .select('calories, protein_g, steps, water_ml, supplements, habits_done')
     .eq('user_id', userId)
     .eq('date', targetDate)
     .maybeSingle()
+
+  // C6: a failed read must not be silently treated as "no existing row" —
+  // that would zero out the additive merge below and overwrite real
+  // accumulated calories/protein/water/steps with just today's increment.
+  if (readError) throw readError
 
   // Additive: calories, protein, water
   // Max: steps
@@ -163,16 +180,19 @@ export async function upsertHealthStatus(
     injured?: boolean
     injury_description?: string
     injury_estimated_days?: number
-  }
+  },
+  date?: string,
+  client?: SupabaseClient
 ): Promise<void> {
-  const supabase = await createClient()
-  const today = new Date().toISOString().split('T')[0]
+  const supabase = await resolveClient(client)
+  const today = date ?? getLocalDate()
 
-  const { data: existing } = await supabase
+  const { data: existing, error: readError } = await supabase
     .from('health_status')
     .select('sick, sick_since, injured, injury_since')
     .eq('user_id', userId)
     .maybeSingle()
+  if (readError) throw readError
 
   const row: Record<string, unknown> = {
     user_id: userId,
@@ -216,14 +236,16 @@ export async function upsertHealthStatus(
 
 export async function insertWorkout(
   userId: string,
-  workout: { description: string; duration_minutes?: number; feeling?: string; exercises?: string[] }
+  workout: { description: string; duration_minutes?: number; feeling?: string; exercises?: string[] },
+  date?: string,
+  client?: SupabaseClient
 ): Promise<void> {
-  const supabase = await createClient()
-  const today = new Date().toISOString().split('T')[0]
+  const supabase = await resolveClient(client)
+  const targetDate = date ?? getLocalDate()
 
   const { error } = await supabase.from('workout_sessions').insert({
     user_id: userId,
-    date: today,
+    date: targetDate,
     description: workout.description,
     duration_minutes: workout.duration_minutes ?? null,
     feeling: workout.feeling ?? null,
@@ -245,13 +267,21 @@ export interface LogEntry {
 export async function insertLogEntry(
   userId: string,
   rawText: string,
-  parsedJson: unknown
+  parsedJson: unknown,
+  date?: string,
+  client?: SupabaseClient
 ): Promise<string> {
-  const supabase = await createClient()
+  const supabase = await resolveClient(client)
+  // `date` defaults to Postgres `current_date` in the table definition,
+  // which evaluates in the DB server's timezone (UTC), not Europe/London —
+  // pass it explicitly so a backdated (log_date) entry, or one logged right
+  // after local midnight, lands on the correct UK calendar day.
+  const targetDate = date ?? getLocalDate()
   const { data, error } = await supabase.from('log_entries').insert({
     user_id: userId,
     raw_text: rawText,
     parsed_json: parsedJson,
+    date: targetDate,
     logged_at: new Date().toISOString(),
   }).select('id').single()
   if (error) throw error
@@ -260,7 +290,7 @@ export async function insertLogEntry(
 
 export async function getTodayLogEntries(userId: string): Promise<LogEntry[]> {
   const supabase = await createClient()
-  const today = new Date().toISOString().split('T')[0]
+  const today = getLocalDate()
   const { data, error } = await supabase
     .from('log_entries')
     // Filter on `date` (always populated via DB default) so entries
@@ -300,8 +330,8 @@ export interface InjuryWithCheckins extends Injury {
   checkins: InjuryCheckin[]
 }
 
-export async function getActiveInjuries(userId: string): Promise<Injury[]> {
-  const supabase = await createClient()
+export async function getActiveInjuries(userId: string, client?: SupabaseClient): Promise<Injury[]> {
+  const supabase = await resolveClient(client)
   const { data, error } = await supabase
     .from('injuries')
     .select('*')
@@ -316,9 +346,10 @@ export async function createInjury(
   userId: string,
   description: string,
   bodyPart: string | null,
-  estimatedDays: number | null
+  estimatedDays: number | null,
+  client?: SupabaseClient
 ): Promise<Injury> {
-  const supabase = await createClient()
+  const supabase = await resolveClient(client)
   const { data, error } = await supabase
     .from('injuries')
     .insert({ user_id: userId, description, body_part: bodyPart, estimated_days: estimatedDays })
@@ -333,16 +364,18 @@ export async function insertInjuryCheckin(
   userId: string,
   feelingPct: number,
   activity: string | null,
-  notes: string | null
+  notes: string | null,
+  date?: string,
+  client?: SupabaseClient
 ): Promise<void> {
-  const supabase = await createClient()
+  const supabase = await resolveClient(client)
   const { error } = await supabase.from('injury_checkins').insert({
     injury_id: injuryId,
     user_id: userId,
     feeling_pct: feelingPct,
     activity,
     notes,
-    date: new Date().toISOString().split('T')[0],
+    date: date ?? getLocalDate(),
   })
   if (error) throw error
 }
@@ -350,13 +383,17 @@ export async function insertInjuryCheckin(
 export async function recomputeDailyStats(userId: string, date: string): Promise<void> {
   const supabase = await createClient()
 
-  const { data: entries } = await supabase
+  const { data: entries, error: readError } = await supabase
     .from('log_entries')
     .select('parsed_json')
     .eq('user_id', userId)
     .gte('logged_at', `${date}T00:00:00`)
     .lte('logged_at', `${date}T23:59:59.999`)
     .order('logged_at', { ascending: true })
+
+  // C7: a failed read must abort, not fall through to summing zero entries —
+  // the upsert below would otherwise wipe the day's real stats to all-zero.
+  if (readError) throw readError
 
   let calories = 0, protein_g = 0, steps = 0, water_ml = 0
   let mood: string | null = null
@@ -380,7 +417,7 @@ export async function recomputeDailyStats(userId: string, date: string): Promise
     p.habits_done?.forEach((h) => habits_done.add(h))
   }
 
-  await supabase.from('daily_stats').upsert(
+  const { error: writeError } = await supabase.from('daily_stats').upsert(
     {
       user_id: userId,
       date,
@@ -397,6 +434,7 @@ export async function recomputeDailyStats(userId: string, date: string): Promise
     },
     { onConflict: 'user_id,date' }
   )
+  if (writeError) throw writeError
 }
 
 export async function deleteLogEntryById(
@@ -404,12 +442,17 @@ export async function deleteLogEntryById(
   entryId: string
 ): Promise<{ date: string } | null> {
   const supabase = await createClient()
-  const { data: entry } = await supabase
+  // Use the `date` column (now always set explicitly by insertLogEntry in
+  // the user's local timezone), not `logged_at` — that's a UTC timestamp
+  // and slicing it directly reproduces the same midnight-boundary bug C3
+  // fixes elsewhere.
+  const { data: entry, error: readError } = await supabase
     .from('log_entries')
-    .select('logged_at')
+    .select('date, logged_at')
     .eq('id', entryId)
     .eq('user_id', userId)
     .maybeSingle()
+  if (readError) throw readError
   if (!entry) return null
   const { error } = await supabase
     .from('log_entries')
@@ -417,7 +460,7 @@ export async function deleteLogEntryById(
     .eq('id', entryId)
     .eq('user_id', userId)
   if (error) throw error
-  return { date: entry.logged_at.split('T')[0] }
+  return { date: (entry.date as string | null) ?? entry.logged_at.split('T')[0] }
 }
 
 export async function deleteWorkoutById(userId: string, workoutId: string): Promise<void> {
@@ -448,45 +491,49 @@ export async function removeSupplementFromToday(
   supplement: string
 ): Promise<void> {
   const supabase = await createClient()
-  const today = new Date().toISOString().split('T')[0]
-  const { data } = await supabase
+  const today = getLocalDate()
+  const { data, error: readError } = await supabase
     .from('daily_stats')
     .select('supplements')
     .eq('user_id', userId)
     .eq('date', today)
     .maybeSingle()
+  if (readError) throw readError
   const updated = (data?.supplements ?? []).filter(
     (s: string) => s.toLowerCase() !== supplement.toLowerCase()
   )
-  await supabase
+  const { error: writeError } = await supabase
     .from('daily_stats')
     .update({ supplements: updated.length > 0 ? updated : null })
     .eq('user_id', userId)
     .eq('date', today)
+  if (writeError) throw writeError
 }
 
 export async function removeHabitFromToday(userId: string, habit: string): Promise<void> {
   const supabase = await createClient()
-  const today = new Date().toISOString().split('T')[0]
-  const { data } = await supabase
+  const today = getLocalDate()
+  const { data, error: readError } = await supabase
     .from('daily_stats')
     .select('habits_done')
     .eq('user_id', userId)
     .eq('date', today)
     .maybeSingle()
+  if (readError) throw readError
   const updated = (data?.habits_done ?? []).filter(
     (h: string) => h.toLowerCase() !== habit.toLowerCase()
   )
-  await supabase
+  const { error: writeError } = await supabase
     .from('daily_stats')
     .update({ habits_done: updated.length > 0 ? updated : null })
     .eq('user_id', userId)
     .eq('date', today)
+  if (writeError) throw writeError
 }
 
 export async function resolveInjuryById(userId: string, injuryId: string): Promise<void> {
   const supabase = await createClient()
-  const today = new Date().toISOString().split('T')[0]
+  const today = getLocalDate()
   const { error } = await supabase
     .from('injuries')
     .update({ resolved_on: today })

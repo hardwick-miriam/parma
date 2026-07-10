@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { getAIProvider } from '@/lib/ai'
 import { upsertDailyStats, insertLogEntry, insertWorkout, upsertHealthStatus, getActiveInjuries } from '@/lib/db/queries'
 import { insertMounjaroDose, upsertMounjaroEffects } from '@/lib/db/mounjaro'
@@ -13,14 +13,22 @@ export async function POST(request: NextRequest) {
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : ''
   if (!token) return NextResponse.json({ error: 'Missing token' }, { status: 401 })
 
-  // Supabase service-level client to look up token across all users
-  const supabase = await createClient()
-  const { data: prefs } = await supabase
+  // This route authenticates via a per-user secret token, not a Supabase
+  // session cookie — there is no `auth.uid()` for RLS to match against, so
+  // the lookup must use the service-role client (bypasses RLS by design,
+  // same as cron/webhook routes). Using the anon client here would silently
+  // return zero rows once RLS is enabled on user_preferences (C1).
+  const supabase = createServiceClient()
+  const { data: prefs, error: prefsError } = await supabase
     .from('user_preferences')
     .select('user_id, shortcuts_token')
     .eq('shortcuts_token', token)
     .maybeSingle()
 
+  if (prefsError) {
+    console.error('shortcuts/log token lookup error:', prefsError.message)
+    return NextResponse.json({ error: 'Token lookup failed' }, { status: 500 })
+  }
   if (!prefs) return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
   const userId = prefs.user_id
 
@@ -30,7 +38,7 @@ export async function POST(request: NextRequest) {
   try {
     const [provider, activeInjuries] = await Promise.all([
       Promise.resolve(getAIProvider()),
-      getActiveInjuries(userId).catch(() => []),
+      getActiveInjuries(userId, supabase).catch(() => []),
     ])
 
     const parsed: ParsedLog = await provider.parseLog(text, {
@@ -41,7 +49,12 @@ export async function POST(request: NextRequest) {
       })),
     })
 
-    // Save stats
+    const logDate = parsed.log_date ?? undefined
+
+    // Every write below passes `supabase` (the service-role client from the
+    // token lookup above) explicitly — this route has no Supabase session,
+    // so the cookie-scoped default client these functions normally use
+    // would match zero rows once RLS is enabled (C1).
     await Promise.all([
       upsertDailyStats(userId, {
         calories: parsed.calories,
@@ -54,21 +67,21 @@ export async function POST(request: NextRequest) {
         supplements: parsed.supplements,
         habits_done: parsed.habits_done,
         notes: parsed.notes,
-      }),
-      insertLogEntry(userId, `[Shortcut${place ? ` · ${place}` : ''}] ${text}`, parsed),
+      }, logDate, supabase),
+      insertLogEntry(userId, `[Shortcut${place ? ` · ${place}` : ''}] ${text}`, parsed, logDate, supabase),
     ])
 
     if (parsed.workouts?.length) {
-      await Promise.all(parsed.workouts.map((w) => insertWorkout(userId, w)))
+      await Promise.all(parsed.workouts.map((w) => insertWorkout(userId, w, logDate, supabase)))
     }
     if (parsed.sick !== undefined) {
-      await upsertHealthStatus(userId, { sick: parsed.sick, sick_estimated_days: parsed.sick_estimated_days })
+      await upsertHealthStatus(userId, { sick: parsed.sick, sick_estimated_days: parsed.sick_estimated_days }, logDate, supabase)
     }
     if (parsed.mounjaro_dose_mg != null) {
-      await insertMounjaroDose(userId, parsed.mounjaro_dose_mg, parsed.mounjaro_feeling ?? null, null)
+      await insertMounjaroDose(userId, parsed.mounjaro_dose_mg, parsed.mounjaro_feeling ?? null, null, logDate, supabase)
     }
     if (parsed.mounjaro_side_effects) {
-      await upsertMounjaroEffects(userId, parsed.mounjaro_side_effects)
+      await upsertMounjaroEffects(userId, parsed.mounjaro_side_effects, undefined, logDate, supabase)
     }
 
     return NextResponse.json({ ok: true, parsed })

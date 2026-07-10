@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { getLocalDate } from '@/lib/date'
 
 interface Photo {
   id: string
@@ -47,7 +48,7 @@ export function ProgressPhotos() {
     setError(null)
     const form = new FormData()
     form.append('photo', file)
-    form.append('date', new Date().toISOString().split('T')[0])
+    form.append('date', getLocalDate())
     try {
       const res = await fetch('/api/photos', { method: 'POST', body: form })
       const data = await res.json()

@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { ActivityCalendar } from 'react-activity-calendar'
 import { useGridItemSize } from '@/components/dashboard/GridItemSizeContext'
+import { getLocalDate } from '@/lib/date'
 import type { DailyStats, WorkoutSession } from '@/lib/db/queries'
 
 type HeatmapMetric = 'logged' | 'workouts' | 'calories' | 'steps' | 'sleep' | 'mood'
@@ -47,7 +48,7 @@ function buildActivity(
   const days: { date: string; count: number; level: 0 | 1 | 2 | 3 | 4 }[] = []
 
   for (let d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {
-    const dateStr = d.toISOString().split('T')[0]
+    const dateStr = getLocalDate(undefined, d)
     const stats = statsByDate.get(dateStr)
 
     let count = 0

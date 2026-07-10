@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { createClient } from '@/lib/supabase/server'
+import { getLocalDate } from '@/lib/date'
 import { getProgressPhotos, addProgressPhoto, deleteProgressPhotoById } from '@/lib/db/photos'
 
 export const dynamic = 'force-dynamic'
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
   if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 })
   if (file.size > 10 * 1024 * 1024) return NextResponse.json({ error: 'File too large (max 10 MB)' }, { status: 400 })
 
-  const photoDate = date ?? new Date().toISOString().split('T')[0]
+  const photoDate = date ?? getLocalDate()
   const ext = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z]/g, '') || 'jpg'
   const storagePath = `${user.id}/${randomUUID()}.${ext}`
 

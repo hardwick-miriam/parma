@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { getLocalDate } from '@/lib/date'
 import type { DailyStats, InjuryWithCheckins, LogEntry } from '@/lib/db/queries'
 
 // ---- Types ------------------------------------------------------------------
@@ -70,7 +71,7 @@ function computeNudges(
   settings: NudgeSettings
 ): Nudge[] {
   const hour = new Date().getHours()
-  const todayStr = new Date().toISOString().split('T')[0]
+  const todayStr = getLocalDate()
   const nudges: Nudge[] = []
 
   if (settings.no_log && hour >= 9 && logEntries.length === 0) {

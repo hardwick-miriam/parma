@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getLocalDate } from '@/lib/date'
 
 export async function GET() {
   const supabase = await createClient()
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
       unit,
       reps: reps ?? null,
       notes: notes ?? null,
-      logged_at: new Date().toISOString().split('T')[0],
+      logged_at: getLocalDate(),
     }, { onConflict: 'user_id,exercise,unit' })
     .select()
     .single()

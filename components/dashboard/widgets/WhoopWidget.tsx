@@ -2,6 +2,7 @@
 
 import { useGridItemSize } from '@/components/dashboard/GridItemSizeContext'
 import { CountUp } from '@/components/ui/CountUp'
+import { getLocalDate } from '@/lib/date'
 import type { WhoopMetrics } from '@/lib/db/whoop'
 
 interface WhoopWidgetProps {
@@ -56,9 +57,9 @@ export function WhoopWidget({ today, history }: WhoopWidgetProps) {
   // Fall back into history just in case it's null.
   const display = today ?? history.find(m => m.recovery_score != null) ?? null
 
-  // Check if displayed row is actually from today (UTC, good enough for label)
-  const utcToday = new Date().toISOString().split('T')[0]
-  const isActuallyToday = display?.date === utcToday
+  // Check if displayed row is actually from today (Europe/London, matching
+  // how whoop_metrics.date and every other "today" comparison is derived)
+  const isActuallyToday = display?.date === getLocalDate()
   const dateLabel = display && !isActuallyToday ? shortDate(display.date) : null
 
   const recovery = display?.recovery_score ?? null
