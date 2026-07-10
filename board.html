@@ -215,11 +215,11 @@
         <div class="bug-ref">S12 · placeholder was already removed last session when LiveLogger was wired in (confirmed by re-reading the file, no "coming soon" text present) — added consistent section labels (Log a set / Training status / Personal records / Routine / Recent exercises) so the page reads as one cohesive training command centre instead of an unlabeled stack. Build clean.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S13" data-time-est="20" data-time-actual="" data-credit-est="30000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S13" data-time-est="20" data-time-actual="24" data-credit-est="30000" data-credit-actual="34000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">FINAL: real end-to-end proof — pick exercise, log 3 sets, confirm persistence + PR update + trend/history render + muscle map reflects it. Build clean, verify deploy, true final board/PROGRESS state.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S13 · real end-to-end proof + final verification</div>
+        <div class="bug-ref">S13 · real fuzzy search picked "Dumbbell Bench Press", logged 60kg×8/65×6/70×4 in sequence, each fired a new PR (final: value=70,reps=4, correctly the heaviest), re-fetched from DB to confirm persistence (not just in-memory), stats/trend/history all correct (est.1RM 79.3 via Epley), computeMuscleRecovery showed chest-l/r + front/rear delts + triceps loaded — first script run had a bug in muscle-map iteration (assumed Map, it's a plain object) which meant cleanup didn't run; caught it, manually verified+cleaned the leftover rows before re-running fixed. Full cleanup confirmed twice. Build clean.</div>
       </div>
 
     </div>
