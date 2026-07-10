@@ -3,13 +3,15 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
+// Food/Wardrobe/Settings moved into the new module shell (see app/(os)/) —
+// this bar now only covers what's still exclusively served by the old
+// top-nav chrome. "Dashboard" points at /grid (the old bento content's new
+// home) since / itself is just a redirect into the new shell's Main page.
 const ITEMS = [
-  { href: '/', label: 'Dashboard' },
+  { href: '/grid', label: 'Dashboard' },
   { href: '/insights', label: 'Insights' },
   { href: '/review', label: 'Review' },
-  { href: '/food', label: 'Food' },
-  { href: '/wardrobe', label: 'Wardrobe' },
-  { href: '/settings', label: 'Settings' },
+  { href: '/main', label: '→ New OS' },
 ]
 
 export function NavBar() {
@@ -17,7 +19,7 @@ export function NavBar() {
   return (
     <nav className="flex items-center gap-0.5 whitespace-nowrap">
       {ITEMS.map(({ href, label }) => {
-        const active = href === '/' ? pathname === '/' : pathname.startsWith(href)
+        const active = pathname.startsWith(href)
         return (
           <Link
             key={href}

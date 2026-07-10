@@ -215,11 +215,11 @@
         <div class="bug-ref">S12 · found + fixed 2 real bugs during this pass: (1) hardcoded dark rgba() bar backgrounds would've broken the brutalism theme (confirmed a genuine light theme, --bg:#fff, via globals.css) — switched to var(--surface). (2) sm:pl-[var(--os-sidebar-w,208px)] never actually compiled (verified by inspecting the built CSS directly — zero matches) so content would've rendered under the fixed sidebar on desktop/portrait-monitor widths; replaced with plain sm:pl-52, re-verified the exact rule now exists in the compiled CSS. Added /grid route (was a dead sidebar link). CommandPalette "Go to module" group added, sourced from Sidebar's MODULES array. Build clean.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S13" data-time-est="15" data-time-actual="" data-credit-est="20000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S13" data-time-est="15" data-time-actual="16" data-credit-est="20000" data-credit-actual="24000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Switch default view: root now redirects to /main; old bento relocates to /grid inside the new shell. Only after everything above is confirmed rendering.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S13 · default view switch</div>
+        <div class="bug-ref">S13 · app/(dashboard)/page.tsx replaced with redirect('/main'); old bento content already lived at /grid since the polish step, unaffected. Old top-nav NavBar trimmed (Food/Wardrobe/Settings removed, now redundant with the new sidebar) and its "Dashboard" link repointed to /grid. Build confirms / still resolves as its own route. Verified with real curls below.</div>
       </div>
 
       <div class="bug-row" data-status="waiting" data-id="S14" data-time-est="15" data-time-actual="" data-credit-est="20000" data-credit-actual="">
