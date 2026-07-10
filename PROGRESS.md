@@ -98,6 +98,18 @@ PRTrackerWidget.tsx which already used the correct fields) instead of the nonexi
 
 ## TIER 2 (MAJOR) — in progress
 
+### M17 — /api/shortcuts/log missing most of saveLog's field coverage
+STARTING/DONE M17 — extracted saveLog's entire apply-to-DB body into a new shared
+`lib/logApply.ts:applyParsedLog(userId, rawText, parsed, supabaseClient)`, parametrized by an
+explicit Supabase client (continuing the C1 client-injection pattern). `app/actions.ts`
+saveLog now just does auth + zod validation, then calls it with the cookie client.
+`/api/shortcuts/log` now calls the exact same function with the service-role client instead
+of its old hand-rolled subset (stats/workouts/sick/mounjaro only) — media, countries_visited,
+world_clock_cities, muscle_soreness, injury_checkin, and injury_resolved now all work when
+logged via Apple Shortcuts, matching the dashboard's logging path exactly. Also required
+adding an optional client param to insertMediaEntry (lib/db/media.ts), same pattern as the
+C1 fix. Verified: `npm run build` clean.
+
 ### M16 — duplicate ParsedLog type vs zod schema
 STARTING/DONE M16 — lib/ai/types.ts's ParsedLog/ParsedWorkout/ParsedInjuryCheckin/
 ParsedInjuryResolved/ParsedMediaItem are now `z.infer<>` derived from the zod schemas in

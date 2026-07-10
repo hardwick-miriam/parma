@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { getAIProvider } from '@/lib/ai'
-import { upsertDailyStats, insertLogEntry, insertWorkout, upsertHealthStatus, getActiveInjuries } from '@/lib/db/queries'
-import { insertMounjaroDose, upsertMounjaroEffects } from '@/lib/db/mounjaro'
+import { getActiveInjuries } from '@/lib/db/queries'
 import { ParsedLogSchema } from '@/lib/schemas'
+import { applyParsedLog } from '@/lib/logApply'
 
 export const maxDuration = 60
 
@@ -58,44 +58,18 @@ export async function POST(request: NextRequest) {
       console.error('[shortcuts/log] AI output failed schema validation:', validation.error.flatten(), 'raw:', rawParsed)
       return NextResponse.json({ error: 'AI returned invalid shape', detail: validation.error.flatten() }, { status: 502 })
     }
-    const parsed = validation.data
 
-    const logDate = parsed.log_date ?? undefined
-
-    // Every write below passes `supabase` (the service-role client from the
-    // token lookup above) explicitly — this route has no Supabase session,
-    // so the cookie-scoped default client these functions normally use
-    // would match zero rows once RLS is enabled (C1).
-    await Promise.all([
-      upsertDailyStats(userId, {
-        calories: parsed.calories,
-        protein_g: parsed.protein_g,
-        steps: parsed.steps,
-        water_ml: parsed.water_ml,
-        mood: parsed.mood,
-        sleep_hours: parsed.sleep_hours,
-        weight_kg: parsed.weight_kg,
-        supplements: parsed.supplements,
-        habits_done: parsed.habits_done,
-        notes: parsed.notes,
-      }, logDate, supabase),
-      insertLogEntry(userId, `[Shortcut${place ? ` · ${place}` : ''}] ${text}`, parsed, logDate, supabase),
-    ])
-
-    if (parsed.workouts?.length) {
-      await Promise.all(parsed.workouts.map((w) => insertWorkout(userId, w, logDate, supabase)))
-    }
-    if (parsed.sick !== undefined) {
-      await upsertHealthStatus(userId, { sick: parsed.sick, sick_estimated_days: parsed.sick_estimated_days }, logDate, supabase)
-    }
-    if (parsed.mounjaro_dose_mg != null) {
-      await insertMounjaroDose(userId, parsed.mounjaro_dose_mg, parsed.mounjaro_feeling ?? null, null, logDate, supabase)
-    }
-    if (parsed.mounjaro_side_effects) {
-      await upsertMounjaroEffects(userId, parsed.mounjaro_side_effects, undefined, logDate, supabase)
+    // Same apply pipeline saveLog uses (M17) — this route used to hand-roll
+    // a partial subset (stats/workouts/sick/mounjaro only), silently
+    // dropping media, countries visited, world clocks, muscle soreness, and
+    // injury check-ins/resolutions when logged via Apple Shortcuts.
+    const rawText = `[Shortcut${place ? ` · ${place}` : ''}] ${text}`
+    const result = await applyParsedLog(userId, rawText, validation.data, supabase)
+    if (result.error) {
+      return NextResponse.json({ error: result.error }, { status: 500 })
     }
 
-    return NextResponse.json({ ok: true, parsed })
+    return NextResponse.json({ ok: true, parsed: validation.data })
   } catch (err) {
     console.error('shortcuts/log error:', err)
     return NextResponse.json({ error: 'Failed to process log' }, { status: 500 })

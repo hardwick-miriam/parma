@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getLocalDate } from '@/lib/date'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 export type MediaCategory = 'book' | 'film' | 'show' | 'song'
 export type MediaStatus = 'want-to' | 'in-progress' | 'finished'
@@ -48,9 +49,10 @@ export async function getMediaCounts(userId: string): Promise<MediaCounts> {
 
 export async function insertMediaEntry(
   userId: string,
-  entry: { category: MediaCategory; title: string; rating?: number; note?: string; status?: MediaStatus; added_date?: string }
+  entry: { category: MediaCategory; title: string; rating?: number; note?: string; status?: MediaStatus; added_date?: string },
+  client?: SupabaseClient
 ): Promise<MediaEntry> {
-  const supabase = await createClient()
+  const supabase = client ?? (await createClient())
   const { data, error } = await supabase
     .from('media_log')
     .insert({
