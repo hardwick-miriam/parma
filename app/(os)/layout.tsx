@@ -4,6 +4,7 @@ import { Sidebar } from '@/components/os/Sidebar'
 import { SignOutButton } from '@/components/dashboard/SignOutButton'
 import { PaletteWrapper } from '@/components/dashboard/PaletteWrapper'
 import { OfflineQueue } from '@/components/OfflineQueue'
+import { ContextualLogBar } from '@/components/os/ContextualLogBar'
 
 export default async function OSLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -16,7 +17,7 @@ export default async function OSLayout({ children }: { children: React.ReactNode
 
       <div
         className="sm:pl-52"
-        style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom))' }}
+        style={{ paddingBottom: 'calc(11rem + env(safe-area-inset-bottom))' }}
       >
         <header
           className="flex items-center justify-end gap-3 px-4 sm:px-6 h-12 sticky top-0 z-30"
@@ -37,6 +38,7 @@ export default async function OSLayout({ children }: { children: React.ReactNode
 
       <OfflineQueue />
       <PaletteWrapper />
+      <ContextualLogBar />
     </div>
   )
 }

@@ -31,6 +31,7 @@ export interface ParseContext {
   weekday?: string       // e.g. 'Monday' for relative-day resolution
   resolvedDate?: string  // YYYY-MM-DD pre-resolved by chrono-node — AI should use this as log_date
   currentHour?: number   // 0-23 in user's timezone — used for the post-midnight "yesterday's dinner" heuristic (F2)
+  moduleContext?: string // which module the log bar was submitted from — a soft bias, never a hard restriction
 }
 
 export interface AIProvider {

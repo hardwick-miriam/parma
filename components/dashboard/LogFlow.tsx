@@ -7,7 +7,7 @@ import { QnAResult } from './QnAResult'
 import { saveLog, deleteLogEntry } from '@/app/actions'
 import type { ParsedLog } from '@/lib/ai/types'
 
-export function LogFlow() {
+export function LogFlow({ moduleContext, placeholder }: { moduleContext?: string; placeholder?: string } = {}) {
   const [pending, setPending] = useState<{ text: string; parsed: ParsedLog; saveError?: string } | null>(null)
   const [qna, setQna] = useState<{ question: string; answer: string; loading: boolean } | null>(null)
   const [voiceToast, setVoiceToast] = useState<{ text: string; entryId: string | null } | null>(null)
@@ -78,7 +78,7 @@ export function LogFlow() {
       const res = await fetch('/api/parse-log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: transcript, ...dateCtx }),
+        body: JSON.stringify({ text: transcript, ...dateCtx, moduleContext }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Parse failed')
@@ -96,6 +96,7 @@ export function LogFlow() {
             text: transcript,
             date: new Date().toLocaleDateString('en-CA'),
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            moduleContext,
           }),
         })
         const data = await res.json()
@@ -142,6 +143,8 @@ export function LogFlow() {
         onParsed={handleParsed}
         onQuestion={handleQuestion}
         onVoiceTranscript={handleVoiceTranscript}
+        moduleContext={moduleContext}
+        placeholder={placeholder}
       />
 
       {/* Voice auto-submit toast with Undo */}

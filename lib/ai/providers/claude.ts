@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { subtractDay } from '@/lib/date'
+import { MODULE_BIAS } from '@/lib/moduleContext'
 import type { AIProvider, ParsedLog, ParseContext } from '../types'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -242,6 +243,17 @@ export class ClaudeProvider implements AIProvider {
         `• If the user gives a recovery percentage or describes how an injured area feels today (without saying it's fully healed), use injury_checkin. Be aggressive — "my achilles feels like 90% right now", "knee's a bit better", "shoulder still sore" are ALL check-ins.\n` +
         `• Only use injury_resolved when the injury is FULLY healed, not for partial improvement.\n` +
         `• If the user says nothing about their injuries, set neither injury_checkin nor injury_resolved.`
+    }
+
+    // Soft module bias — the user submitted this from a specific module's chat
+    // bar. Nudge ambiguous interpretation toward it, but never force a wrong
+    // read: food mentioned while in Health must still extract as food.
+    if (context?.moduleContext) {
+      const cfg = MODULE_BIAS[context.moduleContext]
+      if (cfg) {
+        system += `\n\nThe user submitted this from the ${cfg.label} section of the app, which is usually ${cfg.bias}. ` +
+          `If the message is ambiguous, lean toward that interpretation — but if it clearly describes something else entirely, extract that instead (or in addition). This is a soft hint, never a restriction.`
+      }
     }
 
     const response = await client.messages.create({

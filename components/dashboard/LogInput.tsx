@@ -15,6 +15,8 @@ interface LogInputProps {
   onParsed: (text: string, parsed: ParsedLog) => void
   onQuestion?: (text: string) => void
   onVoiceTranscript?: (text: string) => void  // hands-free: auto-submit this transcript
+  moduleContext?: string  // soft bias for the parse pipeline — e.g. 'food', 'health'
+  placeholder?: string
 }
 
 function MicIcon() {
@@ -123,7 +125,7 @@ function speechRecognitionFallback(): Promise<string> {
   })
 }
 
-export function LogInput({ onParsed, onQuestion, onVoiceTranscript }: LogInputProps) {
+export function LogInput({ onParsed, onQuestion, onVoiceTranscript, moduleContext, placeholder }: LogInputProps) {
   const [text, setText] = useState('')
   const [recording, setRecording] = useState(false)
   const [transcribing, setTranscribing] = useState(false)
@@ -278,6 +280,7 @@ export function LogInput({ onParsed, onQuestion, onVoiceTranscript }: LogInputPr
           text,
           date: new Date().toLocaleDateString('en-CA'),
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          moduleContext,
         }),
       })
       const data = await res.json()
@@ -337,7 +340,7 @@ export function LogInput({ onParsed, onQuestion, onVoiceTranscript }: LogInputPr
           ref={textareaRef}
           value={text}
           onChange={handleChange}
-          placeholder="Log food, sleep, steps, mood… or ask a question"
+          placeholder={placeholder ?? "Log food, sleep, steps, mood… or ask a question"}
           rows={1}
           className="flex-1 resize-none bg-transparent text-text text-sm placeholder:text-text-subtle focus:outline-none leading-relaxed"
           style={{ maxHeight: '120px', overflowY: 'auto' }}

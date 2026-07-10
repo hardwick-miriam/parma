@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     console.error('[parse-log] invalid payload:', payloadResult.error.flatten())
     return NextResponse.json({ error: 'Invalid payload', detail: payloadResult.error.flatten() }, { status: 400 })
   }
-  const { text, date, timezone } = payloadResult.data
+  const { text, date, timezone, moduleContext } = payloadResult.data
 
   const tz = (typeof timezone === 'string' && timezone) ? timezone : 'Europe/London'
   const today = date ?? getLocalDate(tz)
@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
       weekday,
       resolvedDate,
       currentHour: getLocalHour(tz),
+      moduleContext,
     })
 
     const parseResult = ParsedLogSchema.safeParse(rawParsed)

@@ -122,6 +122,9 @@ export const ParseLogPayloadSchema = z.object({
   text: z.string().min(1, 'text is required'),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   timezone: z.string().optional(),
+  // Soft bias only (e.g. 'food', 'health') — nudges interpretation of ambiguous
+  // text toward the module the user is currently in, never a hard restriction.
+  moduleContext: z.string().optional(),
 })
 
 // ── /api/body/soreness payload ────────────────────────────────────────────────
