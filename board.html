@@ -180,39 +180,39 @@
         <div class="bug-ref">S7 · migration 025 run live + verified. "Save as meal" from a day's logged group, quick-add cards on Food page, zero-AI-cost NLP match (lib/savedMealMatch.ts) wired into /api/parse-log for moduleContext=food, deliberately narrow trigger (log/add + my/the only, not "had") to avoid hijacking genuine food logs. REAL test: saved a 3-item meal, matched "log my usual breakfast" correctly, confirmed "had a chicken wrap for lunch" does NOT match (safety check), quick-added on a different day (2 days back) -- all 3 items + macros landed exactly, daily_stats totaled correctly (260kcal/6.6g). Full cleanup verified.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S8" data-time-est="45" data-time-actual="" data-credit-est="70000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S8" data-time-est="45" data-time-actual="55" data-credit-est="70000" data-credit-actual="88000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">TASK 6a — AI daily briefing: briefings table (migration live+verified), one cached call/day, cron after WHOOP sync, graceful fallback.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S8 · daily briefing (the Coach)</div>
+        <div class="bug-ref">S8 · migration 026 run live + verified. New daily cron (0 7 * * *, still daily -- Hobby-plan compliant) calls lib/dailyBriefing.ts once/day, Main only ever reads the cache via GET /api/briefing (zero-cost). REAL test: with the account's genuine (empty) "yesterday" data, correctly returned null (graceful fallback, no wasted AI call) -- then with a realistic inserted test "yesterday" row, produced a genuinely sharp, specific 2-sentence briefing using real numbers ("ran a calorie deficit of roughly 350-400 kcal on a heavy leg day..."), persisted and re-read correctly, then fully cleaned up.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S9" data-time-est="15" data-time-actual="" data-credit-est="20000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S9" data-time-est="15" data-time-actual="18" data-credit-est="20000" data-credit-actual="24000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">TASK 6b — "What should I train today" line: pure computation, freshest/most-due muscle groups + routine.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S9 · train-today line</div>
+        <div class="bug-ref">S9 · lib/trainToday.ts, zero AI cost, reuses the existing computeMuscleRecovery. REAL test against the account's actual (currently empty) workout data correctly produced the honest fallback line rather than a fabricated one.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S10" data-time-est="20" data-time-actual="" data-credit-est="30000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S10" data-time-est="20" data-time-actual="15" data-credit-est="30000" data-credit-actual="22000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">TASK 6c — Today's rings (recovery/calories/training status), tappable into their modules.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S10 · rings</div>
+        <div class="bug-ref">S10 · all 3 rings + the training-status card now wrapped in Link (recovery/food->/health,/food; training status->/gym). Build clean.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S11" data-time-est="45" data-time-actual="" data-credit-est="70000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S11" data-time-est="45" data-time-actual="50" data-credit-est="70000" data-credit-actual="76000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">TASK 6d — Trend graphs: weight, recovery+strain, sleep, calories vs target, HRV/steps if they fit. Server-side pre-aggregated.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S11 · trend graphs</div>
+        <div class="bug-ref">S11 · all 6 graphs (weight 90d, recovery+strain 14d composed chart, sleep vs 8h target colour-coded, calories vs target colour-coded, HRV 14d, steps 7d) built with recharts, each pre-aggregated server-side in page.tsx into small {date,value} arrays -- never ships raw daily_stats/whoop rows to the client. Caught + fixed a real recharts mistake before shipping: per-bar colouring needs <Cell> children, not nested <Bar> elements.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S12" data-time-est="25" data-time-actual="" data-credit-est="35000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S12" data-time-est="25" data-time-actual="20" data-credit-est="35000" data-credit-actual="28000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">TASK 6e — Year heatmap strip + streak counter + quick-nav tiles.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S12 · heatmap + streak + tiles</div>
+        <div class="bug-ref">S12 · HeatmapWidget reused unmodified (same history/workouts props every other consumer passes), StreakBadge reused for the logging streak, quick-nav tiles unchanged from the OS-restructure session. Build clean.</div>
       </div>
 
       <div class="bug-row" data-status="waiting" data-id="S13" data-time-est="25" data-time-actual="" data-credit-est="35000" data-credit-actual="">
