@@ -32,6 +32,66 @@ just a claim.
 
 ---
 
+## Follow-up session — real credentials, migrations actually run (2026-07-10)
+
+Real secrets were restored in `.env.local` for this session (`SUPABASE_SERVICE_ROLE_KEY`,
+`SUPABASE_DB_PASSWORD`, `ANTHROPIC_API_KEY`, real Supabase URL/anon key). The 4 blocked
+migrations from the marathon session above were run for real and verified with live queries,
+not just applied-and-assumed.
+
+**Connectivity note**: `db.<project-ref>.supabase.co:5432` (the direct connection host) only has
+an AAAA record — no IPv4 — and this machine has no outbound IPv6 route (`ENETUNREACH`), so a
+direct connection was impossible. Used the Supavisor session pooler instead
+(`aws-1-eu-central-1.pooler.supabase.com:5432`, user `postgres.<project-ref>`, found by probing
+candidate regions until one authenticated) via a throwaway `pg` client (installed
+`--no-save --no-package-lock`, not committed — `node_modules` is gitignored anyway).
+
+1. **017_rls_untracked_tables.sql** — applied. Verified with a live query:
+   `select relname, relrowsecurity from pg_class where relname in (...)` → all 8 tables
+   (`user_preferences`, `health_status`, `injuries`, `injury_checkins`, `journal_notes`,
+   `progress_photos`, `mounjaro_doses`, `mounjaro_effects`) show `relrowsecurity: true`.
+   `select * from pg_policies where tablename in (...)` → every table has at least one
+   `auth.uid() = user_id` owner policy (some tables already had a manually-created policy from
+   before this repo tracked migrations; ours added an idempotent, functionally-identical
+   duplicate alongside it — harmless, same scope, not a conflict).
+2. **018_mood_feeling_checks.sql** — applied, then both `NOT VALID` constraints explicitly
+   validated: `ALTER TABLE ... VALIDATE CONSTRAINT ...` for `daily_stats_mood_check` and
+   `workout_sessions_feeling_check`. Confirmed via `pg_constraint.convalidated = true` for both —
+   no existing bad rows in prod.
+3. **019_bg_effects_mobile.sql** — applied. Confirmed via `information_schema.columns`:
+   `user_preferences.bg_effects_mobile boolean NOT NULL DEFAULT false` exists.
+4. **020_food_log.sql** — applied. Confirmed `food_log` table exists with `relrowsecurity: true`,
+   one owner policy, and the expected 10 columns.
+
+**F1 food itemisation — real end-to-end test**, no mocks:
+- Ran the actual `ClaudeProvider.parseLog()` (`lib/ai/providers/claude.ts`) via `npx tsx`, real
+  `ANTHROPIC_API_KEY`, against `"porridge for breakfast, chicken wrap and a monster at lunch,
+  curry for dinner"`. Real model output:
+  - porridge / breakfast / 150 kcal / 5g protein
+  - chicken wrap / lunch / 400 kcal / 25g protein
+  - Monster energy drink / lunch / 110 kcal / 0g protein
+  - curry / dinner / 550 kcal / 30g protein
+  - top-level `calories: 1210`, `protein_g: 60` (sum of the four items, as designed)
+- Passed through the real `ParsedLogSchema.parse()` — validates clean.
+- Round-tripped through the real `food_log` table on prod: inserted the 4 items, read them back
+  (confirmed as 4 separate rows, not one blob), then deleted them again — this was a pipeline
+  test, not a real logged meal for today, so nothing was left behind in the live data.
+
+**N8 / WHOOP webhook signature — re-checked, still not fixed.** The task brief for this session
+assumed `WHOOP_WEBHOOK_SECRET` was set. It is not: `grep WHOOP_WEBHOOK_SECRET .env.local` returns
+nothing. `app/api/whoop/webhook/route.ts`'s `validateSignature()` still hits its
+`if (!secret) return true` early-out, so the signature check remains skipped and any
+unauthenticated POST is still accepted in whatever environment this variable is unset in. Not
+changed, not silently marked fixed — flagged instead. Rate limiting left untouched per
+instruction; voice logging (`GROQ_API_KEY`) left for the user to add.
+
+**Board updated**: `bug-status.html` now shows 43/44 fixed — C1, M15, N2, F1 flipped from
+`failed` to `fixed` with the verification evidence above in their `bug-ref` line. N8 remains
+`failed`, reason text updated to reflect the direct re-check above rather than the older
+"documented dev-mode behavior" framing.
+
+---
+
 ## FINAL SUMMARY (session end)
 
 **Result: 39/44 fixed, 5 honestly marked `failed` (blocked, not skipped).** Every fix is a

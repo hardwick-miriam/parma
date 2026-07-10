@@ -296,13 +296,13 @@
     </div>
     <div class="bug-list" data-tier="critical">
 
-      <div class="bug-row" data-status="failed" data-id="C1" data-reason="Migration written and the app-code regression it would cause is fixed, but this session has no working Supabase credentials to actually run it against the live database or prove RLS is on. Needs a session with the real service-role key.">
+      <div class="bug-row" data-status="fixed" data-id="C1">
         <div class="status-chip"></div>
         <div class="bug-main">
           <div class="bug-text">Some of your most private data — journal entries, health status, injuries, progress photos, Mounjaro doses — might not be locked to just your account.</div>
           <div class="bug-reason"></div>
         </div>
-        <div class="bug-ref">C1 · 8 untracked tables / RLS</div>
+        <div class="bug-ref">C1 · 8 untracked tables / RLS — migration 017 run live, RLS + owner policies confirmed via pg_class/pg_policies on all 8 tables</div>
       </div>
 
       <div class="bug-row" data-status="fixed" data-id="C2">
@@ -481,11 +481,11 @@
         <div class="bug-ref">M14 · calories/duration not integer-checked</div>
       </div>
 
-      <div class="bug-row" data-status="failed" data-id="M15" data-reason="Migration written (018_mood_feeling_checks.sql) but not applied — this session has no live Supabase credentials, same blocker as C1.">
+      <div class="bug-row" data-status="fixed" data-id="M15">
 
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Nothing in the database itself stops junk values from ending up in your mood or workout-feeling fields if the normal checks get skipped.</div><div class="bug-reason"></div></div>
-        <div class="bug-ref">M15 · no DB check on mood/feeling</div>
+        <div class="bug-ref">M15 · no DB check on mood/feeling — migration 018 run live, both CHECK constraints validated (convalidated=true, no existing bad rows)</div>
       </div>
 
       <div class="bug-row" data-status="fixed" data-id="M16">
@@ -553,11 +553,11 @@
         <div class="bug-ref">N1 · console-error-and-continue</div>
       </div>
 
-      <div class="bug-row" data-status="failed" data-id="N2" data-reason="Code written (server + client, migration 019 adds the column) but the migration isn't applied — same missing live-Supabase-credentials blocker as C1. Until it's run, saving this toggle will silently fail to persist server-side (same failure class as the bug being fixed, so no worse than before, but not actually fixed live yet).">
+      <div class="bug-row" data-status="fixed" data-id="N2">
 
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Your "background effects on mobile" toggle only remembers itself on the one device or browser you set it on.</div><div class="bug-reason"></div></div>
-        <div class="bug-ref">N2 · bgEffectsMobile localStorage-only</div>
+        <div class="bug-ref">N2 · bgEffectsMobile localStorage-only — migration 019 run live, user_preferences.bg_effects_mobile column confirmed present</div>
       </div>
 
       <div class="bug-row" data-status="fixed" data-id="N3">
@@ -590,7 +590,7 @@
         <div class="bug-ref">N7 · mobile compact branches missing</div>
       </div>
 
-      <div class="bug-row" data-status="failed" data-id="N8" data-reason="These are pre-existing, intentional tradeoffs, not bugs with a safe one-line fix: voice logging needs a GROQ_API_KEY only you can add; real rate limiting needs new infrastructure (e.g. Redis) that shouldn't be added unilaterally overnight; the WHOOP webhook secret skip is deliberately documented dev-mode behavior. Confirmed still true, not changed.">
+      <div class="bug-row" data-status="failed" data-id="N8" data-reason="Re-checked directly against .env.local this session: WHOOP_WEBHOOK_SECRET is still absent (grep for the key returns nothing), so app/api/whoop/webhook/route.ts's validateSignature() still hits its `if (!secret) return true` early-out — any unauthenticated POST is still accepted. Rate limiting intentionally left alone per instruction. Voice logging (GROQ_API_KEY) intentionally left for the user to add themselves.">
 
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Voice logging is still switched off, there's no spending limit on AI usage, and WHOOP's webhook security check can be skipped if it's not configured.</div><div class="bug-reason"></div></div>
@@ -614,11 +614,11 @@
     </div>
     <div class="bug-list" data-tier="food">
 
-      <div class="bug-row" data-status="failed" data-id="F1" data-reason="Full pipeline written (new food_log table via migration 020, itemised zod schema, updated AI tool schema/prompt, apply-logic, ConfirmationDrawer preview, GET endpoint) and it builds clean, but two things block calling this truly fixed: migration 020 hasn't been run (same live-DB blocker as C1), and this session has no working ANTHROPIC_API_KEY, so I could not make a real call to verify Claude actually itemises correctly against the new schema.">
+      <div class="bug-row" data-status="fixed" data-id="F1">
 
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">When you list a whole day of food in one message, it saves as one big blob instead of separate meals.</div><div class="bug-reason"></div></div>
-        <div class="bug-ref">F1 · food logging: blob not meals</div>
+        <div class="bug-ref">F1 · food logging: blob not meals — migration 020 run live; real Claude call against "porridge for breakfast, chicken wrap and a monster at lunch, curry for dinner" returned 4 itemised entries with independent macros; round-tripped through real food_log insert/read/delete on prod DB</div>
       </div>
 
       <div class="bug-row" data-status="fixed" data-id="F2">
