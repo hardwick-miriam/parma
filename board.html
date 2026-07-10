@@ -180,25 +180,25 @@
         <div class="bug-ref">S7 · history list + this-session sets list (edit/delete), built as part of LiveLogger.tsx. Build clean overall.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S8" data-time-est="25" data-time-actual="" data-credit-est="40000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S8" data-time-est="25" data-time-actual="20" data-credit-est="40000" data-credit-actual="30000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">TASK 3 — PR auto-update on genuine new bests + firePR() confetti; verify with real data, not simulated.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S8 · PR integration</div>
+        <div class="bug-ref">S8 · REAL test against prod DB with a fake test exercise: 60kg set -> new PR (60), 70kg set -> new PR (70), 50kg set -> correctly NOT a PR (stayed 70), 90kg WARMUP set -> correctly NOT a PR. personal_records.value confirmed 70 after all sets. Full cleanup, 0 rows remaining.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S9" data-time-est="20" data-time-actual="" data-credit-est="30000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S9" data-time-est="20" data-time-actual="10" data-credit-est="30000" data-credit-actual="16000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Muscle map / training load / Main "last session" / journal all pick up live-logged sessions with zero changes to their own logic.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S9 · integration verification</div>
+        <div class="bug-ref">S9 · verified getRecentWorkouts/getTodayWorkouts (read by Body/Gym/Journal/Main) have no source filter at all -- confirmed by reading lib/db/queries.ts directly, plus the S8 test confirmed exercises[] gets written correctly. Zero code changes needed.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S10" data-time-est="15" data-time-actual="" data-credit-est="20000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S10" data-time-est="15" data-time-actual="10" data-credit-est="20000" data-credit-actual="15000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">NLP text logging still works unchanged ("benched 80 for 5") — verify with a real call, not assumed.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S10 · NLP regression check</div>
+        <div class="bug-ref">S10 · real Claude call on "benched 80kg for 5 reps, felt good" -> real applyParsedLog -> workout_sessions row created with source="manual" (untouched), exercises=["bench press"]. Cleaned up after.</div>
       </div>
 
       <div class="bug-row" data-status="waiting" data-id="S11" data-time-est="15" data-time-actual="" data-credit-est="20000" data-credit-actual="">
