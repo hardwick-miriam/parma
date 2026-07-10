@@ -933,3 +933,49 @@ Commits this session, in order: `64a66fd` → `f158efd` → `bacfafa` → `d1e69
 step has a build log and either a direct database verification or a real API/AI call — see
 `board.html`'s `bug-ref` text per row. Final commit confirmed `Ready`/`Production` via `vercel ls`;
 `/gym`, `/main`, `/health`, `/body` all curled live with correct auth-gating, no 500s.
+
+---
+
+## Session 2, Task 4 + real proof (2026-07-10, later same day)
+
+**13/13 board.html steps done (11 from the first half + 2 more once Task 4 arrived).**
+
+### What got done
+
+Task 4 turned out to be mostly already satisfied by how the live logger was wired in earlier the
+same session — the "coming soon" placeholder was already gone and the logger was already the
+first thing on the page. What was missing was visual cohesion: added consistent section labels
+(Log a set / Training status / Personal records / Routine / Recent exercises) so the Gym page now
+reads as one training command centre top to bottom, not an unlabelled stack of cards.
+
+**Real proof, not simulated** — ran the actual flow end to end against the live database:
+1. Searched "bench press" through the real fuzzy exercise search → matched "Dumbbell Bench Press".
+2. Started today's session (correctly re-used one already open from earlier testing, rather than
+   creating a duplicate).
+3. Logged three sets in sequence — 60kg×8, 65kg×6, 70kg×4 — the way tapping through the UI three
+   times would.
+4. Re-fetched from the database (not just checking in-memory state) to confirm all three actually
+   persisted.
+5. Confirmed the personal record correctly settled on the heaviest set (70kg×4), not the last one
+   logged or the first.
+6. Confirmed the stats panel's numbers (estimated 1-rep-max via Epley, best set, session count),
+   trend, and history all matched what was actually logged.
+7. Confirmed the Body module's exact muscle-recovery calculation — the same function it already
+   uses — picked up this session and correctly loaded the chest and secondary muscles (front/rear
+   delts, triceps) that a bench press works.
+8. **A real bug showed up during this test**: my first verification pass assumed the muscle-recovery
+   result was a `Map` when it's actually a plain object, which crashed before cleanup ran. Caught
+   it, manually checked and cleaned the leftover test rows before fixing the assumption and
+   re-running the whole thing cleanly. No test data was left behind — verified twice.
+
+### What's still open / needs you
+
+1. **Still no visual/browser testing possible from here** — same limitation as both earlier
+   sessions. Everything above is real, verified data-layer proof; nobody has watched the rep
+   buttons, weight input, or trend chart actually render on a screen yet.
+2. **Finances (Session 3)** — untouched, as instructed.
+
+### Evidence trail
+Commits: `3450638` (Task 4 layout) → `3f2d8c8` (final board + proof notes). Confirmed
+`Ready`/`Production` via `vercel ls`; `/`, `/gym`, `/main`, `/body` all curled live with correct
+307 auth-gating.
