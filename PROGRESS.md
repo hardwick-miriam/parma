@@ -713,3 +713,84 @@ commit hash per step so a paused run resumes correctly.
   `storage.objects` policies confirmed via `pg_policies`. Added C11 to `BUGS.md` and
   `bug-status.html` (fixed on arrival, not left as a dangling TODO). Board: **45/46 resolved,
   only N8 open.**
+
+---
+
+## FINAL SUMMARY — long unattended session (2026-07-10, ended ~12:XX)
+
+**All 12 steps on board.html done. Nothing left mid-flight.**
+
+### What got done, in plain English
+
+1. **Session board** (`board.html`) — a live tracker for this session's steps, same visual style
+   as `bug-status.html`, with time/credit estimates vs actuals and a credit-burn meter (clearly
+   labelled approximate — self-tracked, not real token telemetry). Added a standing rule to
+   CLAUDE.md: any 3+ step task gets a board.html first, updated live per step, same as committing.
+
+2. **Wardrobe catalog** — a full clothing tracker, live at `/wardrobe`:
+   - Take/pick a photo → it gets compressed in your browser → one AI vision call proposes the
+     item's name/type/colours/brand/season/tags → you review and edit before it saves. Manual
+     entry works too.
+   - Browse page: photo grid, filter by season/type/colour, search, sort by newest/most-worn/
+     least-worn/cost-per-wear, defaults to the current UK season.
+   - Tap into an item: edit any field, see wear count, last worn, cost-per-wear, a 12-week wear
+     history mini-calendar, delete (which also removes the stored photo).
+   - Log a wear just by typing it — "wore the grey hoodie and black cargos yesterday" — matched
+     against your items with no AI call (pure fuzzy text matching), dated correctly.
+   - A small dashboard widget shows your item count and how many you own for the current season.
+   - **Verified for real**: 3 test photos through the actual AI vision pipeline (2 correctly
+     identified as a t-shirt and jeans; 1 crude test image was misread as an accessory — reported
+     honestly rather than hidden), real database writes, a real wear log, correct cost-per-wear
+     math, then fully cleaned up.
+
+3. **Food page** — a proper nutrition page at `/food`, not just the small dashboard widget:
+   - Today's calories, protein, carbs, fat, fibre, sugar, and salt, each shown against a target
+     you can set in Settings (sensible defaults pre-filled).
+   - A day-quality ring — a simple score based on hitting protein/fibre and staying under sugar/
+     salt targets.
+   - A scrollable history of everything you've logged, grouped by day, with meal labels (🍳🥪🍽️🍿)
+     and where the numbers came from (AI estimate / Open Food Facts / manual), water and
+     supplements folded into each day.
+   - Tap a "most eaten" food to re-log it instantly with its known macros — no new AI call.
+   - Attach a note to any food ("the chicken wrap made me feel sick") just by typing it — it's
+     remembered against that food and shows up as a chip next time you see or re-log it.
+   - **Verified for real**: a real AI call on "full english + a can of coke" correctly broke out
+     macros for both items; the database write matched the math exactly; the note-matching logic
+     was tested for real and a genuine bug was found and fixed live (the note text was including
+     stray wording until the fix), then re-verified clean.
+
+4. **Bug sweep** — all 44 items from last night's `BUGS.md` audit are resolved except one
+   (**N8**, the WHOOP webhook signature check) — genuinely blocked, not avoided: it needs
+   `WHOOP_WEBHOOK_SECRET` set, and that variable is still absent from `.env.local` as of this
+   session (checked directly, not assumed). While building wardrobe's photo storage, found and
+   fixed a **new, real security gap**: the existing Progress Photos feature's storage bucket had
+   row-level security turned on but *no rule at all* granting real users access to it — meaning
+   it likely hasn't actually worked for uploading/viewing photos since it shipped (previous
+   checks only looked fine because they used an admin-level database connection that bypasses
+   this kind of rule). Fixed with the same pattern as wardrobe's new bucket, run live and
+   verified. Logged as C11.
+
+### What's still open / needs you
+
+1. **N8 — WHOOP webhook signature.** You need to set `WHOOP_WEBHOOK_SECRET` (from your WHOOP
+   developer app settings) in Vercel's environment variables. Until then, the webhook accepts
+   unauthenticated requests by design (documented fallback, not a crash risk) — just not the
+   secure path.
+2. **Rate limiting on AI endpoints** — intentionally left alone per your instruction; still no
+   per-user cost cap on `parse-log`/`insights`/`query`/`review`/`suggest-food`/wardrobe's vision
+   call. Worth a decision on infrastructure (e.g. Upstash Redis) when you're ready.
+3. **Voice logging (`GROQ_API_KEY`)** — left for you to add, as agreed.
+4. **UI click-through** — everything above was verified with real API/DB calls (the most rigorous
+   check available without a live browser session), but nobody has physically tapped through
+   `/wardrobe` or `/food` in a real browser yet. Worth a few minutes on your phone to sanity-check
+   layout at real widths, especially the photo-first add flow's camera capture on iOS/Android.
+5. The wardrobe vision call occasionally misreads unusual photos (seen firsthand with a crude
+   test image) — normal for any vision model, worth knowing it can happen with real photos too,
+   which is exactly why the flow asks you to confirm/edit before saving rather than auto-saving.
+
+### Evidence trail
+Every step above has a commit hash, a live verification transcript, or both — see the dated
+sections earlier in this file, and `board.html`'s per-row `bug-ref` text for the compressed
+version. Commits this session, in order: `9c94665` → `b64f56a` → `f86d97e` → `aec484c` →
+`b58767b` → `d47b7d6`. Latest commit confirmed serving on production via the GitHub Deployments
+API and `vercel ls` (Ready/Production).
