@@ -79,3 +79,8 @@ artificial diffs on the same lines.
   to run `supabase/migrations/017_rls_untracked_tables.sql` and confirm all 8 tables show
   `relrowsecurity = true` with a policy each.
   Commit (migration file + regression fix): 531f4e9.
+
+### C5 — mounjaro_side_effects min(1) → min(0)
+STARTING/DONE C5 — lib/schemas.ts MounjaroSideEffectsSchema now allows 0 for
+nausea/appetite/energy, matching the tool schema's documented "0=none" meaning. Verified:
+`npm run build` clean.

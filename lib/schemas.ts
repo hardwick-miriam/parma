@@ -29,9 +29,12 @@ export const ParsedMediaItemSchema = z.object({
 })
 
 export const MounjaroSideEffectsSchema = z.object({
-  nausea: z.number().min(1).max(10).optional(),
-  appetite: z.number().min(1).max(10).optional(),
-  energy: z.number().min(1).max(10).optional(),
+  // 0 is meaningful here (0=no nausea, 0=no appetite, 0=exhausted — see the
+  // tool schema in lib/ai/providers/claude.ts) — min(1) used to reject a
+  // legitimate "no side effects" report and fail the entire parsed log.
+  nausea: z.number().min(0).max(10).optional(),
+  appetite: z.number().min(0).max(10).optional(),
+  energy: z.number().min(0).max(10).optional(),
   notes: z.string().optional(),
 })
 
