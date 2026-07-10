@@ -69,6 +69,7 @@ export async function DELETE(request: NextRequest) {
   const id = searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
 
-  await deleteProgressPhotoById(user.id, id)
+  const deletedPath = await deleteProgressPhotoById(user.id, id)
+  if (!deletedPath) return NextResponse.json({ error: 'Photo not found' }, { status: 404 })
   return NextResponse.json({ ok: true })
 }

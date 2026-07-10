@@ -109,6 +109,18 @@ STARTING/DONE M22/M23 —
   malformed codes instead of rejecting the whole array on one bad entry.
 Verified: `npm run build` clean.
 
+## TIER 3 (MINOR) — in progress
+
+### N1 — console-error-and-continue reads
+STARTING/DONE N1 — this group was already largely following the "log then degrade gracefully"
+pattern per the original audit (lib/db/whoop.ts reads, food cache, review stats, insights
+cache, photos signed URL, share PR lookup, pushNotify cleanup all already console.error). Two
+genuinely had zero visibility and are now fixed: `getJournalNotes` (lib/db/journal.ts) had no
+error handling at all — now logs; `deleteProgressPhotoById` (lib/db/photos.ts) now logs its
+pre-delete read error and its storage-remove error (orphaned-file risk) instead of silently
+swallowing both, and the DELETE route now returns 404 instead of `{ok:true}` when the photo
+didn't actually exist/delete. Verified: `npm run build` clean.
+
 ## TIER 2 (MAJOR) COMPLETE — 22/23 fixed, 1 blocked (M15: migration 018 written but not
 applied — same live-DB-credentials blocker as C1)
 

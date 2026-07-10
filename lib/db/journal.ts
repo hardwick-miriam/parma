@@ -11,12 +11,16 @@ export interface JournalNote {
 
 export async function getJournalNotes(userId: string, limit = 90): Promise<JournalNote[]> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('journal_notes')
     .select('*')
     .eq('user_id', userId)
     .order('note_date', { ascending: false })
     .limit(limit)
+  // Degrades to an empty list either way (callers show "no notes yet"), but
+  // at minimum a real DB error is now visible in logs instead of
+  // indistinguishable from "no notes".
+  if (error) console.error('[journal] getJournalNotes error:', error.code, error.message)
   return (data ?? []) as JournalNote[]
 }
 
