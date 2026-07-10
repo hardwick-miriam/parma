@@ -249,49 +249,67 @@ function HatchDef() {
 
 // ─── Injury body-part → muscle-id mapping ────────────────────────────────────
 
+// Single source of truth for injury body_part → muscle IDs, used both to
+// highlight injured muscles on the diagram and (via injuryForMuscle below)
+// to find which injury applies to a tapped muscle. Previously the tapped-
+// muscle lookup used a separate, much cruder heuristic (matching only the
+// first word of the muscle's display label against the injury text), so an
+// injury logged as "shoulder" would never surface for a tap on "Rear Delt"
+// even though this same keyword map already correctly flags it as injured.
+function muscleIdsForBodyPart(bodyPart: string | null): Set<string> {
+  const muscles = new Set<string>()
+  const bp = (bodyPart ?? '').toLowerCase()
+  if (bp.includes('chest')) { muscles.add('chest-l'); muscles.add('chest-r') }
+  if (bp.includes('shoulder') || bp.includes('delt')) {
+    muscles.add('front-delts-l'); muscles.add('front-delts-r')
+    muscles.add('rear-delts-l'); muscles.add('rear-delts-r')
+  }
+  if (bp.includes('bicep')) { muscles.add('biceps-l'); muscles.add('biceps-r') }
+  if (bp.includes('tricep')) { muscles.add('triceps-l'); muscles.add('triceps-r') }
+  if (bp.includes('lat') || (bp.includes('back') && !bp.includes('lower'))) {
+    muscles.add('rhomboids'); muscles.add('lats-l'); muscles.add('lats-r')
+  }
+  if (bp.includes('lower back') || bp.includes('lumbar')) muscles.add('lower-back')
+  if (bp.includes('trap')) muscles.add('traps')
+  if (bp.includes('quad') || (bp.includes('thigh') && !bp.includes('inner'))) {
+    muscles.add('quads-l'); muscles.add('quads-r')
+  }
+  if (bp.includes('hamstring') || bp.includes('ham')) {
+    muscles.add('hamstrings-l'); muscles.add('hamstrings-r')
+  }
+  if (bp.includes('glute') || bp.includes('hip')) { muscles.add('glutes-l'); muscles.add('glutes-r') }
+  if (bp.includes('calf') || bp.includes('calves') || bp.includes('gastro')) {
+    muscles.add('calves-l'); muscles.add('calves-r')
+  }
+  if (bp.includes('knee')) { muscles.add('quads-l'); muscles.add('quads-r') }
+  if (bp.includes('ankle') || bp.includes('shin') || bp.includes('tibial')) {
+    muscles.add('calves-front-l'); muscles.add('calves-front-r')
+    muscles.add('tibialis-l'); muscles.add('tibialis-r')
+  }
+  if (bp.includes('oblique')) { muscles.add('obliques-l'); muscles.add('obliques-r') }
+  if (bp.includes('ab') || bp.includes('core')) {
+    muscles.add('abs-upper'); muscles.add('abs-lower')
+  }
+  if (bp.includes('forearm') || bp.includes('wrist')) {
+    muscles.add('forearms-l'); muscles.add('forearms-r')
+  }
+  if (bp.includes('adduct') || bp.includes('groin') || bp.includes('inner thigh')) {
+    muscles.add('adductors-l'); muscles.add('adductors-r')
+  }
+  return muscles
+}
+
 function injuryMuscles(injuries: InjuryWithCheckins[]): Set<string> {
   const muscles = new Set<string>()
   for (const inj of injuries) {
-    const bp = (inj.body_part ?? '').toLowerCase()
-    if (bp.includes('chest')) { muscles.add('chest-l'); muscles.add('chest-r') }
-    if (bp.includes('shoulder') || bp.includes('delt')) {
-      muscles.add('front-delts-l'); muscles.add('front-delts-r')
-      muscles.add('rear-delts-l'); muscles.add('rear-delts-r')
-    }
-    if (bp.includes('bicep')) { muscles.add('biceps-l'); muscles.add('biceps-r') }
-    if (bp.includes('tricep')) { muscles.add('triceps-l'); muscles.add('triceps-r') }
-    if (bp.includes('lat') || (bp.includes('back') && !bp.includes('lower'))) {
-      muscles.add('rhomboids'); muscles.add('lats-l'); muscles.add('lats-r')
-    }
-    if (bp.includes('lower back') || bp.includes('lumbar')) muscles.add('lower-back')
-    if (bp.includes('trap')) muscles.add('traps')
-    if (bp.includes('quad') || (bp.includes('thigh') && !bp.includes('inner'))) {
-      muscles.add('quads-l'); muscles.add('quads-r')
-    }
-    if (bp.includes('hamstring') || bp.includes('ham')) {
-      muscles.add('hamstrings-l'); muscles.add('hamstrings-r')
-    }
-    if (bp.includes('glute') || bp.includes('hip')) { muscles.add('glutes-l'); muscles.add('glutes-r') }
-    if (bp.includes('calf') || bp.includes('calves') || bp.includes('gastro')) {
-      muscles.add('calves-l'); muscles.add('calves-r')
-    }
-    if (bp.includes('knee')) { muscles.add('quads-l'); muscles.add('quads-r') }
-    if (bp.includes('ankle') || bp.includes('shin') || bp.includes('tibial')) {
-      muscles.add('calves-front-l'); muscles.add('calves-front-r')
-      muscles.add('tibialis-l'); muscles.add('tibialis-r')
-    }
-    if (bp.includes('oblique')) { muscles.add('obliques-l'); muscles.add('obliques-r') }
-    if (bp.includes('ab') || bp.includes('core')) {
-      muscles.add('abs-upper'); muscles.add('abs-lower')
-    }
-    if (bp.includes('forearm') || bp.includes('wrist')) {
-      muscles.add('forearms-l'); muscles.add('forearms-r')
-    }
-    if (bp.includes('adduct') || bp.includes('groin') || bp.includes('inner thigh')) {
-      muscles.add('adductors-l'); muscles.add('adductors-r')
-    }
+    for (const m of muscleIdsForBodyPart(inj.body_part)) muscles.add(m)
   }
   return muscles
+}
+
+// The first injury (if any) whose body_part keyword-maps to this muscle ID.
+function injuryForMuscle(injuries: InjuryWithCheckins[], muscleId: string): InjuryWithCheckins | undefined {
+  return injuries.find((inj) => muscleIdsForBodyPart(inj.body_part).has(muscleId))
 }
 
 // ─── Muscle detail popover ────────────────────────────────────────────────────
@@ -435,12 +453,7 @@ export function BodyWidget({ recentWorkouts = [], activeInjuries = [], recoveryM
 
   const injured = useMemo(() => injuryMuscles(activeInjuries), [activeInjuries])
   const tappedRecovery = tapped ? recoveryMap[tapped] : undefined
-  const tappedInjury = tapped
-    ? activeInjuries.find(inj =>
-        injured.has(tapped) &&
-        (inj.body_part ?? '').toLowerCase().includes(MUSCLE_GROUP_LABEL[tapped].toLowerCase().split(' ')[0])
-      )
-    : undefined
+  const tappedInjury = tapped ? injuryForMuscle(activeInjuries, tapped) : undefined
 
   const workedCount = Object.keys(recoveryMap).length
   const injuredCount = activeInjuries.length

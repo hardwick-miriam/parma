@@ -111,6 +111,15 @@ Verified: `npm run build` clean.
 
 ## TIER 3 (MINOR) — in progress
 
+### N5 — BodyWidget fragile injury-to-muscle matching
+STARTING/DONE N5 — extracted the per-injury body_part → muscle-IDs keyword map (already used
+correctly by `injuryMuscles` to highlight injured muscles) into `muscleIdsForBodyPart`, and
+added `injuryForMuscle` using the same map for the tapped-muscle popover lookup. Previously
+the popover used a separate, much cruder check (only the first word of the muscle's display
+label against the injury text), so e.g. an injury logged as "shoulder" never surfaced when
+tapping "Rear Delt" even though the diagram already correctly highlighted it as injured using
+the better map. Now both use the same logic. Verified: `npm run build` clean.
+
 ### N3 — correction: already fixed via C3
 The widget date-key builders (Heatmap, HabitGarden, SleepDebt, WidgetDetailSheets,
 TrainingLoad, Whoop, Mounjaro widgets, Nudges, SummaryCard, ShareButton, ProgressPhotos) were
