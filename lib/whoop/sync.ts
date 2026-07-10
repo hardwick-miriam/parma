@@ -165,11 +165,15 @@ export async function syncWhoopUser(userId: string): Promise<SyncResult> {
   }
 
   // ── sync window ───────────────────────────────────────────────────────────────
-  const { data: connRow } = await supabase
+  const { data: connRow, error: connRowErr } = await supabase
     .from('whoop_connections')
     .select('last_sync_at')
     .eq('user_id', userId)
     .single()
+  // Non-fatal: falls back to the 30-day default window below, which is a
+  // safe (if wider than necessary) degradation — but log it so a real DB
+  // error here doesn't go completely unnoticed.
+  if (connRowErr) console.error(`syncWhoopUser: failed to read last_sync_at for ${userId}:`, connRowErr.message)
 
   const lastSync = connRow?.last_sync_at as string | null
   const startDate = lastSync
@@ -284,7 +288,7 @@ export async function syncWhoopUser(userId: string): Promise<SyncResult> {
       )
 
       // Check if a parma log already has exercises for this date
-      const { data: existingSession } = await supabase
+      const { data: existingSession, error: existingSessionErr } = await supabase
         .from('workout_sessions')
         .select('exercises')
         .eq('user_id', userId)
@@ -292,10 +296,19 @@ export async function syncWhoopUser(userId: string): Promise<SyncResult> {
         .neq('source', 'whoop')
         .maybeSingle()
 
-      // If no parma-logged exercises, pull from the active routine
+      if (existingSessionErr) {
+        console.error(`syncWhoopUser: failed to check existing exercises for ${userId}/${date}:`, existingSessionErr.message)
+      }
+
+      // If no parma-logged exercises, pull from the active routine — but
+      // only when we actually confirmed there's nothing to preserve. On a
+      // read error, `exercises` staying null (and the routine guess being
+      // skipped) means the upsert below omits the `exercises` key
+      // entirely, leaving whatever's already in the DB untouched, instead
+      // of overwriting a real manually-logged session with a guess.
       let exercises: string[] | null = existingSession?.exercises ?? null
       let fromRoutine = false
-      if (!exercises?.length && activeSessions.length) {
+      if (!existingSessionErr && !exercises?.length && activeSessions.length) {
         const routineSession = matchRoutineSession(activeSessions, date, sportName)
         if (routineSession) {
           exercises = routineSession.exercises.map(e => e.name)

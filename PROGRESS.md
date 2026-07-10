@@ -98,6 +98,19 @@ PRTrackerWidget.tsx which already used the correct fields) instead of the nonexi
 
 ## TIER 2 (MAJOR) — in progress
 
+### M21 — remaining unchecked WHOOP sync/webhook reads
+STARTING/DONE M21 — most of this item's sub-findings were already fixed as side effects of
+C1/C9/M3/M11 (removeSupplement/HabitFromToday, deleteLogEntryById, getValidConnectionService's
+initial select, world-clocks, push subscribe DELETE). The three still open:
+- lib/whoop/sync.ts sync-window lookup: now checks and logs its error (falls back to the
+  existing 30-day-window degradation, which is safe, just now visible instead of silent).
+- lib/whoop/sync.ts existingSession lookup: now checks its error and — critically — skips the
+  routine-fallback guess entirely on a read failure, instead of treating "read failed" the
+  same as "confirmed no manual exercises" and guessing wrong.
+- app/api/whoop/webhook/route.ts conn lookup: now checked; returns 500 (was previously
+  indistinguishable from "unknown WHOOP user" and silently dropped).
+Verified: `npm run build` clean.
+
 ### M18, M19, M20 — AI provider landmine, wrong help text, dead component
 STARTING/DONE M18/M19/M20 —
 - M18: lib/ai/index.ts now refuses to instantiate OpenAICompatibleProvider unless

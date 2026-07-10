@@ -38,12 +38,18 @@ export async function POST(request: NextRequest) {
 
   // Look up the Parma user by WHOOP user_id
   const supabase = createServiceClient()
-  const { data: conn } = await supabase
+  const { data: conn, error: connErr } = await supabase
     .from('whoop_connections')
     .select('user_id')
     .eq('whoop_user_id', event.user_id)
     .maybeSingle()
 
+  if (connErr) {
+    console.error('WHOOP webhook connection lookup error:', connErr.message)
+    // Return non-2xx so WHOOP retries — a DB error here previously looked
+    // identical to "unknown WHOOP user" and silently dropped the event.
+    return NextResponse.json({ error: 'Failed to look up connection' }, { status: 500 })
+  }
   if (!conn) {
     // Not a known user — acknowledge and ignore
     return NextResponse.json({ ok: true })
