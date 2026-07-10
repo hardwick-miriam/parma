@@ -20,6 +20,7 @@ import {
 } from '@/lib/db/queries'
 import { insertMounjaroDose, upsertMounjaroEffects } from '@/lib/db/mounjaro'
 import { insertMediaEntry } from '@/lib/db/media'
+import { ParsedLogSchema } from '@/lib/schemas'
 import type { ParsedLog } from '@/lib/ai/types'
 import type { Injury } from '@/lib/db/queries'
 
@@ -53,10 +54,25 @@ function matchInjury(activeInjuries: Injury[], target: string): Injury | undefin
   return wordMatch
 }
 
-export async function saveLog(rawText: string, parsed: ParsedLog): Promise<{ error?: string; entryId?: string }> {
+export async function saveLog(rawText: string, parsedIn: ParsedLog): Promise<{ error?: string; entryId?: string }> {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) return { error: 'Not authenticated' }
+
+  // saveLog is a Server Action — a real network endpoint any client can call
+  // directly with arbitrary JSON, bypassing the zod validation that
+  // /api/parse-log runs on the AI's raw output. It's also the normal path
+  // for user-edited data: ConfirmationDrawer lets the user hand-edit the
+  // parsed object before this is called. Re-validate here so malformed
+  // edits (NaN from a cleared number input, a free-typed mood value) never
+  // reach the database — reject the whole save rather than coerce silently,
+  // matching the rule /api/parse-log already follows.
+  const validation = ParsedLogSchema.safeParse(parsedIn)
+  if (!validation.success) {
+    console.error('[saveLog] validation failed:', validation.error.flatten())
+    return { error: 'Some of the edited values were invalid — please check the numbers and try again.' }
+  }
+  const parsed = validation.data
 
   try {
     const logDate = parsed.log_date ?? undefined

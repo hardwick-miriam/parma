@@ -3,7 +3,7 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { getAIProvider } from '@/lib/ai'
 import { upsertDailyStats, insertLogEntry, insertWorkout, upsertHealthStatus, getActiveInjuries } from '@/lib/db/queries'
 import { insertMounjaroDose, upsertMounjaroEffects } from '@/lib/db/mounjaro'
-import type { ParsedLog } from '@/lib/ai/types'
+import { ParsedLogSchema } from '@/lib/schemas'
 
 export const maxDuration = 60
 
@@ -41,13 +41,24 @@ export async function POST(request: NextRequest) {
       getActiveInjuries(userId, supabase).catch(() => []),
     ])
 
-    const parsed: ParsedLog = await provider.parseLog(text, {
+    const rawParsed = await provider.parseLog(text, {
       activeInjuries: activeInjuries.map((inj) => ({
         id: inj.id,
         description: inj.description,
         body_part: inj.body_part,
       })),
     })
+
+    // This route calls the AI provider directly instead of going through
+    // /api/parse-log, so it never got the schema check that route runs on
+    // the AI's raw output — validate here too, same "reject, never coerce"
+    // rule (CLAUDE.md), instead of writing a possibly-malformed shape.
+    const validation = ParsedLogSchema.safeParse(rawParsed)
+    if (!validation.success) {
+      console.error('[shortcuts/log] AI output failed schema validation:', validation.error.flatten(), 'raw:', rawParsed)
+      return NextResponse.json({ error: 'AI returned invalid shape', detail: validation.error.flatten() }, { status: 502 })
+    }
+    const parsed = validation.data
 
     const logDate = parsed.log_date ?? undefined
 

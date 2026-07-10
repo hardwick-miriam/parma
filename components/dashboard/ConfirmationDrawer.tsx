@@ -24,10 +24,11 @@ const NUMBER_FIELDS = [
 ]
 
 const TEXT_FIELDS = [
-  { key: 'mood' as const, label: 'Mood' },
   { key: 'injury_description' as const, label: 'Injury description' },
   { key: 'notes' as const, label: 'Notes' },
 ]
+
+const MOOD_OPTIONS = ['great', 'good', 'okay', 'low', 'bad'] as const
 
 export function ConfirmationDrawer({ rawText, parsed, saveError, onConfirm, onDiscard }: ConfirmationDrawerProps) {
   const [edited, setEdited] = useState<ParsedLog>({ ...parsed })
@@ -37,11 +38,24 @@ export function ConfirmationDrawer({ rawText, parsed, saveError, onConfirm, onDi
   useEffect(() => { setMounted(true) }, [])
 
   function setNum(key: keyof ParsedLog, val: string) {
-    setEdited((p) => ({ ...p, [key]: val === '' ? undefined : Number(val) }))
+    if (val === '') {
+      setEdited((p) => ({ ...p, [key]: undefined }))
+      return
+    }
+    const n = Number(val)
+    // Ignore keystrokes that don't yet form a valid number (e.g. a bare "-"
+    // or "." mid-edit) instead of writing NaN into state — NaN would sail
+    // through as "present" and fail as an opaque DB error on save.
+    if (!Number.isFinite(n)) return
+    setEdited((p) => ({ ...p, [key]: n }))
   }
 
   function setStr(key: keyof ParsedLog, val: string) {
     setEdited((p) => ({ ...p, [key]: val === '' ? undefined : val }))
+  }
+
+  function setMood(val: string) {
+    setEdited((p) => ({ ...p, mood: val === '' ? undefined : (val as ParsedLog['mood']) }))
   }
 
   function setBool(key: 'sick' | 'injured', val: boolean) {
@@ -56,6 +70,7 @@ export function ConfirmationDrawer({ rawText, parsed, saveError, onConfirm, onDi
   const presentNumbers = NUMBER_FIELDS.filter(({ key }) => edited[key] != null)
   const presentText = TEXT_FIELDS.filter(({ key }) => edited[key] != null)
   const hasAnything = presentNumbers.length > 0 || presentText.length > 0 ||
+    edited.mood != null ||
     edited.sick != null || edited.injured != null ||
     edited.supplements?.length || edited.habits_done?.length ||
     edited.workouts?.length ||
@@ -104,6 +119,21 @@ export function ConfirmationDrawer({ rawText, parsed, saveError, onConfirm, onDi
         <div className="flex-1 overflow-y-auto min-h-0 px-6 pb-2 flex flex-col gap-5">
           {!hasAnything && (
             <p className="text-text-subtle text-sm">Nothing was detected. Try being more specific.</p>
+          )}
+
+          {edited.mood != null && (
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-text-muted">Mood</span>
+              <select
+                value={edited.mood}
+                onChange={(e) => setMood(e.target.value)}
+                className="rounded-lg bg-surface-elevated border border-border text-text text-sm px-3 py-2 focus:outline-none focus:border-border-strong capitalize"
+              >
+                {MOOD_OPTIONS.map((m) => (
+                  <option key={m} value={m} className="capitalize">{m}</option>
+                ))}
+              </select>
+            </label>
           )}
 
           {presentNumbers.length > 0 && (

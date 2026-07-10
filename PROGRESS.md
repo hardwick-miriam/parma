@@ -84,3 +84,15 @@ artificial diffs on the same lines.
 STARTING/DONE C5 — lib/schemas.ts MounjaroSideEffectsSchema now allows 0 for
 nausea/appetite/energy, matching the tool schema's documented "0=none" meaning. Verified:
 `npm run build` clean.
+
+### C2 — re-validate before write; clamp numeric edits; enforce mood enum
+STARTING/DONE C2 —
+- app/actions.ts saveLog(): runs `ParsedLogSchema.safeParse` on the incoming `parsed` object
+  before any DB write; returns a user-facing error instead of writing on failure.
+- app/api/shortcuts/log/route.ts: same — this route calls the AI provider directly (not via
+  /api/parse-log) so it never had schema validation at all; now returns 502 with the zod
+  detail on failure, matching /api/parse-log's existing pattern.
+- components/dashboard/ConfirmationDrawer.tsx: `setNum` no longer writes NaN into state (a
+  keystroke that doesn't parse to a finite number is ignored instead of committed); `mood` is
+  now a `<select>` constrained to the 5 real enum values instead of a free-text `<input>`.
+Verified: `npm run build` clean.
