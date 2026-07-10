@@ -230,15 +230,27 @@ export function InsightsDetail({ onClose }: { onClose: () => void }) {
   // blank even when the fetch succeeded.
   const [data, setData] = useState<{ insights: Array<{ type: string; title: string; body: string; strength?: number | null }>; insufficient?: boolean } | null>(null)
   const [error, setError] = useState(false)
+  const [retryKey, setRetryKey] = useState(0)
 
   useEffect(() => {
+    setError(false)
     fetch('/api/insights').then((r) => r.json()).then(setData).catch(() => setError(true))
-  }, [])
+  }, [retryKey])
 
   return (
     <WidgetShell title="Insights" onClose={onClose}>
       {!data && !error && <p className="text-sm text-text-subtle">Loading insights…</p>}
-      {error && <p className="text-sm text-text-subtle">Couldn&apos;t load insights — try again shortly.</p>}
+      {error && (
+        <div className="flex flex-col items-start gap-2">
+          <p className="text-sm text-text-subtle">Couldn&apos;t load insights.</p>
+          <button
+            onClick={() => setRetryKey((k) => k + 1)}
+            className="text-xs text-accent underline underline-offset-2"
+          >
+            Retry
+          </button>
+        </div>
+      )}
       {data?.insights?.map((ins, i) => (
         <div key={i} className="rounded-xl bg-surface-elevated border border-border p-4 flex flex-col gap-1">
           <p className="text-xs text-text-subtle uppercase tracking-widest">{ins.title}</p>
@@ -415,16 +427,39 @@ export function PRTrackerDetail({ onClose }: { onClose: () => void }) {
   // fields never existed on the API response, so every PR here silently
   // rendered with no value/reps/date at all.
   const [prs, setPrs] = useState<Array<{ id: string; exercise: string; value: number; unit: string; reps: number | null; logged_at: string }>>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+  const [retryKey, setRetryKey] = useState(0)
 
   useEffect(() => {
-    fetch('/api/personal-records').then((r) => r.json()).then((d) => { if (d.records) setPrs(d.records) }).catch(() => {})
-  }, [])
+    setLoading(true)
+    setError(false)
+    fetch('/api/personal-records')
+      .then((r) => r.json())
+      .then((d) => { if (d.records) setPrs(d.records) })
+      // Previously swallowed silently — a failed fetch spun on "Loading…"
+      // forever with no way to retry.
+      .catch(() => setError(true))
+      .finally(() => setLoading(false))
+  }, [retryKey])
 
   return (
     <WidgetShell title="Personal Records" onClose={onClose}>
       <div>
         <SectionLabel>All-time PRs ({prs.length})</SectionLabel>
-        {prs.length === 0 ? (
+        {loading ? (
+          <p className="text-sm text-text-subtle">Loading…</p>
+        ) : error ? (
+          <div className="flex flex-col items-start gap-2">
+            <p className="text-sm text-text-subtle">Couldn&apos;t load personal records.</p>
+            <button
+              onClick={() => setRetryKey((k) => k + 1)}
+              className="text-xs text-accent underline underline-offset-2"
+            >
+              Retry
+            </button>
+          </div>
+        ) : prs.length === 0 ? (
           <p className="text-sm text-text-subtle">Log strength workouts to track PRs.</p>
         ) : (
           <div className="flex flex-col divide-y divide-border">

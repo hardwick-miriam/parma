@@ -111,6 +111,13 @@ Verified: `npm run build` clean.
 
 ## TIER 3 (MINOR) — in progress
 
+### N6 — detail sheets with no loading timeout/retry
+STARTING/DONE N6 — PRTrackerDetail and InsightsDetail now have explicit loading/error states
+with a Retry button, matching the pattern the main WeatherWidget already used. (WeatherDetail
+no longer fetches at all as of the M9 fix, so it's moot there; GlobeDetail's two fetches
+already degrade gracefully via `.catch(() => {})` with no blocking loading state to get stuck
+on, so left as-is.) Verified: `npm run build` clean.
+
 ### N5 — BodyWidget fragile injury-to-muscle matching
 STARTING/DONE N5 — extracted the per-injury body_part → muscle-IDs keyword map (already used
 correctly by `injuryMuscles` to highlight injured muscles) into `muscleIdsForBodyPart`, and
