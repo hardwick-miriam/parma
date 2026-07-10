@@ -630,3 +630,36 @@ commit hash per step so a paused run resumes correctly.
   session's brief) may not actually work for real logged-in users right now. Did NOT copy this
   pattern into wardrobe (wardrobe has real policies, verified above). Logged for the BUGS.md
   sweep (S11) rather than fixed now, since it's outside the 4 tasks given for this session.
+
+### S4-S8 — wardrobe feature (photo-first add, browse, detail, NLP wear log, widget)
+- STARTING S4-S8
+- DONE S4-S8 — Full wardrobe catalog shipped:
+  - `lib/wardrobeTypes.ts` (client-safe types + `currentSeason()`), `lib/db/wardrobe.ts` (server
+    CRUD, cost-per-wear calc), `lib/ai/wardrobeVision.ts` (the one approved vision call —
+    Haiku, tool-use, called once per new item at add-time only), `lib/wardrobeImage.ts`
+    (client-side canvas compress to ~1024px JPEG), `lib/wardrobeMatch.ts` (fuse.js + chrono-node
+    NLP wear-log matcher, zero AI cost).
+  - API: `app/api/wardrobe/{route,analyze,log-wear}` + `[id]/{route,wear/route}`.
+  - UI: `components/wardrobe/{AddItemFlow,WardrobeClient}.tsx`,
+    `app/(dashboard)/wardrobe/{page,[id]/{page,ItemDetailClient}}.tsx`,
+    `components/dashboard/widgets/WardrobeWidget.tsx` (micro/compact/full tiers), registered in
+    `DashboardGrid.tsx` WIDGET_CATALOG + both default layouts, `/wardrobe` added to `NavBar.tsx`.
+  - Build gotcha caught before it shipped: `lib/db/wardrobe.ts` imports
+    `lib/supabase/server.ts` → `next/headers`, which cannot be bundled into Client Components.
+    Split pure types/`currentSeason()` into `lib/wardrobeTypes.ts` so client files never import
+    the server module, even indirectly via a value import. `npm run build` clean after the split.
+  - **Real end-to-end verification** (not simulated): generated 3 synthetic SVG "photos" (red
+    t-shirt, blue jeans, white trainers) rendered to PNG via `@resvg/resvg-js` (already a project
+    dependency), ran them through the actual `proposeWardrobeItemFromPhoto()` with a real
+    `ANTHROPIC_API_KEY` call:
+    - "red t-shirt" → AI proposed `{name: "Red t-shirt", type: "top", colours: ["red"], ...}` — correct
+    - "blue jeans" → AI proposed `{name: "Blue jeans", type: "bottom", colours: ["blue"], ...}` — correct
+    - "white trainers" → AI proposed `{name: "Curved headband", type: "accessory", ...}` — **wrong**,
+      my crude flat-shape SVG wasn't recognizable as a shoe. Reporting this honestly rather than
+      omitting it: the vision *pipeline* worked (real API call, valid schema-conformant tool output),
+      but this specific synthetic test image was a bad stand-in for a real photo.
+    - Inserted all 3 via the real `insertWardrobeItem`, logged a wear for item 1 on yesterday's
+      date, re-queried via `getWardrobeItems` — season filter and type/colour fields all read back
+      correctly, `cost_per_wear` computed as `40 / 1 = 40.00` (price_paid=40, wear_count=1) —
+      correct. Deleted all 3 test items + their storage objects; re-queried, 0 remaining.
+  - `npm run build` clean throughout.

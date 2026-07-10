@@ -360,52 +360,52 @@
         <div class="bug-ref">S3 · wardrobe storage bucket — 'wardrobe' bucket (private) created, 4 owner-scoped storage.objects policies confirmed. NOTE: found progress-photos bucket has storage.objects RLS on with ZERO policies + uses the anon-scoped client — likely already broken for real users, not fixed here, flagged for S11.</div>
       </div>
 
-      <div class="bug-row" data-status="working" data-id="S4"
-           data-time-est="40" data-time-actual=""
-           data-credit-est="70000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S4"
+           data-time-est="40" data-time-actual="45"
+           data-credit-est="70000" data-credit-actual="82000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Wardrobe: photo-first add flow (client-side compress → one vision call proposing fields → confirm/edit → save) + manual add.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S4 · photo-first add flow</div>
+        <div class="bug-ref">S4 · photo-first add flow — components/wardrobe/AddItemFlow.tsx, lib/wardrobeImage.ts (canvas compress), lib/ai/wardrobeVision.ts (one Haiku vision call, tool-use)</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S5"
-           data-time-est="30" data-time-actual=""
-           data-credit-est="55000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S5"
+           data-time-est="30" data-time-actual="28"
+           data-credit-est="55000" data-credit-actual="51000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Wardrobe: /wardrobe browse page — responsive grid, filter chips, search, sort, season toggle.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S5 · /wardrobe browse page</div>
+        <div class="bug-ref">S5 · /wardrobe browse page — components/wardrobe/WardrobeClient.tsx, TanStack Query + AutoAnimate grid, season defaults to currentSeason()</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S6"
-           data-time-est="25" data-time-actual=""
-           data-credit-est="45000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S6"
+           data-time-est="25" data-time-actual="22"
+           data-credit-est="45000" data-credit-actual="41000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Wardrobe: item detail (editable fields, wear count, last worn, cost-per-wear, mini wear-history calendar, delete).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S6 · item detail</div>
+        <div class="bug-ref">S6 · item detail — app/(dashboard)/wardrobe/[id]/ItemDetailClient.tsx, 12-week wear heatmap grid</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S7"
-           data-time-est="25" data-time-actual=""
-           data-credit-est="45000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S7"
+           data-time-est="25" data-time-actual="18"
+           data-credit-est="45000" data-credit-actual="33000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Wardrobe: NLP wear logging (fuse.js match + chrono-node date), never-worn list, most-worn ranking.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S7 · NLP wear logging</div>
+        <div class="bug-ref">S7 · NLP wear logging — lib/wardrobeMatch.ts, zero AI cost (pure fuse.js + chrono-node, no LLM call), never-worn toggle + most/least-worn sort in browse page</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S8"
-           data-time-est="20" data-time-actual=""
-           data-credit-est="35000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S8"
+           data-time-est="20" data-time-actual="25"
+           data-credit-est="35000" data-credit-actual="48000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Wardrobe: compact widget + WIDGET_CATALOG registration + nav entry. Verify: 3 photo adds, filter, wear log, cost-per-wear.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S8 · widget + nav + verify</div>
+        <div class="bug-ref">S8 · REAL verified end-to-end: 3 synthetic photos → real Haiku vision calls → "Red t-shirt"/top/red (correct), "Blue jeans"/bottom/blue (correct), "Curved headband"/accessory (misread my crude trainers icon — honest miss, not hidden); inserted via real DB layer, wear logged for yesterday, season+type read back correctly, cost_per_wear = 40/1 = 40.00 (correct), then all 3 test items deleted (0 remaining after cleanup).</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S9"
+      <div class="bug-row" data-status="working" data-id="S9"
            data-time-est="25" data-time-actual=""
            data-credit-est="45000" data-credit-actual="">
         <div class="status-chip"></div>

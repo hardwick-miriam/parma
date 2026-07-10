@@ -39,6 +39,7 @@ import { TrainingLoadWidget } from './widgets/TrainingLoadWidget'
 import { SleepDebtWidget } from './widgets/SleepDebtWidget'
 import { HabitGardenWidget } from './widgets/HabitGardenWidget'
 import { HeatmapWidget } from './widgets/HeatmapWidget'
+import { WardrobeWidget } from './widgets/WardrobeWidget'
 import { MilestoneToast } from './MilestoneToast'
 import { GridItemSizeContext } from './GridItemSizeContext'
 import { detectMilestones } from '@/lib/milestones'
@@ -92,6 +93,7 @@ export const WIDGET_CATALOG: Array<{
   { id: 'sleepdebt',  name: 'Sleep Debt',   description: '14-day rolling sleep deficit tracker',      icon: '💤' },
   { id: 'habitgarden',name: 'Habit Garden', description: 'SVG plant that grows with your habits',     icon: '🌱' },
   { id: 'heatmap',   name: 'Year Heatmap', description: '52-week activity heatmap by metric',        icon: '📅' },
+  { id: 'wardrobe',  name: 'Wardrobe',     description: 'Clothing catalog: items, wears, cost-per-wear', icon: '👕' },
 ]
 
 // ─── Default layouts ─────────────────────────────────────────────────────────
@@ -120,6 +122,7 @@ const DEFAULT_LG: LayoutItem[] = [
   { i: 'sleepdebt',  x: 4,  y: 28, w: 4,  h: 5, minW: 2, minH: 3 },
   { i: 'habitgarden',x: 8,  y: 28, w: 4,  h: 5, minW: 2, minH: 3 },
   { i: 'heatmap',   x: 0,  y: 33, w: 12, h: 5, minW: 6, minH: 4 },
+  { i: 'wardrobe',  x: 8,  y: 38, w: 4,  h: 4, minW: 2, minH: 3 },
 ]
 
 const DEFAULT_SM: LayoutItem[] = [
@@ -146,6 +149,7 @@ const DEFAULT_SM: LayoutItem[] = [
   { i: 'sleepdebt',   x: 0, y: 91, w: 4, h: 5 },
   { i: 'habitgarden', x: 0, y: 96, w: 4, h: 6 },
   { i: 'heatmap',     x: 0, y: 102, w: 4, h: 5 },
+  { i: 'wardrobe',    x: 0, y: 107, w: 4, h: 5 },
 ]
 
 const DEFAULT_LAYOUTS: ResponsiveLayouts = { lg: DEFAULT_LG, sm: DEFAULT_SM }
@@ -957,6 +961,12 @@ export function DashboardGrid({
                   <HeatmapWidget history={history} workouts={workouts} />
                 </TappableWrapper>
                 {editMode && <RemoveBtn id="heatmap" onHide={hideWidget} />}
+              </div>
+            )}
+            {!hiddenWidgets.has('wardrobe') && (
+              <div key="wardrobe" className="relative">
+                <WardrobeWidget />
+                {editMode && <RemoveBtn id="wardrobe" onHide={hideWidget} />}
               </div>
             )}
           </ResponsiveGridLayout>
