@@ -10,10 +10,14 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = createServiceClient()
-  const { data: connections } = await supabase
+  const { data: connections, error: connectionsErr } = await supabase
     .from('whoop_connections')
     .select('user_id')
 
+  if (connectionsErr) {
+    console.error('cron/whoop-sync: failed to list connections:', connectionsErr.message)
+    return NextResponse.json({ error: 'Failed to list WHOOP connections' }, { status: 500 })
+  }
   if (!connections?.length) {
     return NextResponse.json({ synced: 0, users: 0 })
   }

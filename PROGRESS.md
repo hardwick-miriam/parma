@@ -98,6 +98,22 @@ PRTrackerWidget.tsx which already used the correct fields) instead of the nonexi
 
 ## TIER 2 (MAJOR) — in progress
 
+### M4-M8 — more unchecked writes / silent-success routes
+STARTING/DONE M4/M5/M6/M7/M8 —
+- M4: routine PUT's deactivate-others update now checked; returns 500 instead of risking two
+  simultaneously-active routines.
+- M5: app/actions.ts saveLog's countries_visited / world_clock_cities reads+upserts now
+  checked and throw into the existing catch block instead of silently dropping.
+- M6: cron/insights-refresh now checks the active-users read, the per-user delete+insert, and
+  only increments `refreshed` after both succeed (was unconditional); failures are now
+  collected and returned in the response instead of only console-logged.
+- M7: sync-tick and cron/whoop-sync now check their whoop_connections read and return 500 on
+  failure instead of silently reporting "0 synced" / "nothing to sync".
+- M8: auth/callback now checks exchangeCodeForSession/verifyOtp and redirects to
+  /login?error=... on failure instead of redirecting to `next` as if authenticated; login page
+  now seeds its error banner from that query param.
+Verified: `npm run build` clean.
+
 ### M1, M2, M3 — unchecked writes returning fake success
 STARTING/DONE M1/M2/M3 —
 - M1: lib/db/journal.ts upsertJournalNote now throws on error instead of returning null;

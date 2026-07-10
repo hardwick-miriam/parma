@@ -13,15 +13,20 @@ export async function GET(request: NextRequest) {
 
   // Get all users who have logged at least 10 days of data in the last 90 days
   const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  const { data: activeUsers } = await supabase
+  const { data: activeUsers, error: activeUsersErr } = await supabase
     .from('daily_stats')
     .select('user_id')
     .gte('date', since)
 
+  if (activeUsersErr) {
+    console.error('insights-refresh: failed to list active users:', activeUsersErr.message)
+    return NextResponse.json({ error: 'Failed to list active users', refreshed: 0 }, { status: 500 })
+  }
   if (!activeUsers?.length) return NextResponse.json({ refreshed: 0 })
 
   const userIds = [...new Set(activeUsers.map((r: { user_id: string }) => r.user_id))]
   let refreshed = 0
+  const failures: Array<{ user_id: string; error: string }> = []
 
   for (const userId of userIds) {
     try {
@@ -31,8 +36,10 @@ export async function GET(request: NextRequest) {
       const computed = computeInsights(history)
       if (computed.length === 0) continue
 
-      await supabase.from('insights').delete().eq('user_id', userId)
-      await supabase.from('insights').insert(
+      const { error: deleteErr } = await supabase.from('insights').delete().eq('user_id', userId)
+      if (deleteErr) throw deleteErr
+
+      const { error: insertErr } = await supabase.from('insights').insert(
         computed.map((ins) => ({
           user_id: userId,
           type: ins.type,
@@ -44,11 +51,18 @@ export async function GET(request: NextRequest) {
           computed_at: new Date().toISOString(),
         }))
       )
+      if (insertErr) throw insertErr
+
+      // Only counted once the delete+insert are both confirmed to have
+      // actually succeeded — previously this incremented unconditionally,
+      // regardless of whether the write worked.
       refreshed++
     } catch (err) {
-      console.error(`insights-refresh failed for user ${userId}:`, err)
+      const msg = err instanceof Error ? err.message : String(err)
+      console.error(`insights-refresh failed for user ${userId}:`, msg)
+      failures.push({ user_id: userId, error: msg })
     }
   }
 
-  return NextResponse.json({ refreshed, total_users: userIds.length })
+  return NextResponse.json({ refreshed, total_users: userIds.length, failures })
 }

@@ -24,10 +24,14 @@ export async function GET(request: NextRequest) {
 
   const t0 = Date.now()
   const supabase = createServiceClient()
-  const { data: connections } = await supabase
+  const { data: connections, error: connectionsErr } = await supabase
     .from('whoop_connections')
     .select('user_id, last_sync_at')
 
+  if (connectionsErr) {
+    console.error('sync-tick: failed to list connections:', connectionsErr.message)
+    return NextResponse.json({ error: 'Failed to list WHOOP connections', took_ms: Date.now() - t0 }, { status: 500 })
+  }
   if (!connections?.length) {
     return NextResponse.json({ synced_users: 0, skipped: 0, records: 0, took_ms: Date.now() - t0 })
   }

@@ -82,13 +82,19 @@ export async function PUT(request: NextRequest) {
   if (body.sessions !== undefined) updates.sessions = body.sessions
   if (body.is_active !== undefined) {
     updates.is_active = body.is_active
-    // If activating, deactivate all others first
+    // If activating, deactivate all others first — unchecked, this could
+    // silently fail while the activation below succeeds, leaving two
+    // routines marked active at once.
     if (body.is_active) {
-      await supabase
+      const { error: deactivateError } = await supabase
         .from('routines')
         .update({ is_active: false })
         .eq('user_id', user.id)
         .neq('id', id)
+      if (deactivateError) {
+        console.error('[routine PUT] deactivate-others error:', deactivateError.message)
+        return NextResponse.json({ error: 'Failed to deactivate other routines' }, { status: 500 })
+      }
     }
   }
 

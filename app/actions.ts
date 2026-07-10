@@ -146,24 +146,27 @@ export async function saveLog(rawText: string, parsedIn: ParsedLog): Promise<{ e
 
     if (parsed.countries_visited?.length) {
       const newCodes = parsed.countries_visited.map((c) => c.toUpperCase())
-      const { data: existing } = await supabase
+      const { data: existing, error: countriesReadErr } = await supabase
         .from('user_preferences')
         .select('visited_countries')
         .eq('user_id', user.id)
         .maybeSingle()
+      if (countriesReadErr) throw new Error(`Failed to read visited countries: ${countriesReadErr.message}`)
       const current: string[] = (existing?.visited_countries as string[]) ?? []
       const merged = [...new Set([...current, ...newCodes])]
-      await supabase
+      const { error: countriesWriteErr } = await supabase
         .from('user_preferences')
         .upsert({ user_id: user.id, visited_countries: merged, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
+      if (countriesWriteErr) throw new Error(`Failed to save visited countries: ${countriesWriteErr.message}`)
     }
 
     if (parsed.world_clock_cities?.length) {
-      const { data: existingPrefs } = await supabase
+      const { data: existingPrefs, error: clocksReadErr } = await supabase
         .from('user_preferences')
         .select('world_clocks')
         .eq('user_id', user.id)
         .maybeSingle()
+      if (clocksReadErr) throw new Error(`Failed to read world clocks: ${clocksReadErr.message}`)
       type CityConfig = { name: string; country: string; lat: number; lon: number; timezone: string }
       const currentClocks: CityConfig[] = (existingPrefs?.world_clocks as CityConfig[]) ?? []
       const added: CityConfig[] = []
@@ -177,13 +180,14 @@ export async function saveLog(rawText: string, parsedIn: ParsedLog): Promise<{ e
           const r = geoData.results?.[0]
           if (!r) continue
           added.push({ name: r.name, country: r.country ?? '', lat: r.latitude, lon: r.longitude, timezone: r.timezone })
-        } catch { /* skip unresolvable cities */ }
+        } catch { /* skip unresolvable cities — geocoding failure, not a DB error */ }
       }
       if (added.length) {
         const merged = [...currentClocks, ...added]
-        await supabase
+        const { error: clocksWriteErr } = await supabase
           .from('user_preferences')
           .upsert({ user_id: user.id, world_clocks: merged, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
+        if (clocksWriteErr) throw new Error(`Failed to save world clocks: ${clocksWriteErr.message}`)
       }
     }
 
