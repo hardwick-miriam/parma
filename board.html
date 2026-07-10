@@ -194,11 +194,11 @@
         <div class="bug-ref">S9 · health module — RecoveryWidget + WhoopWidget (HRV/RHR/sleep/strain) + SleepDebtWidget + HealthStatusWidget (sick) + InjuryWidget, all reusing existing data functions exactly as the bento page does. Build clean. TASK 3 complete.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S10" data-time-est="45" data-time-actual="" data-credit-est="70000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S10" data-time-est="45" data-time-actual="38" data-credit-est="70000" data-credit-actual="62000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">TASK 2 — Main command centre: recovery ring, calories ring + macro bars, training status, key vitals, quick-nav tiles into every module. Pulls from existing data, no forked logic.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S10 · main / command centre</div>
+        <div class="bug-ref">S10 · main / command centre — MainClient.tsx reuses computeRecovery, DailyStats (with the macro columns from the food session), WhoopMetrics, getRecentWorkouts; big CircularProgress rings; quick-nav tiles pull directly from Sidebar's MODULES array (single source of truth). Build clean.</div>
       </div>
 
       <div class="bug-row" data-status="waiting" data-id="S11" data-time-est="40" data-time-actual="" data-credit-est="60000" data-credit-actual="">
