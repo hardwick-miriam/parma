@@ -96,12 +96,12 @@
 <body>
 <div class="wrap">
   <header>
-    <h1><span class="brand">Parma</span> — Jarvis Restructure Session Board</h1>
-    <p class="subtitle">Portrait-first modular OS build. Old bento dashboard stays reachable throughout — this tracks the shell + module rollout.</p>
+    <h1><span class="brand">Parma</span> — Session 2: Live Workout Logger</h1>
+    <p class="subtitle">Set-by-set logging built into the Gym module. Task 4 of the brief was cut off mid-message — proceeding on Tasks 1-3, flagged for follow-up.</p>
   </header>
 
   <div class="overall-card">
-    <div class="overall-count"><span class="num" id="overall-num">0</span><span class="label">of <span id="overall-total">14</span> done</span></div>
+    <div class="overall-count"><span class="num" id="overall-num">0</span><span class="label">of <span id="overall-total">11</span> done</span></div>
     <div class="progress-track"><div class="progress-fill" id="overall-progress"></div></div>
     <div class="overall-breakdown" id="overall-breakdown"></div>
     <div class="status-banner" id="done-banner">✓ All steps resolved — board is no longer auto-refreshing.</div>
@@ -131,102 +131,81 @@
     <div class="tier-header"><div class="tier-title"><span class="tier-badge">Session steps</span></div></div>
     <div class="bug-list" data-tier="steps">
 
-      <div class="bug-row" data-status="done" data-id="S1" data-time-est="15" data-time-actual="18" data-credit-est="25000" data-credit-actual="32000">
+      <div class="bug-row" data-status="done" data-id="S1" data-time-est="15" data-time-actual="12" data-credit-est="25000" data-credit-actual="24000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Board.html for this session + survey existing shell/nav/widget/theme code before touching routes.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">Board.html + recon: personal_records schema, confetti/PR firing mechanism, exercise DB lookup, workout_sessions shape, muscle-load/training-load feeds.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S1 · board + recon</div>
+        <div class="bug-ref">S1 · found firePR() in lib/confetti.ts already exists but unused anywhere — will wire it up. personal_records currently unconditional upsert (no "only if better" check) — new auto-PR logic must add that guard.</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S2" data-time-est="45" data-time-actual="40" data-credit-est="75000" data-credit-actual="68000">
+      <div class="bug-row" data-status="waiting" data-id="S2" data-time-est="30" data-time-actual="" data-credit-est="45000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">TASK 1 — The shell: new (os) route group, Sidebar nav component (portrait-first, collapses on mobile/narrow landscape), auth-gated layout, old bento left 100% untouched at root.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 1 — Data model: workout_sets table (linked to workout_sessions + exercise DB), RLS, migration run live + verified.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S2 · shell + sidebar — commit 7d0b397, npm run build clean, root / untouched (verified: no diff to app/(dashboard)/page.tsx)</div>
+        <div class="bug-ref">S2 · data model</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S3" data-time-est="15" data-time-actual="12" data-credit-est="25000" data-credit-actual="20000">
+      <div class="bug-row" data-status="waiting" data-id="S3" data-time-est="20" data-time-actual="" data-credit-est="35000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Recompose: Settings moved into the new shell (same URL, new chrome).</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">API layer: session start/continue, exercise search (fuzzy + recent-first), set log/edit/delete, stats/history/trend queries.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S3 · settings module — git mv into app/(os)/settings, same /settings URL, npm run build clean after clearing stale .next type cache</div>
+        <div class="bug-ref">S3 · API layer</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S4" data-time-est="15" data-time-actual="10" data-credit-est="25000" data-credit-actual="16000">
+      <div class="bug-row" data-status="waiting" data-id="S4" data-time-est="35" data-time-actual="" data-credit-est="55000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Recompose: Food moved into the new shell (same URL, new chrome).</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">Exercise picker + last-time reference + weight input + tappable rep selector (1-12+) + big Log Set button.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S4 · food module — git mv into app/(os)/food, /food resolves exactly once, build clean</div>
+        <div class="bug-ref">S4 · picker + logging UI</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S5" data-time-est="20" data-time-actual="14" data-credit-est="30000" data-credit-actual="22000">
+      <div class="bug-row" data-status="waiting" data-id="S5" data-time-est="20" data-time-actual="" data-credit-est="30000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Recompose: Wardrobe moved into the new shell (same URLs, new chrome).</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">Next-set recommendation card — transparent progressive-overload rule in one config spot.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S5 · wardrobe module — git mv into app/(os)/wardrobe incl. [id] detail route, both resolve exactly once, build clean</div>
+        <div class="bug-ref">S5 · recommendation logic</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S6" data-time-est="30" data-time-actual="24" data-credit-est="45000" data-credit-actual="38000">
+      <div class="bug-row" data-status="waiting" data-id="S6" data-time-est="30" data-time-actual="" data-credit-est="45000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Recompose: Body module — full page using BodyWidget's muscle map + recovery figure, reusing existing data functions.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">Stats row (est. 1RM via Epley, best set, sessions) + trend graph (top set / est-1RM over last N sessions).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S6 · body module — new app/(os)/body/page.tsx reuses getRecentWorkouts/getInjuriesWithCheckins/getWhoopMetrics + computeMuscleRecovery exactly as DashboardGrid does, ModulePageClient gives it full-size (not compact) rendering. Build clean.</div>
+        <div class="bug-ref">S6 · stats + trend</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S7" data-time-est="25" data-time-actual="10" data-credit-est="40000" data-credit-actual="18000">
+      <div class="bug-row" data-status="waiting" data-id="S7" data-time-est="20" data-time-actual="" data-credit-est="30000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Recompose: Media module — full catalogue page (books/films/shows/songs), reusing lib/db/media.ts.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">History list — past sessions for the selected exercise, dated, weight x reps. Sets stack/editable/deletable within the current session.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S7 · media module — MediaWidget is self-contained (fetches its own /api/media data), just wrapped in ModulePageClient for full-size rendering. Build clean.</div>
+        <div class="bug-ref">S7 · history + session sets list</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S8" data-time-est="20" data-time-actual="10" data-credit-est="35000" data-credit-actual="17000">
+      <div class="bug-row" data-status="waiting" data-id="S8" data-time-est="25" data-time-actual="" data-credit-est="40000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Recompose: Journal module — full page, reusing existing journal data functions.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 3 — PR auto-update on genuine new bests + firePR() confetti; verify with real data, not simulated.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S8 · journal module — reuses getTodayStats/getTodayWorkouts/getDailyStatsHistory exactly as the bento page does. Build clean.</div>
+        <div class="bug-ref">S8 · PR integration</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S9" data-time-est="30" data-time-actual="26" data-credit-est="45000" data-credit-actual="41000">
+      <div class="bug-row" data-status="waiting" data-id="S9" data-time-est="20" data-time-actual="" data-credit-est="30000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Health module — HRV/RHR/sleep/strain/sick/injury/sleep-debt in one page, Recovery lives here.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">Muscle map / training load / Main "last session" / journal all pick up live-logged sessions with zero changes to their own logic.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S9 · health module — RecoveryWidget + WhoopWidget (HRV/RHR/sleep/strain) + SleepDebtWidget + HealthStatusWidget (sick) + InjuryWidget, all reusing existing data functions exactly as the bento page does. Build clean. TASK 3 complete.</div>
+        <div class="bug-ref">S9 · integration verification</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S10" data-time-est="45" data-time-actual="38" data-credit-est="70000" data-credit-actual="62000">
+      <div class="bug-row" data-status="waiting" data-id="S10" data-time-est="15" data-time-actual="" data-credit-est="20000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">TASK 2 — Main command centre: recovery ring, calories ring + macro bars, training status, key vitals, quick-nav tiles into every module. Pulls from existing data, no forked logic.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">NLP text logging still works unchanged ("benched 80 for 5") — verify with a real call, not assumed.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S10 · main / command centre — MainClient.tsx reuses computeRecovery, DailyStats (with the macro columns from the food session), WhoopMetrics, getRecentWorkouts; big CircularProgress rings; quick-nav tiles pull directly from Sidebar's MODULES array (single source of truth). Build clean.</div>
+        <div class="bug-ref">S10 · NLP regression check</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S11" data-time-est="40" data-time-actual="35" data-credit-est="60000" data-credit-actual="54000">
+      <div class="bug-row" data-status="waiting" data-id="S11" data-time-est="15" data-time-actual="" data-credit-est="20000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">TASK 4 — Gym module: PR tracker, training load, routine, body-map link, per-exercise history. Real data only, clearly-marked space left for the future live logger (not built this session).</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">Final: clean build, verify production serves latest commit, board.html + PROGRESS.md true final state, plain-English summary (incl. flagging the truncated Task 4).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S11 · gym module — TrainingLoadWidget (acute/chronic), new days-since-rest stat, PRTrackerWidget, RoutineSection, ExerciseHistory.tsx (new — real session-level history from actual logged exercises, no fabricated set/rep data), link to /body, dashed-border placeholder card for the deferred live logger. Build clean.</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="S12" data-time-est="30" data-time-actual="42" data-credit-est="45000" data-credit-actual="58000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Polish: theme parity across the shell + every module, ⌘K palette gains "go to [module]" jumps, mobile/landscape/portrait pass.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">S12 · found + fixed 2 real bugs during this pass: (1) hardcoded dark rgba() bar backgrounds would've broken the brutalism theme (confirmed a genuine light theme, --bg:#fff, via globals.css) — switched to var(--surface). (2) sm:pl-[var(--os-sidebar-w,208px)] never actually compiled (verified by inspecting the built CSS directly — zero matches) so content would've rendered under the fixed sidebar on desktop/portrait-monitor widths; replaced with plain sm:pl-52, re-verified the exact rule now exists in the compiled CSS. Added /grid route (was a dead sidebar link). CommandPalette "Go to module" group added, sourced from Sidebar's MODULES array. Build clean.</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="S13" data-time-est="15" data-time-actual="16" data-credit-est="20000" data-credit-actual="24000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Switch default view: root now redirects to /main; old bento relocates to /grid inside the new shell. Only after everything above is confirmed rendering.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">S13 · app/(dashboard)/page.tsx replaced with redirect('/main'); old bento content already lived at /grid since the polish step, unaffected. Old top-nav NavBar trimmed (Food/Wardrobe/Settings removed, now redundant with the new sidebar) and its "Dashboard" link repointed to /grid. Build confirms / still resolves as its own route. Verified with real curls below.</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="S14" data-time-est="15" data-time-actual="14" data-credit-est="20000" data-credit-actual="19000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Final: clean build, verify production serves the latest commit (live fingerprint), board.html + PROGRESS.md true final state, plain-English summary.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">S14 · commit 0831335 confirmed Ready/Production via vercel ls (2m old); every route (/, /main, /grid, /health, /body, /media, /journal, /food, /wardrobe, /settings, /gym) curled live, all consistent 307->/login (correct auth-gating, no 500s, no redirect loops)</div>
+        <div class="bug-ref">S11 · final verification + summary</div>
       </div>
 
     </div>
@@ -239,7 +218,7 @@
 </div>
 
 <script>
-  var SESSION_TOKEN_BUDGET = 900000;
+  var SESSION_TOKEN_BUDGET = 700000;
 </script>
 <script>
 (function () {
