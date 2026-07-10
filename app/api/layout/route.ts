@@ -18,6 +18,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Nothing to update' }, { status: 400 })
   }
 
-  await upsertUserPreferences(user.id, updates as Parameters<typeof upsertUserPreferences>[1])
-  return NextResponse.json({ ok: true })
+  try {
+    await upsertUserPreferences(user.id, updates as Parameters<typeof upsertUserPreferences>[1])
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    console.error('[api/layout] upsertUserPreferences failed:', err)
+    return NextResponse.json({ error: 'Failed to save layout' }, { status: 500 })
+  }
 }

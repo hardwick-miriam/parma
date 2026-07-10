@@ -2,10 +2,11 @@
 
 import 'react-grid-layout/css/styles.css'
 
-import { useState, useCallback, useRef, useMemo, useEffect } from 'react'
+import { useState, useCallback, useRef, useMemo } from 'react'
 import { Responsive, WidthProvider } from 'react-grid-layout/legacy'
 import type { LayoutItem, ResponsiveLayouts } from 'react-grid-layout/legacy'
 import { motion, AnimatePresence } from 'framer-motion'
+import { toast } from 'sonner'
 import { NutritionWidget } from './widgets/NutritionWidget'
 import { StepsWidget } from './widgets/StepsWidget'
 import { WorkoutsWidget } from './widgets/WorkoutsWidget'
@@ -547,15 +548,26 @@ export function DashboardGrid({
   const [lgLayout, setLgLayout] = useState<LayoutItem[]>(
     () => (mergeLayouts(savedLayouts ?? {}, new Set(savedHiddenWidgets ?? [])).lg as LayoutItem[]) ?? DEFAULT_LG
   )
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const persistHidden = useCallback((hidden: Set<string>) => {
+  // keepalive lets the request finish even if the user navigates/refreshes right
+  // after triggering it; res.ok is checked so a server-side failure isn't silent.
+  const postLayout = useCallback((body: Record<string, unknown>, failureMessage: string) => {
     fetch('/api/layout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ hidden_widgets: [...hidden] }),
-    }).catch(() => {})
+      body: JSON.stringify(body),
+      keepalive: true,
+    }).then((res) => {
+      if (!res.ok) throw new Error(`/api/layout ${res.status}`)
+    }).catch((err) => {
+      console.error('[layout] save failed:', err)
+      toast.error(failureMessage)
+    })
   }, [])
+
+  const persistHidden = useCallback((hidden: Set<string>) => {
+    postLayout({ hidden_widgets: [...hidden] }, 'Could not save widget change')
+  }, [postLayout])
 
   const hideWidget = useCallback((id: string) => {
     setHiddenWidgets(prev => {
@@ -614,19 +626,11 @@ export function DashboardGrid({
     setLgLayout([...currentLayout])
     if (!editMode) return
     setLayouts(allLayouts)
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-    saveTimerRef.current = setTimeout(() => {
-      fetch('/api/layout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ layouts: allLayouts }),
-      }).catch(() => {})
-    }, 800)
-  }, [editMode])
-
-  useEffect(() => {
-    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current) }
-  }, [])
+    // react-grid-layout only calls this on drag-stop/resize-stop/breakpoint-change,
+    // not per-frame — so there's no need to debounce, and debouncing this write
+    // previously meant a refresh within 800ms of a drag silently dropped it.
+    postLayout({ layouts: allLayouts }, 'Could not save layout')
+  }, [editMode, postLayout])
 
   const { supTimes, habitTimes } = buildEntryTimestamps(logEntries)
   const muscleRecoveryMap = useMemo(() => {
