@@ -111,6 +111,13 @@ Verified: `npm run build` clean.
 
 ## TIER 3 (MINOR) — in progress
 
+### N9 — re-confirm no TODO/FIXME/HACK/XXX
+STARTING/DONE N9 — re-ran the grep after tonight's changes. 8 files matched case-insensitive
+"hack", all false positives from the "hacker" theme name (same false-positive class the
+original audit found). No real TODO/FIXME/HACK/XXX markers introduced or found.
+
+## TIER 3 (MINOR) COMPLETE — 8/9 fixed, 1 confirmed-not-newly-actionable (N8, see above)
+
 ### N8 — known documented gaps
 STARTING/DONE-BUT-FAILED N8 — re-confirmed all three are still true (voice transcription
 still 503s with GROQ_API_KEY unset; no rate limiting on any AI endpoint; WHOOP webhook
