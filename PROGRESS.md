@@ -80,6 +80,14 @@ artificial diffs on the same lines.
   `relrowsecurity = true` with a policy each.
   Commit (migration file + regression fix): 531f4e9.
 
+### C6, C7 — correction to earlier log entry
+These were actually already fixed inside the same lib/db/queries.ts pass as C1/C3/C4
+(commit 531f4e9) — `upsertDailyStats`'s read now checks `readError` and throws instead of
+treating a failed read as "no existing row" (C6), and `recomputeDailyStats` checks both its
+read and write errors instead of upserting zeroed stats on failure (C7). The board rows for
+C6/C7 just hadn't been flipped yet; corrected now. No new commit needed — attributing to
+531f4e9.
+
 ### C5 — mounjaro_side_effects min(1) → min(0)
 STARTING/DONE C5 — lib/schemas.ts MounjaroSideEffectsSchema now allows 0 for
 nausea/appetite/energy, matching the tool schema's documented "0=none" meaning. Verified:
