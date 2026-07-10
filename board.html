@@ -173,21 +173,21 @@
         <div class="bug-ref">S6 · body module — new app/(os)/body/page.tsx reuses getRecentWorkouts/getInjuriesWithCheckins/getWhoopMetrics + computeMuscleRecovery exactly as DashboardGrid does, ModulePageClient gives it full-size (not compact) rendering. Build clean.</div>
       </div>
 
-      <div class="bug-row" data-status="working" data-id="S7" data-time-est="25" data-time-actual="" data-credit-est="40000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S7" data-time-est="25" data-time-actual="10" data-credit-est="40000" data-credit-actual="18000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Recompose: Media module — full catalogue page (books/films/shows/songs), reusing lib/db/media.ts.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S7 · media module</div>
+        <div class="bug-ref">S7 · media module — MediaWidget is self-contained (fetches its own /api/media data), just wrapped in ModulePageClient for full-size rendering. Build clean.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S8" data-time-est="20" data-time-actual="" data-credit-est="35000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S8" data-time-est="20" data-time-actual="10" data-credit-est="35000" data-credit-actual="17000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Recompose: Journal module — full page, reusing existing journal data functions.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S8 · journal module</div>
+        <div class="bug-ref">S8 · journal module — reuses getTodayStats/getTodayWorkouts/getDailyStatsHistory exactly as the bento page does. Build clean.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S9" data-time-est="30" data-time-actual="" data-credit-est="45000" data-credit-actual="">
+      <div class="bug-row" data-status="working" data-id="S9" data-time-est="30" data-time-actual="" data-credit-est="45000" data-credit-actual="">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Health module — HRV/RHR/sleep/strain/sick/injury/sleep-debt in one page, Recovery lives here.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
