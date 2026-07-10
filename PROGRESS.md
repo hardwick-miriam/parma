@@ -80,6 +80,16 @@ artificial diffs on the same lines.
   `relrowsecurity = true` with a policy each.
   Commit (migration file + regression fix): 531f4e9.
 
+### C8, C9 — WHOOP webhook + token-refresh error handling
+STARTING/DONE C8/C9 —
+- C8: lib/whoop/sync.ts syncRecoveryByCycleId/syncSleepById/syncWorkoutById now check their
+  upsert's error and throw instead of silently discarding a failed write. The webhook route's
+  catch block now returns 500 (was always 200) so WHOOP retries the delivery.
+- C9: lib/whoop/client.ts getValidConnectionService now checks the token-refresh write's
+  error and throws with a clear message on failure, instead of returning a new access token
+  as if it were persisted while the DB still holds the invalidated old refresh token.
+Verified: `npm run build` clean.
+
 ### C6, C7 — correction to earlier log entry
 These were actually already fixed inside the same lib/db/queries.ts pass as C1/C3/C4
 (commit 531f4e9) — `upsertDailyStats`'s read now checks `readError` and throws instead of

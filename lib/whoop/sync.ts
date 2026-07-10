@@ -437,7 +437,7 @@ export async function syncRecoveryByCycleId(userId: string, cycleId: number): Pr
     ? await whoopGet<WhoopSleepRecord>(`/activity/sleep/${recovery.sleep_id}`, conn.access_token).catch(() => null)
     : null
 
-  await supabase
+  const { error } = await supabase
     .from('whoop_metrics')
     .upsert({
       user_id: userId,
@@ -452,6 +452,9 @@ export async function syncRecoveryByCycleId(userId: string, cycleId: number): Pr
         : null,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id,date' })
+  // C8: without this check a failed write is invisible — the webhook route's
+  // try/catch never sees it, so it ACKs 200 and WHOOP never retries.
+  if (error) throw error
 }
 
 export async function syncSleepById(userId: string, sleepId: string): Promise<void> {
@@ -463,7 +466,7 @@ export async function syncSleepById(userId: string, sleepId: string): Promise<vo
 
   const date = cycleDate(sleep.start, sleep.timezone_offset)
 
-  await supabase
+  const { error } = await supabase
     .from('whoop_metrics')
     .upsert({
       user_id: userId,
@@ -471,6 +474,7 @@ export async function syncSleepById(userId: string, sleepId: string): Promise<vo
       sleep_performance_pct: sleep.score.sleep_performance_percentage,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id,date' })
+  if (error) throw error
 }
 
 export async function syncWorkoutById(userId: string, workoutId: string): Promise<void> {
@@ -486,7 +490,7 @@ export async function syncWorkoutById(userId: string, workoutId: string): Promis
     (new Date(workout.end).getTime() - new Date(workout.start).getTime()) / 60_000
   )
 
-  await supabase
+  const { error } = await supabase
     .from('workout_sessions')
     .upsert(
       {
@@ -500,4 +504,5 @@ export async function syncWorkoutById(userId: string, workoutId: string): Promis
       },
       { onConflict: 'user_id,whoop_id' }
     )
+  if (error) throw error
 }

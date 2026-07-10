@@ -70,7 +70,12 @@ export async function POST(request: NextRequest) {
     }
   } catch (err) {
     console.error(`WHOOP webhook error for ${event.type}:`, err)
-    // Return 200 so WHOOP doesn't retry; we'll catch up in nightly cron
+    // C8: return non-2xx so WHOOP retries the delivery. Previously this
+    // always returned 200 even on a failed write, so a transient DB error
+    // silently dropped the event for good — the "nightly cron catches up"
+    // assumption doesn't hold on Vercel Hobby, where the only sub-daily
+    // sync path is the external pinger, not a cron job (see CLAUDE.md rule 7).
+    return NextResponse.json({ error: 'Failed to process webhook event' }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true })

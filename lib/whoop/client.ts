@@ -151,12 +151,13 @@ export async function getWhoopProfile(accessToken: string): Promise<WhoopProfile
 
 export async function getValidConnectionService(userId: string): Promise<WhoopConnection> {
   const supabase = createServiceClient()
-  const { data: conn } = await supabase
+  const { data: conn, error: readError } = await supabase
     .from('whoop_connections')
     .select('*')
     .eq('user_id', userId)
     .maybeSingle()
 
+  if (readError) throw readError
   if (!conn) throw new Error('Not connected to WHOOP')
 
   const expiresAt = new Date(conn.token_expires_at as string)
@@ -166,7 +167,7 @@ export async function getValidConnectionService(userId: string): Promise<WhoopCo
 
   const tokens = await doRefresh(conn.refresh_token as string)
   const newExpires = new Date(Date.now() + tokens.expires_in * 1000).toISOString()
-  await supabase
+  const { error: writeError } = await supabase
     .from('whoop_connections')
     .update({
       access_token: tokens.access_token,
@@ -174,6 +175,14 @@ export async function getValidConnectionService(userId: string): Promise<WhoopCo
       token_expires_at: newExpires,
     })
     .eq('user_id', userId)
+
+  // C9: WHOOP rotates refresh tokens on every use — if this write silently
+  // fails, the DB keeps the now-invalidated old refresh_token while we
+  // return the new access_token as if it were persisted. The next refresh
+  // then fails against WHOOP with an opaque error, breaking the
+  // integration until the user manually reconnects. Throw so the caller
+  // (sync/webhook) sees a clear "token persist failed" error instead.
+  if (writeError) throw new Error(`Failed to persist refreshed WHOOP token: ${writeError.message}`)
 
   return { ...conn, access_token: tokens.access_token, token_expires_at: newExpires } as WhoopConnection
 }
