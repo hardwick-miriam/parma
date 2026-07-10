@@ -98,6 +98,13 @@ PRTrackerWidget.tsx which already used the correct fields) instead of the nonexi
 
 ## TIER 2 (MAJOR) — in progress
 
+### M12 — theme write-only on a new browser/device
+STARTING/DONE M12 — app/layout.tsx now falls back to `getUserPreferences(user.id).theme` when
+the `parma-theme` cookie is absent (new browser/device/cleared cookies), instead of always
+defaulting to 'normal'. Also removed the dead `initialPrefs.theme` prop on SettingsClient (it
+was fetched in settings/page.tsx but never actually read — the component uses `useTheme()`
+instead — now redundant given the layout-level fix). Verified: `npm run build` clean.
+
 ### M11 — push notification categories never read back
 STARTING/DONE M11 — added GET /api/push/subscribe?endpoint=... returning the saved
 `categories` for that subscription; PushNotificationSettings.tsx now fetches and seeds its

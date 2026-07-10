@@ -16,7 +16,6 @@ interface Props {
     token: string | null
     savedPlaces: SavedPlace[]
     mounjaroEnabled: boolean
-    theme: string
     weatherBgEnabled: boolean
   }
   whoopConnection: {

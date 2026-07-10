@@ -5,6 +5,8 @@ import { ThemeProvider } from '@/components/ThemeProvider'
 import { QueryProvider } from '@/components/QueryProvider'
 import { Toaster } from 'sonner'
 import { SWRegister } from '@/components/SWRegister'
+import { createClient } from '@/lib/supabase/server'
+import { getUserPreferences } from '@/lib/db/preferences'
 import './globals.css'
 
 const inter = Inter({
@@ -52,7 +54,25 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies()
-  const theme = cookieStore.get('parma-theme')?.value ?? 'normal'
+  let theme = cookieStore.get('parma-theme')?.value
+
+  // The cookie is absent on a new browser/device/cleared-cookies, even
+  // though the user's real saved theme is in user_preferences.theme — fall
+  // back to the DB so it isn't effectively write-only outside this one
+  // browser. Only worth the round trip when there's no cookie to trust.
+  if (!theme) {
+    try {
+      const supabase = await createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const prefs = await getUserPreferences(user.id)
+        theme = prefs?.theme
+      }
+    } catch {
+      // Not authenticated / DB unavailable — fall through to default
+    }
+  }
+  theme ??= 'normal'
 
   const fontVars = [
     inter.variable,
