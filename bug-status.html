@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Parma — Bug Fix Status Board</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --purple: #8b5cf6;
+    --purple-dim: rgba(139, 92, 246, 0.14);
+    --purple-glow: rgba(139, 92, 246, 0.35);
+    --bg: #0b0b10;
+    --panel: #16161f;
+    --panel-2: #1c1c28;
+    --border: #2a2a38;
+    --text: #f0f0f5;
+    --text-dim: #9a9aad;
+    --text-faint: #6b6b7d;
+    --grey: #4b4b5a;
+    --grey-bg: rgba(120, 120, 140, 0.14);
+    --blue: #38bdf8;
+    --blue-bg: rgba(56, 189, 248, 0.14);
+    --green: #34d399;
+    --green-bg: rgba(52, 211, 153, 0.14);
+    --red: #f87171;
+    --red-bg: rgba(248, 113, 113, 0.14);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: radial-gradient(circle at 20% -10%, rgba(139,92,246,0.10), transparent 45%), var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    padding: 32px 24px 80px;
+    min-height: 100vh;
+  }
+
+  .wrap { max-width: 1000px; margin: 0 auto; }
+
+  header {
+    margin-bottom: 28px;
+  }
+
+  h1 {
+    font-size: clamp(28px, 4vw, 40px);
+    margin: 0 0 6px;
+    letter-spacing: -0.02em;
+  }
+  h1 span.brand { color: var(--purple); }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 16px;
+    margin: 0 0 24px;
+  }
+
+  .overall-card {
+    background: linear-gradient(155deg, var(--panel-2), var(--panel));
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 28px 24px;
+    box-shadow: 0 0 0 1px rgba(139,92,246,0.05), 0 20px 60px -30px rgba(139,92,246,0.4);
+  }
+
+  .overall-count {
+    font-size: clamp(40px, 7vw, 64px);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .overall-count .num { color: var(--purple); }
+  .overall-count .label {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text-dim);
+  }
+
+  .progress-track {
+    margin-top: 18px;
+    height: 16px;
+    border-radius: 999px;
+    background: #26263a;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #7c3aed, var(--purple), #a78bfa);
+    box-shadow: 0 0 16px var(--purple-glow);
+    transition: width 0.4s ease;
+    border-radius: 999px;
+  }
+
+  .overall-breakdown {
+    margin-top: 16px;
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+  .overall-breakdown b { color: var(--text); }
+
+  .status-banner {
+    display: none;
+    margin-top: 16px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    background: var(--green-bg);
+    color: var(--green);
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .status-banner.show { display: block; }
+
+  .live-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--blue);
+    margin-right: 8px;
+    box-shadow: 0 0 8px var(--blue);
+    animation: pulse 1.4s infinite ease-in-out;
+    vertical-align: middle;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+  .refresh-note {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--text-faint);
+  }
+
+  .tier-section { margin-top: 40px; }
+
+  .tier-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tier-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .tier-badge {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .tier-critical .tier-badge { background: rgba(248,113,113,0.16); color: #fca5a5; }
+  .tier-major .tier-badge { background: rgba(251,191,36,0.16); color: #fcd34d; }
+  .tier-minor .tier-badge { background: rgba(56,189,248,0.16); color: #7dd3fc; }
+  .tier-food .tier-badge { background: rgba(52,211,153,0.16); color: #6ee7b7; }
+
+  .tier-counter {
+    font-size: 14px;
+    color: var(--text-dim);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .bug-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .bug-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    transition: border-color 0.3s, background 0.3s;
+  }
+
+  .bug-row[data-status="fixing"] {
+    border-color: rgba(56,189,248,0.4);
+    background: linear-gradient(90deg, rgba(56,189,248,0.06), var(--panel) 40%);
+  }
+  .bug-row[data-status="fixed"] {
+    border-color: rgba(52,211,153,0.3);
+  }
+  .bug-row[data-status="failed"] {
+    border-color: rgba(248,113,113,0.35);
+  }
+
+  .status-chip {
+    flex: 0 0 auto;
+    min-width: 118px;
+    text-align: center;
+    padding: 7px 10px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .bug-row[data-status="waiting"] .status-chip { background: var(--grey-bg); color: var(--text-dim); }
+  .bug-row[data-status="fixing"] .status-chip { background: var(--blue-bg); color: var(--blue); }
+  .bug-row[data-status="fixed"] .status-chip { background: var(--green-bg); color: var(--green); }
+  .bug-row[data-status="failed"] .status-chip { background: var(--red-bg); color: var(--red); }
+
+  .bug-main {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .bug-text {
+    font-size: 17px;
+    line-height: 1.45;
+  }
+  .bug-row[data-status="fixed"] .bug-text {
+    color: var(--text-dim);
+  }
+
+  .bug-reason {
+    margin-top: 6px;
+    font-size: 14px;
+    color: var(--red);
+    font-style: italic;
+    display: none;
+  }
+  .bug-row[data-status="failed"] .bug-reason.has-text { display: block; }
+
+  .bug-ref {
+    flex: 0 0 auto;
+    font-size: 12px;
+    color: var(--text-faint);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: var(--panel-2);
+    padding: 4px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  footer {
+    margin-top: 50px;
+    text-align: center;
+    color: var(--text-faint);
+    font-size: 13px;
+  }
+
+  @media (max-width: 640px) {
+    .bug-row { flex-wrap: wrap; }
+    .status-chip { order: 1; }
+    .bug-main { order: 2; flex-basis: 100%; }
+    .bug-ref { order: 3; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1><span class="brand">Parma</span> — Bug Fix Status Board</h1>
+    <p class="subtitle">Every issue from tonight's bug audit (BUGS.md), tracked live while fixes go in.</p>
+  </header>
+
+  <div class="overall-card">
+    <div class="overall-count"><span class="num" id="overall-num">0</span><span class="label">of <span id="overall-total">44</span> fixed</span></div>
+    <div class="progress-track"><div class="progress-fill" id="overall-progress"></div></div>
+    <div class="overall-breakdown" id="overall-breakdown"></div>
+    <div class="status-banner" id="done-banner">✓ All bugs resolved — board is no longer auto-refreshing.</div>
+    <div class="refresh-note" id="refresh-note"><span class="live-dot"></span>Auto-refreshing every 5 seconds while work is in progress.</div>
+  </div>
+
+  <!-- ===================== CRITICAL ===================== -->
+  <section class="tier-section tier-critical">
+    <div class="tier-header">
+      <div class="tier-title"><span class="tier-badge">Critical</span></div>
+      <div class="tier-counter" data-tier-counter="critical">0 of 10 fixed</div>
+    </div>
+    <div class="bug-list" data-tier="critical">
+
+      <div class="bug-row" data-status="waiting" data-id="C1">
+        <div class="status-chip"></div>
+        <div class="bug-main">
+          <div class="bug-text">Some of your most private data — journal entries, health status, injuries, progress photos, Mounjaro doses — might not be locked to just your account.</div>
+          <div class="bug-reason"></div>
+        </div>
+        <div class="bug-ref">C1 · 8 untracked tables / RLS</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="C2">
+        <div class="status-chip"></div>
+        <div class="bug-main">
+          <div class="bug-text">Editing a log entry before saving could quietly corrupt it — bad numbers or made-up text could sneak straight into the database with no check.</div>
+          <div class="bug-reason"></div>
+        </div>
+        <div class="bug-ref">C2 · app/actions.ts saveLog</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="C3">
+        <div class="status-chip"></div>
+        <div class="bug-main">
+          <div class="bug-text">For up to an hour after midnight, workouts, injury check-ins, and Mounjaro doses got saved to the wrong day.</div>
+          <div class="bug-reason"></div>
+        </div>
+        <div class="bug-ref">C3 · lib/db/queries.ts (UTC date)</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="C4">
+        <div class="status-chip"></div>
+        <div class="bug-main">
+          <div class="bug-text">Saying "yesterday I did X" only backdated the food part of your log — the workout, injury note, or Mounjaro dose still landed on today, and could even overwrite today's real dose.</div>
+          <div class="bug-reason"></div>
+        </div>
+        <div class="bug-ref">C4 · log_date backdating ignored</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="C5">
+        <div class="status-chip"></div>
+        <div class="bug-main">
+          <div class="bug-text">Saying "no side effects today" was silently deleting your entire log entry — not just the side-effects part.</div>
+          <div class="bug-reason"></div>
+        </div>
+        <div class="bug-ref">C5 · mounjaro_side_effects schema</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="C6">
+        <div class="status-chip"></div>
+        <div class="bug-main">
+          <div class="bug-text">A brief hiccup reading your existing totals could silently wipe out and overwrite your real calorie, protein, water, and step counts for the day.</div>
+          <div class="bug-reason"></div>
+        </div>
+        <div class="bug-ref">C6 · upsertDailyStats</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="C7">
+        <div class="status-chip"></div>
+        <div class="bug-main">
+          <div class="bug-text">Deleting a single log entry could, on a bad day, zero out your entire day's stats instead of just removing that one entry.</div>
+          <div class="bug-reason"></div>
+        </div>
+        <div class="bug-ref">C7 · recomputeDailyStats</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="C8">
+        <div class="status-chip"></div>
+        <div class="bug-main">
+          <div class="bug-text">WHOOP data (recovery, sleep, workouts) could silently fail to save when it arrived — and WHOOP would never know to resend it.</div>
+          <div class="bug-reason"></div>
+        </div>
+        <div class="bug-ref">C8 · WHOOP webhook writes</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="C9">
+        <div class="status-chip"></div>
+        <div class="bug-main">
+          <div class="bug-text">A silent database hiccup could quietly break your WHOOP connection until you manually disconnect and reconnect it.</div>
+          <div class="bug-reason"></div>
+        </div>
+        <div class="bug-ref">C9 · WHOOP token refresh</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="C10">
+        <div class="status-chip"></div>
+        <div class="bug-main">
+          <div class="bug-text">Personal records existed but never showed up when you tapped in to see them.</div>
+          <div class="bug-reason"></div>
+        </div>
+        <div class="bug-ref">C10 · PRTrackerDetail</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================== MAJOR ===================== -->
+  <section class="tier-section tier-major">
+    <div class="tier-header">
+      <div class="tier-title"><span class="tier-badge">Major</span></div>
+      <div class="tier-counter" data-tier-counter="major">0 of 23 fixed</div>
+    </div>
+    <div class="bug-list" data-tier="major">
+
+      <div class="bug-row" data-status="waiting" data-id="M1">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">A journal note could fail to save while the app still tells you it worked.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">M1 · journal upsert</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="M2">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">Hitting "Disconnect WHOOP" could say success while WHOOP actually stayed connected behind the scenes.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">M2 · WHOOP disconnect</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="M3">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">Adding or removing a World Clocks city could silently fail to actually save.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">M3 · world-clocks upsert</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="M4">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">Switching your active workout routine could leave two routines marked "active" at the same time.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">M4 · routine activation</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="M5">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">Countries you mentioned visiting, or cities you asked to track, could silently vanish even though the rest of your log saved fine.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">M5 · saveLog countries/clocks</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="M6">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">The nightly insights refresh could report "done" even when it actually failed to save anything.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">M6 · insights-refresh cron</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="M7">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">The WHOOP auto-sync could quietly report "nothing to sync" when it actually hit a database error.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">M7 · sync-tick / whoop-sync cron</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="M8">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">A broken sign-in link could drop you into the app looking logged in when you're actually not authenticated.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">M8 · auth callback</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="M9">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">Tapping into the Weather widget for more detail could show a totally blank screen with no explanation.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">M9 · WeatherDetail missing coords</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="M10">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">The Weather widget shows clipped or overflowing text when you shrink it small on your phone.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">M10 · WeatherWidget mobile sizing</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="M11">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">Your push notification preferences reset to "everything on" every single time you reloaded the page.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">M11 · push categories not read back</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="M12">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">Your chosen theme could revert to the default on a new phone or browser, even though it was saved.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">M12 · theme write-only on new device</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="M13">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">Logging food and a workout together as a backdated entry could split them onto two different days.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">M13 · insertWorkout missing logDate</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="M14">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">An oddly-estimated food or workout log could fail to save with a confusing, unexplained error.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">M14 · calories/duration not integer-checked</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="M15">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">Nothing in the database itself stops junk values from ending up in your mood or workout-feeling fields if the normal checks get skipped.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">M15 · no DB check on mood/feeling</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="M16">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">A future update to what the app can log could silently stop working on some screens while looking fine on others — two copies of the same rulebook can drift apart.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">M16 · duplicate ParsedLog type</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="M17">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">Logging via Apple Shortcuts silently drops media, countries visited, world clocks, injuries, and muscle soreness — only food, workouts, and mood actually come through.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">M17 · /api/shortcuts/log missing fields</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="M18">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">A backup AI provider option that exists in the code is badly out of date and would break most logging features if it were ever switched on.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">M18 · openai-compatible provider</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="M19">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">The World Clocks help text sends you to the wrong Settings page to add a city — that page is for something else entirely.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">M19 · WorldClocks detail wrong pointer</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="M20">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">There's a leftover, unused world-map screen still sitting in the code, duplicating the working Globe widget.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">M20 · orphaned WorldMapWidget</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="M21">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">Several smaller actions — removing a supplement or habit, deleting a log, WHOOP syncing details — can silently do nothing on a database hiccup with no warning.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">M21 · misc unchecked writes</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="M22">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">The AI quietly figures out which of your numbers are rough estimates, but the app never actually shows you that flag anywhere.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">M22 · unused estimates field</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="M23">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">One bad country code or rating inside a log could silently throw away your whole log entry instead of just ignoring that one item.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">M23 · atomic array validation</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================== MINOR ===================== -->
+  <section class="tier-section tier-minor">
+    <div class="tier-header">
+      <div class="tier-title"><span class="tier-badge">Minor</span></div>
+      <div class="tier-counter" data-tier-counter="minor">0 of 9 fixed</div>
+    </div>
+    <div class="bug-list" data-tier="minor">
+
+      <div class="bug-row" data-status="waiting" data-id="N1">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">A bunch of smaller background reads and writes (journal list, WHOOP history, photo cleanup, food cache) fail silently with no visible impact most of the time — but no record of the failure either.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">N1 · console-error-and-continue</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="N2">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">Your "background effects on mobile" toggle only remembers itself on the one device or browser you set it on.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">N2 · bgEffectsMobile localStorage-only</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="N3">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">Some charts (heatmap, habit garden, sleep debt) can highlight the wrong day's column for about an hour after midnight.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">N3 · widget date-key builders</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="N4">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">Insights and Routines can show "nothing here yet" when they actually just failed to load — you can't tell the difference.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">N4 · swallowed fetch errors</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="N5">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">Tapping a muscle on the body diagram can fail to show a real injury if you didn't log it using almost the exact same wording as the muscle name.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">N5 · BodyWidget fragile matching</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="N6">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">Some detail popups (Weather, Insights, PR Tracker) just spin on "Loading…" forever with no retry button if the load fails.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">N6 · detail sheets no timeout/retry</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="N7">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">Several widgets (world clocks, media, supplements, insights, PR tracker, training load, habit garden, habits) can look cramped or clipped when shrunk small on a phone.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">N7 · mobile compact branches missing</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="N8">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">Voice logging is still switched off, there's no spending limit on AI usage, and WHOOP's webhook security check can be skipped if it's not configured.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">N8 · known documented gaps</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="N9">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">Double-checked the whole codebase for leftover "fix this later" notes — genuinely none found. Nothing to do here, just confirming it's clean.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">N9 · no TODO/FIXME found</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================== FOOD ===================== -->
+  <section class="tier-section tier-food">
+    <div class="tier-header">
+      <div class="tier-title"><span class="tier-badge">Food</span></div>
+      <div class="tier-counter" data-tier-counter="food">0 of 2 fixed</div>
+    </div>
+    <div class="bug-list" data-tier="food">
+
+      <div class="bug-row" data-status="waiting" data-id="F1">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">When you list a whole day of food in one message, it saves as one big blob instead of separate meals.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">F1 · food logging: blob not meals</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="F2">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">Logging food after midnight files it under today when it should really be yesterday.</div><div class="bug-reason"></div></div>
+        <div class="bug-ref">F2 · food logging: after-midnight date</div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer>
+    Generated from BUGS.md · edit each row's <code>data-status</code> (waiting / fixing / fixed / failed) and, for failed rows, <code>data-reason</code> to update this board.
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  var STATUS_LABEL = {
+    waiting: 'WAITING',
+    fixing: 'FIXING NOW',
+    fixed: '✓ FIXED',
+    failed: '✗ COULDN\'T FIX'
+  };
+
+  var rows = Array.prototype.slice.call(document.querySelectorAll('.bug-row'));
+
+  rows.forEach(function (row) {
+    var status = row.getAttribute('data-status') || 'waiting';
+    var chip = row.querySelector('.status-chip');
+    chip.textContent = STATUS_LABEL[status] || STATUS_LABEL.waiting;
+
+    var reasonEl = row.querySelector('.bug-reason');
+    var reasonText = row.getAttribute('data-reason') || '';
+    if (reasonText) {
+      reasonEl.textContent = 'Reason: ' + reasonText;
+      reasonEl.classList.add('has-text');
+    }
+  });
+
+  // Overall + per-tier counts
+  var total = rows.length;
+  var fixed = rows.filter(function (r) { return r.getAttribute('data-status') === 'fixed'; }).length;
+  var fixing = rows.filter(function (r) { return r.getAttribute('data-status') === 'fixing'; }).length;
+  var failed = rows.filter(function (r) { return r.getAttribute('data-status') === 'failed'; }).length;
+  var waiting = total - fixed - fixing - failed;
+
+  document.getElementById('overall-num').textContent = fixed;
+  document.getElementById('overall-total').textContent = total;
+  document.getElementById('overall-progress').style.width = (total ? (fixed / total * 100) : 0) + '%';
+  document.getElementById('overall-breakdown').innerHTML =
+    '<span><b>' + waiting + '</b> waiting</span>' +
+    '<span><b>' + fixing + '</b> fixing now</span>' +
+    '<span><b>' + fixed + '</b> fixed</span>' +
+    '<span><b>' + failed + '</b> couldn\'t fix</span>';
+
+  ['critical', 'major', 'minor', 'food'].forEach(function (tier) {
+    var tierRows = Array.prototype.slice.call(document.querySelectorAll('.bug-list[data-tier="' + tier + '"] .bug-row'));
+    var tierFixed = tierRows.filter(function (r) { return r.getAttribute('data-status') === 'fixed'; }).length;
+    var el = document.querySelector('[data-tier-counter="' + tier + '"]');
+    if (el) el.textContent = tierFixed + ' of ' + tierRows.length + ' fixed';
+  });
+
+  // Auto-refresh every 5s until every row is resolved (fixed or failed)
+  var allResolved = rows.every(function (r) {
+    var s = r.getAttribute('data-status');
+    return s === 'fixed' || s === 'failed';
+  });
+
+  if (allResolved && total > 0) {
+    document.getElementById('done-banner').classList.add('show');
+    document.getElementById('refresh-note').style.display = 'none';
+  } else {
+    setTimeout(function () { location.reload(); }, 5000);
+  }
+})();
+</script>
+</body>
+</html>
