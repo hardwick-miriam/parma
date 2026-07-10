@@ -342,25 +342,25 @@
         <div class="bug-ref">S1 · session board + standing rule</div>
       </div>
 
-      <div class="bug-row" data-status="working" data-id="S2"
-           data-time-est="20" data-time-actual=""
-           data-credit-est="35000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S2"
+           data-time-est="20" data-time-actual="14"
+           data-credit-est="35000" data-credit-actual="32000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Wardrobe: write + run live migration for wardrobe_items / wardrobe_wears, RLS verified.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S2 · wardrobe migration + RLS</div>
+        <div class="bug-ref">S2 · wardrobe migration + RLS — migration 021 run live, RLS + owner policy confirmed on both tables</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S3"
-           data-time-est="15" data-time-actual=""
-           data-credit-est="25000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S3"
+           data-time-est="15" data-time-actual="8"
+           data-credit-est="25000" data-credit-actual="18000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Wardrobe: private storage bucket + signed-URL helper (reusing the progress-photos pattern).</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">Wardrobe: private storage bucket + signed-URL helper (reusing the progress-photos pattern, but with real owner-scoped RLS policies this time — see reason).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S3 · wardrobe storage bucket</div>
+        <div class="bug-ref">S3 · wardrobe storage bucket — 'wardrobe' bucket (private) created, 4 owner-scoped storage.objects policies confirmed. NOTE: found progress-photos bucket has storage.objects RLS on with ZERO policies + uses the anon-scoped client — likely already broken for real users, not fixed here, flagged for S11.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S4"
+      <div class="bug-row" data-status="working" data-id="S4"
            data-time-est="40" data-time-actual=""
            data-credit-est="70000" data-credit-actual="">
         <div class="status-chip"></div>

@@ -613,3 +613,20 @@ commit hash per step so a paused run resumes correctly.
 - DONE S1 — `board.html` created (dark/purple theme matching `bug-status.html`, 12-step tracker,
   time+credit estimate/actual columns, credit burn meter labelled APPROXIMATE). Added rule 8 to
   CLAUDE.md: "3+ step tasks get board.html first, mandatory like committing." Commit: (see below)
+
+### S2/S3 — wardrobe migration + storage bucket
+- STARTING S2/S3
+- DONE S2/S3 — `supabase/migrations/021_wardrobe.sql` run live: `wardrobe_items` +
+  `wardrobe_wears` tables, both RLS-enabled with owner policies (verified via
+  `pg_class.relrowsecurity` + `pg_policies`), plus a private `wardrobe` storage bucket with 4
+  owner-scoped `storage.objects` policies (select/insert/update/delete, gated on
+  `(storage.foldername(name))[1] = auth.uid()::text`), verified live.
+- **New finding, not in scope to fix here**: while building this, found `storage.objects` has
+  RLS enabled but ZERO policies for the existing `progress-photos` bucket, and
+  `app/api/photos/route.ts` calls through the anon/session-scoped client
+  (`lib/supabase/server.ts:createClient()`) for all 3 storage calls (upload, signed URL x2). With
+  RLS on and no permissive policy, PostgREST/Storage denies access to non-superuser roles by
+  default — this looks like the progress-photos feature (already-shipped, not part of this
+  session's brief) may not actually work for real logged-in users right now. Did NOT copy this
+  pattern into wardrobe (wardrobe has real policies, verified above). Logged for the BUGS.md
+  sweep (S11) rather than fixed now, since it's outside the 4 tasks given for this session.
