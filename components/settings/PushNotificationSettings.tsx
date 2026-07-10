@@ -42,7 +42,19 @@ export function PushNotificationSettings() {
   useEffect(() => {
     if (!supported) return
     navigator.serviceWorker.ready.then((reg) => {
-      reg.pushManager.getSubscription().then((sub) => setSubscribed(!!sub))
+      reg.pushManager.getSubscription().then((sub) => {
+        setSubscribed(!!sub)
+        if (!sub) return
+        // Seed from what's actually saved server-side — without this the
+        // checkboxes always reset to "everything on" on every page load,
+        // regardless of what the user previously turned off.
+        fetch(`/api/push/subscribe?endpoint=${encodeURIComponent(sub.endpoint)}`)
+          .then((r) => r.json())
+          .then((d) => {
+            if (d.categories) setCategories((prev) => ({ ...prev, ...d.categories }))
+          })
+          .catch(() => {})
+      })
     })
   }, [supported])
 

@@ -1,6 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
+// The `categories` JSON column was write-only before this — nothing ever
+// read it back, so the client's local state (defaulted to "everything on")
+// silently reset on every page refresh regardless of what the user had
+// actually saved.
+export async function GET(request: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const endpoint = request.nextUrl.searchParams.get('endpoint')
+  if (!endpoint) return NextResponse.json({ error: 'endpoint required' }, { status: 400 })
+
+  const { data, error } = await supabase
+    .from('push_subscriptions')
+    .select('categories')
+    .eq('user_id', user.id)
+    .eq('endpoint', endpoint)
+    .maybeSingle()
+
+  if (error) {
+    console.error('[push/subscribe GET] error:', error.message)
+    return NextResponse.json({ error: 'Failed to load categories' }, { status: 500 })
+  }
+  return NextResponse.json({ categories: data?.categories ?? null })
+}
+
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -39,10 +65,13 @@ export async function DELETE(request: NextRequest) {
 
   const { endpoint } = await request.json() as { endpoint?: string }
 
-  if (endpoint) {
-    await supabase.from('push_subscriptions').delete().eq('user_id', user.id).eq('endpoint', endpoint)
-  } else {
-    await supabase.from('push_subscriptions').delete().eq('user_id', user.id)
+  const { error } = endpoint
+    ? await supabase.from('push_subscriptions').delete().eq('user_id', user.id).eq('endpoint', endpoint)
+    : await supabase.from('push_subscriptions').delete().eq('user_id', user.id)
+
+  if (error) {
+    console.error('[push/subscribe DELETE] error:', error.message)
+    return NextResponse.json({ error: 'Failed to remove subscription' }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true })

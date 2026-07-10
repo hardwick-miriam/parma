@@ -98,6 +98,13 @@ PRTrackerWidget.tsx which already used the correct fields) instead of the nonexi
 
 ## TIER 2 (MAJOR) — in progress
 
+### M11 — push notification categories never read back
+STARTING/DONE M11 — added GET /api/push/subscribe?endpoint=... returning the saved
+`categories` for that subscription; PushNotificationSettings.tsx now fetches and seeds its
+checkboxes from that on mount instead of always defaulting to all-enabled. Also fixed the
+adjacent unchecked DELETE writes in the same route file (M21 overlap). Verified: `npm run
+build` clean.
+
 ### M9, M10 — Weather detail sheet + widget mobile sizing
 STARTING/DONE M9/M10 — while fixing this I found the bug was worse than described:
 `WeatherDetail` didn't just fetch with no lat/lon (400), its field names
