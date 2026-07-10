@@ -26,7 +26,11 @@ export const ParsedInjuryResolvedSchema = z.object({
 export const ParsedMediaItemSchema = z.object({
   category: z.enum(['book', 'film', 'show', 'song']),
   title: z.string(),
-  rating: z.number().min(1).max(10).optional(),
+  // Clamped rather than strictly bounded — the tool schema has no numeric
+  // bound on this, so an out-of-range value from the model used to fail
+  // this whole media item, which cascaded into failing the entire log
+  // (M23) even when everything else — food, workouts, etc — was fine.
+  rating: z.number().optional().transform((v) => (v == null ? v : Math.min(10, Math.max(1, v)))),
   note: z.string().optional(),
   status: z.enum(['want-to', 'in-progress', 'finished']).optional(),
 })
@@ -43,7 +47,8 @@ export const MounjaroSideEffectsSchema = z.object({
 
 export const MuscleSorenessEntrySchema = z.object({
   muscle_id: z.string(),
-  intensity: z.number().min(1).max(10),
+  // Same clamp-not-fail reasoning as media rating above (M23).
+  intensity: z.number().transform((v) => Math.min(10, Math.max(1, v))),
 })
 
 export const ParsedLogSchema = z.object({
@@ -69,7 +74,13 @@ export const ParsedLogSchema = z.object({
   injury_checkin: ParsedInjuryCheckinSchema.optional(),
   injury_resolved: ParsedInjuryResolvedSchema.optional(),
   media: z.array(ParsedMediaItemSchema).optional(),
-  countries_visited: z.array(z.string().length(3)).optional(),
+  // Filters out malformed codes instead of failing the whole log on one bad
+  // entry (M23) — the tool schema has no length/pattern constraint on this,
+  // so a stray 2-letter or misformatted code from the model used to nuke
+  // any food/workout/etc bundled in the same message.
+  countries_visited: z.array(z.string()).optional().transform((arr) =>
+    arr?.map((c) => c.trim().toUpperCase()).filter((c) => /^[A-Z]{3}$/.test(c))
+  ),
   world_clock_cities: z.array(z.string()).optional(),
   mounjaro_dose_mg: z.number().positive().optional(),
   mounjaro_feeling: z.string().optional(),

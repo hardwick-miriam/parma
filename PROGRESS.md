@@ -98,6 +98,20 @@ PRTrackerWidget.tsx which already used the correct fields) instead of the nonexi
 
 ## TIER 2 (MAJOR) — in progress
 
+### M22, M23 — unused estimates field; atomic array validation
+STARTING/DONE M22/M23 —
+- M22: ConfirmationDrawer now shows a small "~est." marker next to any numeric field the AI
+  flagged in `estimates` — previously extracted, validated, typed, and then never displayed
+  anywhere.
+- M23: lib/schemas.ts — media `rating` and muscle_soreness `intensity` are now clamped to
+  1-10 instead of strictly rejected (one bad rating no longer fails the whole media item,
+  which no longer cascades into failing the entire log); `countries_visited` now filters out
+  malformed codes instead of rejecting the whole array on one bad entry.
+Verified: `npm run build` clean.
+
+## TIER 2 (MAJOR) COMPLETE — 22/23 fixed, 1 blocked (M15: migration 018 written but not
+applied — same live-DB-credentials blocker as C1)
+
 ### M21 — remaining unchecked WHOOP sync/webhook reads
 STARTING/DONE M21 — most of this item's sub-findings were already fixed as side effects of
 C1/C9/M3/M11 (removeSupplement/HabitFromToday, deleteLogEntryById, getValidConnectionService's

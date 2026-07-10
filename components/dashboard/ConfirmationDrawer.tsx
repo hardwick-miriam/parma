@@ -140,7 +140,14 @@ export function ConfirmationDrawer({ rawText, parsed, saveError, onConfirm, onDi
             <div className="grid grid-cols-2 gap-3">
               {presentNumbers.map(({ key, label }) => (
                 <label key={key} className="flex flex-col gap-1">
-                  <span className="text-xs text-text-muted">{label}</span>
+                  <span className="text-xs text-text-muted">
+                    {label}
+                    {/* AI-inferred rather than stated by the user — the model already tells us
+                        this via `estimates`, which nothing ever surfaced before. */}
+                    {edited.estimates?.includes(key) && (
+                      <span className="text-text-subtle" title="Estimated — not explicitly stated"> ~est.</span>
+                    )}
+                  </span>
                   <input
                     type="number"
                     value={edited[key] as number ?? ''}
