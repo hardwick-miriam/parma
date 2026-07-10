@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getAIProvider } from '@/lib/ai'
 import { getActiveInjuries } from '@/lib/db/queries'
 import { ParseLogPayloadSchema, ParsedLogSchema } from '@/lib/schemas'
-import { getLocalDate, getWeekdayName } from '@/lib/date'
+import { getLocalDate, getWeekdayName, getLocalHour } from '@/lib/date'
 import { chronoParseDate } from '@/lib/chronoParse'
 
 export const maxDuration = 60
@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
       timezone: tz,
       weekday,
       resolvedDate,
+      currentHour: getLocalHour(tz),
     })
 
     const parseResult = ParsedLogSchema.safeParse(rawParsed)

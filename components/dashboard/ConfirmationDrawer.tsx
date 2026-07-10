@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { getLocalDate } from '@/lib/date'
 import type { ParsedLog } from '@/lib/ai/types'
 
 interface ConfirmationDrawerProps {
@@ -56,6 +57,10 @@ export function ConfirmationDrawer({ rawText, parsed, saveError, onConfirm, onDi
 
   function setMood(val: string) {
     setEdited((p) => ({ ...p, mood: val === '' ? undefined : (val as ParsedLog['mood']) }))
+  }
+
+  function setLogDate(val: string) {
+    setEdited((p) => ({ ...p, log_date: val || undefined }))
   }
 
   function setBool(key: 'sick' | 'injured', val: boolean) {
@@ -119,6 +124,23 @@ export function ConfirmationDrawer({ rawText, parsed, saveError, onConfirm, onDi
         <div className="flex-1 overflow-y-auto min-h-0 px-6 pb-2 flex flex-col gap-5">
           {!hasAnything && (
             <p className="text-text-subtle text-sm">Nothing was detected. Try being more specific.</p>
+          )}
+
+          {/* F2: the AI's resolved date (including the post-midnight
+              "yesterday's dinner" heuristic) is always reviewable and
+              correctable here before saving — not just shown when the AI
+              flagged the entry as backdated. */}
+          {hasAnything && (
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-text-muted">Date this entry belongs to</span>
+              <input
+                type="date"
+                value={edited.log_date ?? getLocalDate()}
+                onChange={(e) => setLogDate(e.target.value)}
+                max={getLocalDate()}
+                className="rounded-lg bg-surface-elevated border border-border text-text text-sm px-3 py-2 focus:outline-none focus:border-border-strong"
+              />
+            </label>
           )}
 
           {edited.mood != null && (

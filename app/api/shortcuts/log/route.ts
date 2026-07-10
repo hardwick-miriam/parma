@@ -4,6 +4,8 @@ import { getAIProvider } from '@/lib/ai'
 import { getActiveInjuries } from '@/lib/db/queries'
 import { ParsedLogSchema } from '@/lib/schemas'
 import { applyParsedLog } from '@/lib/logApply'
+import { getLocalDate, getWeekdayName, getLocalHour } from '@/lib/date'
+import { chronoParseDate } from '@/lib/chronoParse'
 
 export const maxDuration = 60
 
@@ -41,12 +43,25 @@ export async function POST(request: NextRequest) {
       getActiveInjuries(userId, supabase).catch(() => []),
     ])
 
+    // This route previously passed no date context at all to parseLog —
+    // /api/parse-log's "today"/weekday/resolvedDate/currentHour context
+    // (which relative-date resolution and the F2 post-midnight heuristic
+    // depend on) never reached Shortcuts-originated logs.
+    const today = getLocalDate()
+    const weekday = getWeekdayName(today)
+    const resolvedDate = chronoParseDate(text).resolvedDate ?? today
+
     const rawParsed = await provider.parseLog(text, {
       activeInjuries: activeInjuries.map((inj) => ({
         id: inj.id,
         description: inj.description,
         body_part: inj.body_part,
       })),
+      today,
+      timezone: 'Europe/London',
+      weekday,
+      resolvedDate,
+      currentHour: getLocalHour(),
     })
 
     // This route calls the AI provider directly instead of going through

@@ -116,6 +116,36 @@ STARTING/DONE N9 — re-ran the grep after tonight's changes. 8 files matched ca
 "hack", all false positives from the "hacker" theme name (same false-positive class the
 original audit found). No real TODO/FIXME/HACK/XXX markers introduced or found.
 
+## TIER 4 (FOOD PARSER) — in progress
+
+### F2 — after-midnight backdating
+STARTING/DONE F2 —
+- lib/date.ts: added `getLocalHour(tz, now)` and moved `subtractDay` here from
+  lib/ai/providers/claude.ts (was a private duplicate; now the shared, tested helper used
+  everywhere else in this codebase).
+- lib/ai/types.ts ParseContext: added `currentHour?: number`.
+- lib/ai/providers/claude.ts: when `currentHour` is 0-3, the system prompt now instructs the
+  model that a past-tense meal/food/workout mention with no explicit day almost certainly
+  belongs to yesterday, and to set `log_date` to yesterday's date accordingly — explicit dates
+  still take priority via chrono-node's existing pre-resolution, unchanged.
+- app/api/parse-log/route.ts: now passes `currentHour` (computed server-side from the request
+  timezone) into the parse context.
+- app/api/shortcuts/log/route.ts: this route was passing **no date context at all** to
+  parseLog before tonight — not just missing the midnight heuristic, it had no "today"
+  reference whatsoever, so its relative-date resolution ("yesterday", explicit dates via
+  chrono) was silently broken for every Shortcuts-originated log. Fixed to build the same
+  today/weekday/resolvedDate/currentHour context /api/parse-log does.
+- components/dashboard/ConfirmationDrawer.tsx: added an always-visible "Date this entry
+  belongs to" date picker (defaults to the resolved log_date or today, capped at today) so
+  the AI's date — including a midnight-heuristic guess — is reviewable and correctable before
+  saving, not just accepted blind.
+**Not done**: editing the date of an *already-saved* historical log entry — this app has no
+edit capability for any field of a persisted log entry (only delete), so that would be a
+separate, larger feature, not a fix to this bug. Confirmed no such UI exists anywhere in the
+codebase before deciding this was out of scope for tonight.
+Verified: `npm run build` clean. Could NOT verify against a live Claude call — no working
+ANTHROPIC_API_KEY in this session (see environment note at the top of this file).
+
 ## TIER 3 (MINOR) COMPLETE — 8/9 fixed, 1 confirmed-not-newly-actionable (N8, see above)
 
 ### N8 — known documented gaps

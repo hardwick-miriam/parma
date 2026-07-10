@@ -12,6 +12,18 @@ export function getWeekdayName(dateStr: string): string {
   return format(new Date(dateStr + 'T12:00:00'), 'EEEE')
 }
 
+/** Returns the current hour (0-23) in the user's timezone (default: Europe/London) */
+export function getLocalHour(tz: string = DEFAULT_TZ, now: Date = new Date()): number {
+  return Number(format(toZonedTime(now, tz), 'H', { timeZone: tz }))
+}
+
+/** One calendar day before a YYYY-MM-DD string (Europe/London terms, DST-safe via noon anchor) */
+export function subtractDay(dateStr: string, tz: string = DEFAULT_TZ): string {
+  const d = new Date(dateStr + 'T12:00:00Z')
+  d.setUTCDate(d.getUTCDate() - 1)
+  return getLocalDate(tz, d)
+}
+
 /** Format a date for display — e.g. "Friday 4 July 2025" */
 export function formatDisplayDate(tz: string = DEFAULT_TZ, now: Date = new Date()): string {
   return format(toZonedTime(now, tz), 'EEEE d MMMM yyyy', { timeZone: tz })

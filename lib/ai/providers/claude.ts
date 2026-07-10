@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { subtractDay } from '@/lib/date'
 import type { AIProvider, ParsedLog, ParseContext } from '../types'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -158,12 +159,6 @@ const BASE_SYSTEM =
   "Dates may be in DD/MM format — interpret accordingly.\n\n" +
   "For water: convert to ml (1L=1000ml, 1 glass=250ml, 1 pint=568ml). For weight: convert to kg."
 
-function subtractDay(dateStr: string): string {
-  const d = new Date(dateStr + 'T12:00:00')
-  d.setDate(d.getDate() - 1)
-  return d.toISOString().split('T')[0]
-}
-
 export class ClaudeProvider implements AIProvider {
   async parseLog(text: string, context?: ParseContext): Promise<ParsedLog> {
     let system = BASE_SYSTEM
@@ -172,9 +167,24 @@ export class ClaudeProvider implements AIProvider {
     if (context?.today) {
       const tz = context.timezone ?? 'Europe/London'
       const wd = context.weekday ?? ''
+      const yesterday = subtractDay(context.today, tz)
       system += `\n\nToday is ${context.today} (${wd}), timezone ${tz}. ` +
-        `Use this to resolve relative dates: "yesterday" → ${subtractDay(context.today)}, "this morning/last night" → today, ` +
+        `Use this to resolve relative dates: "yesterday" → ${yesterday}, "this morning/last night" → today, ` +
         `"Tuesday" → most recent Tuesday before today. Set log_date only when the entry is clearly about a past day.`
+
+      // F2: right after local midnight, a message like "had a burger for
+      // dinner" almost always describes a meal that happened *before*
+      // midnight, not one eaten in the last few minutes of the new day.
+      // Without this, such messages defaulted to today purely because
+      // there's no explicit date to trigger chrono-node or the general
+      // "yesterday" rule above.
+      if (context.currentHour != null && context.currentHour >= 0 && context.currentHour < 4) {
+        system += `\n\nIt is currently ${context.currentHour}:00 in the very early morning of ${context.today}. ` +
+          `If the user describes a meal, food, or workout in the PAST TENSE with no explicit day stated ` +
+          `(e.g. "had a burger for dinner", "did legs earlier"), assume it happened yesterday (${yesterday}) and set log_date = "${yesterday}" — ` +
+          `it is very unlikely they mean the last few minutes of today. ` +
+          `Exceptions: if they say "today", "just now", "this morning", give an explicit date, or describe something clearly happening right now, use ${context.today} instead.`
+      }
     }
 
     // chrono-node pre-resolved a date expression — treat as authoritative ground truth
