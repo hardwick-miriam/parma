@@ -222,11 +222,11 @@
         <div class="bug-ref">S13 · app/(dashboard)/page.tsx replaced with redirect('/main'); old bento content already lived at /grid since the polish step, unaffected. Old top-nav NavBar trimmed (Food/Wardrobe/Settings removed, now redundant with the new sidebar) and its "Dashboard" link repointed to /grid. Build confirms / still resolves as its own route. Verified with real curls below.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S14" data-time-est="15" data-time-actual="" data-credit-est="20000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S14" data-time-est="15" data-time-actual="14" data-credit-est="20000" data-credit-actual="19000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Final: clean build, verify production serves the latest commit (live fingerprint), board.html + PROGRESS.md true final state, plain-English summary.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S14 · final verification + summary</div>
+        <div class="bug-ref">S14 · commit 0831335 confirmed Ready/Production via vercel ls (2m old); every route (/, /main, /grid, /health, /body, /media, /journal, /food, /wardrobe, /settings, /gym) curled live, all consistent 307->/login (correct auth-gating, no 500s, no redirect loops)</div>
       </div>
 
     </div>

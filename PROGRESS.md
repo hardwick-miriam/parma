@@ -794,3 +794,80 @@ sections earlier in this file, and `board.html`'s per-row `bug-ref` text for the
 version. Commits this session, in order: `9c94665` → `b64f56a` → `f86d97e` → `aec484c` →
 `b58767b` → `d47b7d6`. Latest commit confirmed serving on production via the GitHub Deployments
 API and `vercel ls` (Ready/Production).
+
+---
+
+## Jarvis restructure — portrait-first modular OS (2026-07-10)
+
+**All 14 board.html steps done. Nothing left mid-flight. The live site's default view has
+changed for the first time this session (root now redirects into the new shell) — everything
+up to that point was purely additive and never touched the working app.**
+
+### What got done, in plain English
+
+Parma's had one big scrolling bento-grid dashboard. This session built a second, modular way to
+navigate the whole app — a persistent sidebar (or bottom tab bar on your phone) with a proper
+page for each part of your life: **Main, Gym, Food, Body, Media, Wardrobe, Journal, Health,
+Settings**. Nothing about the actual data or features changed — this was restructuring how you
+get to them, not rebuilding what they do.
+
+1. **The shell** — a left-hand sidebar on desktop/tablet/portrait-monitor widths, a bottom icon
+   bar on your phone. Both list the same 9 modules in the same order, plus a separate "Grid"
+   entry that's still the exact same bento dashboard you had before, completely unchanged.
+
+2. **Main** — the new "how am I doing today" home page: a big recovery ring, a calories ring with
+   protein/carbs/fat bars against your Settings targets, your last workout and how many days
+   since, HRV/RHR/sleep at a glance, and one-tap tiles into every other module.
+
+3. **Everything else moved in** — Settings, Food, and Wardrobe already had their own pages, so
+   those just got relocated under the new sidebar (same web addresses, nothing to re-bookmark).
+   Body, Media, Journal, and Health are brand new full pages built from the exact same widgets
+   and data your dashboard already used — just given a full page's worth of room instead of one
+   small tile, so nothing "compact" is hiding its detail on you anymore.
+
+4. **Gym** — a real training-status page: your training load trend, days since your last rest
+   day, your PRs, your active routine, a per-exercise history (pulled from what you've actually
+   logged — no invented set/rep numbers), and a link into the Body muscle map. There's a clearly
+   labelled empty slot for the live set-by-set logger, which — as agreed — is next session's work,
+   not this one's.
+
+5. **Polish caught two real bugs before they shipped** — worth knowing about because they're the
+   kind of thing that looks fine until you actually check: the new shell's header/tab bars were
+   hardcoded to a dark colour, which would've looked broken on your "Brutalism" theme (that one's
+   actually white-background, black-text — confirmed by reading its actual colours, not assumed).
+   And the CSS rule meant to push page content clear of the sidebar silently failed to generate at
+   all — I only found this by inspecting the actual compiled CSS output, not by trusting that the
+   build succeeded. Both fixed and re-verified.
+
+6. **The switch** — only once everything above was built and build-verified did the site's front
+   door change: `/` now sends you straight into the new Main page. Your old dashboard didn't go
+   anywhere — it's one click away at "Grid" in the new sidebar, or type `/grid` directly.
+
+### What's still open / needs you
+
+1. **No visual/click-through testing was possible from here.** This environment has no browser or
+   screenshot tool, so every module was verified by: a clean build after every single step, and
+   directly inspecting the compiled output (which is how the two theme/CSS bugs above were
+   actually caught — not guessed at). Nobody has physically opened the new sidebar on a real
+   portrait monitor, tablet, or phone yet. This is the one thing I'd genuinely ask you to do
+   yourself before trusting this at a glance — especially the sidebar-vs-bottom-bar breakpoint
+   and the Gym/Health pages' layout at real portrait-monitor proportions.
+2. **Live set-by-set workout logger** — deliberately deferred to Session 2, as agreed. The Gym
+   page has a clearly-marked space for it.
+3. **Finances module** — mentioned as Session 3 in the brief; not started, not expected to be.
+4. Two small navigation cleanups from the old top bar (Food/Wardrobe/Settings links removed since
+   they live in the new sidebar now) — if anything still links to the old bar expecting those,
+   they'll 404 gracefully into the new sidebar's own pages at the same URLs, not actually broken,
+   just a slightly different route in.
+5. One thing worth a decision: I noticed the brief said "8 themes" but the app actually has 7
+   (normal/hacker/brutalism/old-money/dark-academia/midnight-ocean/synthwave) — didn't invent an
+   8th, just flagging the mismatch in case you meant to ask for a new one.
+
+### Evidence trail
+Every step has a commit hash and either a build log, a direct compiled-CSS inspection, or a live
+curl — see `board.html`'s per-row `bug-ref` text for the compressed version. Commits this session,
+in order: `ff82088` → `7d0b397` → `e986206` → `7b1bb15` → `c27becc` → `5be806a` → `c015c60` →
+`cb0a164` → `98da625` → `1265b56` → `f59f0a4` → `0d9a11a` → `0831335`. Final commit confirmed
+`Ready`/`Production` via `vercel ls`, and every route (`/`, `/main`, `/grid`, `/health`, `/body`,
+`/media`, `/journal`, `/food`, `/wardrobe`, `/settings`, `/gym`) curled live with a consistent,
+correct `307 → /login` (no 500s, no redirect loops).
