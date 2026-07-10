@@ -96,8 +96,8 @@
 <body>
 <div class="wrap">
   <header>
-    <h1><span class="brand">Parma</span> — Session 2: Live Workout Logger</h1>
-    <p class="subtitle">Set-by-set logging built into the Gym module. Task 4 of the brief was cut off mid-message — proceeding on Tasks 1-3, flagged for follow-up.</p>
+    <h1><span class="brand">Parma</span> — Body Figure, Chat Bar, Foods, Saved Meals, Main Upgrade</h1>
+    <p class="subtitle">Real body artwork + overlay, contextual chat bar per module, editable food items, saved meals, and a full Main command-centre rebuild with an AI daily briefing.</p>
   </header>
 
   <div class="overall-card">
@@ -131,95 +131,95 @@
     <div class="tier-header"><div class="tier-title"><span class="tier-badge">Session steps</span></div></div>
     <div class="bug-list" data-tier="steps">
 
-      <div class="bug-row" data-status="done" data-id="S1" data-time-est="15" data-time-actual="12" data-credit-est="25000" data-credit-actual="24000">
+      <div class="bug-row" data-status="done" data-id="S1" data-time-est="40" data-time-actual="45" data-credit-est="70000" data-credit-actual="85000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Board.html + recon: personal_records schema, confetti/PR firing mechanism, exercise DB lookup, workout_sessions shape, muscle-load/training-load feeds.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 1a — Body figure: locate the real PNGs, copy into public/, calibrate muscle-zone coordinates against the actual artwork (not eyeballed).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S1 · found firePR() in lib/confetti.ts already exists but unused anywhere — will wire it up. personal_records currently unconditional upsert (no "only if better" check) — new auto-PR logic must add that guard.</div>
+        <div class="bug-ref">S1 · found + recon</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S2" data-time-est="30" data-time-actual="18" data-credit-est="45000" data-credit-actual="34000">
+      <div class="bug-row" data-status="done" data-id="S2" data-time-est="35" data-time-actual="30" data-credit-est="55000" data-credit-actual="48000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">TASK 1 — Data model: workout_sets table (linked to workout_sessions + exercise DB), RLS, migration run live + verified.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 1b — Rebuild BodyWidget entirely on the real images + SVG overlay, delete the old hand-coded outline/lines, verify glow alignment for real.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S2 · migration 024_workout_sets.sql run live, RLS + owner policy + all 8 columns confirmed via pg_class/pg_policies/information_schema</div>
+        <div class="bug-ref">S2 · new BodyWidget</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S3" data-time-est="20" data-time-actual="28" data-credit-est="35000" data-credit-actual="52000">
+      <div class="bug-row" data-status="waiting" data-id="S3" data-time-est="15" data-time-actual="" data-credit-est="20000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">API layer: session start/continue, exercise search (fuzzy + recent-first), set log/edit/delete, stats/history/trend queries.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 2 — Weather restored to Main, live conditions confirmed.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S3 · lib/db/workoutSets.ts (session/set CRUD, Epley 1RM, PR-guard upsert) + searchExercises() added to lib/exerciseDb.ts + 5 new /api/gym/* routes. Build clean, all routes compiled.</div>
+        <div class="bug-ref">S3 · weather on Main</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S4" data-time-est="35" data-time-actual="40" data-credit-est="55000" data-credit-actual="64000">
+      <div class="bug-row" data-status="waiting" data-id="S4" data-time-est="40" data-time-actual="" data-credit-est="60000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Exercise picker + last-time reference + weight input + tappable rep selector (1-12+) + big Log Set button.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 3a — Shared contextual chat/log bar component (voice + barcode affordances preserved), restored to Main.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S4 · components/os/LiveLogger.tsx — found + fixed a real bug before shipping: estimate1RM/WorkoutSet were imported from the server-only lib/db/workoutSets.ts into this client component (same class of bug as the wardrobe session's currentSeason issue) — split into client-safe lib/gymTypes.ts. Build clean.</div>
+        <div class="bug-ref">S4 · shared chat bar</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S5" data-time-est="20" data-time-actual="12" data-credit-est="30000" data-credit-actual="19000">
+      <div class="bug-row" data-status="waiting" data-id="S5" data-time-est="30" data-time-actual="" data-credit-est="45000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Next-set recommendation card — transparent progressive-overload rule in one config spot.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 3b — Chat bar on every module with a soft context bias (Food/Health/Media/Wardrobe/Journal/Gym), parse pipeline accepts the bias without hard-restricting.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S5 · lib/gymRecommendation.ts — PROGRESSION_CONFIG is the single spot to change the rule (top-of-range weight bump vs same-weight rep bump)</div>
+        <div class="bug-ref">S5 · per-module bias wiring</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S6" data-time-est="30" data-time-actual="26" data-credit-est="45000" data-credit-actual="38000">
+      <div class="bug-row" data-status="waiting" data-id="S6" data-time-est="35" data-time-actual="" data-credit-est="50000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Stats row (est. 1RM via Epley, best set, sessions) + trend graph (top set / est-1RM over last N sessions).</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 4 — Edit/delete individual food items with correct day-total recompute (no zeroing, no silent failure).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S6 · stats row + recharts LineChart trend, built as part of LiveLogger.tsx</div>
+        <div class="bug-ref">S6 · food item edit/delete</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S7" data-time-est="20" data-time-actual="14" data-credit-est="30000" data-credit-actual="22000">
+      <div class="bug-row" data-status="waiting" data-id="S7" data-time-est="40" data-time-actual="" data-credit-est="60000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">History list — past sessions for the selected exercise, dated, weight x reps. Sets stack/editable/deletable within the current session.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 5 — saved_meals table (migration live+verified), save/quick-add UI, NLP quick-add via the food chat bar.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S7 · history list + this-session sets list (edit/delete), built as part of LiveLogger.tsx. Build clean overall.</div>
+        <div class="bug-ref">S7 · saved meals</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S8" data-time-est="25" data-time-actual="20" data-credit-est="40000" data-credit-actual="30000">
+      <div class="bug-row" data-status="waiting" data-id="S8" data-time-est="45" data-time-actual="" data-credit-est="70000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">TASK 3 — PR auto-update on genuine new bests + firePR() confetti; verify with real data, not simulated.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 6a — AI daily briefing: briefings table (migration live+verified), one cached call/day, cron after WHOOP sync, graceful fallback.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S8 · REAL test against prod DB with a fake test exercise: 60kg set -> new PR (60), 70kg set -> new PR (70), 50kg set -> correctly NOT a PR (stayed 70), 90kg WARMUP set -> correctly NOT a PR. personal_records.value confirmed 70 after all sets. Full cleanup, 0 rows remaining.</div>
+        <div class="bug-ref">S8 · daily briefing (the Coach)</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S9" data-time-est="20" data-time-actual="10" data-credit-est="30000" data-credit-actual="16000">
+      <div class="bug-row" data-status="waiting" data-id="S9" data-time-est="15" data-time-actual="" data-credit-est="20000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Muscle map / training load / Main "last session" / journal all pick up live-logged sessions with zero changes to their own logic.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 6b — "What should I train today" line: pure computation, freshest/most-due muscle groups + routine.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S9 · verified getRecentWorkouts/getTodayWorkouts (read by Body/Gym/Journal/Main) have no source filter at all -- confirmed by reading lib/db/queries.ts directly, plus the S8 test confirmed exercises[] gets written correctly. Zero code changes needed.</div>
+        <div class="bug-ref">S9 · train-today line</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S10" data-time-est="15" data-time-actual="10" data-credit-est="20000" data-credit-actual="15000">
+      <div class="bug-row" data-status="waiting" data-id="S10" data-time-est="20" data-time-actual="" data-credit-est="30000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">NLP text logging still works unchanged ("benched 80 for 5") — verify with a real call, not assumed.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 6c — Today's rings (recovery/calories/training status), tappable into their modules.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S10 · real Claude call on "benched 80kg for 5 reps, felt good" -> real applyParsedLog -> workout_sessions row created with source="manual" (untouched), exercises=["bench press"]. Cleaned up after.</div>
+        <div class="bug-ref">S10 · rings</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S11" data-time-est="15" data-time-actual="16" data-credit-est="20000" data-credit-actual="19000">
+      <div class="bug-row" data-status="waiting" data-id="S11" data-time-est="45" data-time-actual="" data-credit-est="70000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Final (interim, before Task 4 arrived): clean build, verify production serves latest commit, board.html + PROGRESS.md true final state, plain-English summary (incl. flagging the truncated Task 4).</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 6d — Trend graphs: weight, recovery+strain, sleep, calories vs target, HRV/steps if they fit. Server-side pre-aggregated.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S11 · commit afa7380 confirmed Ready/Production via vercel ls (2m old); /gym, /main, /health, /body all curled live, correct 307 auth-gating, no 500s</div>
+        <div class="bug-ref">S11 · trend graphs</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S12" data-time-est="20" data-time-actual="15" data-credit-est="25000" data-credit-actual="20000">
+      <div class="bug-row" data-status="waiting" data-id="S12" data-time-est="25" data-time-actual="" data-credit-est="35000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">TASK 4 — Gym module home: live logger as centrepiece + PR tracker/training load/routine/body-map link as a proper training command centre. Remove "coming soon" placeholder.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 6e — Year heatmap strip + streak counter + quick-nav tiles.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S12 · placeholder was already removed last session when LiveLogger was wired in (confirmed by re-reading the file, no "coming soon" text present) — added consistent section labels (Log a set / Training status / Personal records / Routine / Recent exercises) so the page reads as one cohesive training command centre instead of an unlabeled stack. Build clean.</div>
+        <div class="bug-ref">S12 · heatmap + streak + tiles</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S13" data-time-est="20" data-time-actual="24" data-credit-est="30000" data-credit-actual="34000">
+      <div class="bug-row" data-status="waiting" data-id="S13" data-time-est="25" data-time-actual="" data-credit-est="35000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">FINAL: real end-to-end proof — pick exercise, log 3 sets, confirm persistence + PR update + trend/history render + muscle map reflects it. Build clean, verify deploy, true final board/PROGRESS state.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">FINAL: build clean, verify production serves latest commit, board.html + PROGRESS.md true final state, evidence per task.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S13 · real fuzzy search picked "Dumbbell Bench Press", logged 60kg×8/65×6/70×4 in sequence, each fired a new PR (final: value=70,reps=4, correctly the heaviest), re-fetched from DB to confirm persistence (not just in-memory), stats/trend/history all correct (est.1RM 79.3 via Epley), computeMuscleRecovery showed chest-l/r + front/rear delts + triceps loaded — first script run had a bug in muscle-map iteration (assumed Map, it's a plain object) which meant cleanup didn't run; caught it, manually verified+cleaned the leftover rows before re-running fixed. Full cleanup confirmed twice. Build clean.</div>
+        <div class="bug-ref">S13 · final verification + summary</div>
       </div>
 
     </div>
@@ -232,7 +232,7 @@
 </div>
 
 <script>
-  var SESSION_TOKEN_BUDGET = 700000;
+  var SESSION_TOKEN_BUDGET = 1400000;
 </script>
 <script>
 (function () {
