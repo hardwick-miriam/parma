@@ -223,25 +223,32 @@ export function SleepDebtDetail({ history, target = 8, onClose }: { history: Dai
 }
 
 export function InsightsDetail({ onClose }: { onClose: () => void }) {
-  const [data, setData] = useState<{ insights: Array<{ metric_a: string; metric_b: string; r: string; interpretation: string }> } | null>(null)
+  // Field names match the real /api/insights response (see InsightRow in
+  // InsightsWidget.tsx: title/body/strength/type) — the previous
+  // metric_a/metric_b/r/interpretation fields never existed on any
+  // response this API produces, so every insight here silently rendered
+  // blank even when the fetch succeeded.
+  const [data, setData] = useState<{ insights: Array<{ type: string; title: string; body: string; strength?: number | null }>; insufficient?: boolean } | null>(null)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
-    fetch('/api/insights').then((r) => r.json()).then(setData).catch(() => {})
+    fetch('/api/insights').then((r) => r.json()).then(setData).catch(() => setError(true))
   }, [])
 
   return (
     <WidgetShell title="Insights" onClose={onClose}>
-      {!data && <p className="text-sm text-text-subtle">Loading insights…</p>}
+      {!data && !error && <p className="text-sm text-text-subtle">Loading insights…</p>}
+      {error && <p className="text-sm text-text-subtle">Couldn&apos;t load insights — try again shortly.</p>}
       {data?.insights?.map((ins, i) => (
         <div key={i} className="rounded-xl bg-surface-elevated border border-border p-4 flex flex-col gap-1">
-          <p className="text-xs text-text-subtle uppercase tracking-widest">
-            {ins.metric_a} × {ins.metric_b} · r = {ins.r}
-          </p>
-          <p className="text-sm text-text">{ins.interpretation}</p>
+          <p className="text-xs text-text-subtle uppercase tracking-widest">{ins.title}</p>
+          <p className="text-sm text-text">{ins.body}</p>
         </div>
       ))}
-      {data?.insights?.length === 0 && (
-        <p className="text-sm text-text-subtle">Log more days to unlock correlations.</p>
+      {data && !error && data.insights?.length === 0 && (
+        <p className="text-sm text-text-subtle">
+          {data.insufficient ? 'Log at least 10 days of data to see insights.' : 'Log more days to unlock correlations.'}
+        </p>
       )}
     </WidgetShell>
   )

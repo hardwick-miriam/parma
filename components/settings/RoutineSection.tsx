@@ -206,14 +206,20 @@ export function RoutineSection() {
   const [routines, setRoutines] = useState<Routine[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
+  const [loadError, setLoadError] = useState(false)
 
   const load = useCallback(async () => {
     try {
       const res = await fetch('/api/routine')
-      if (!res.ok) return
+      if (!res.ok) { setLoadError(true); return }
       const json = await res.json()
       setRoutines(json.routines ?? [])
-    } catch { /* non-fatal */ }
+      setLoadError(false)
+    } catch {
+      // Previously swallowed silently, making a failed load indistinguishable
+      // from "you just don't have any routines yet".
+      setLoadError(true)
+    }
     finally { setLoading(false) }
   }, [])
 
@@ -246,7 +252,10 @@ export function RoutineSection() {
         <p className="text-xs text-text-subtle">Loading…</p>
       ) : (
         <>
-          {routines.length === 0 && !showForm && (
+          {loadError && (
+            <p className="text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2">Couldn&apos;t load your routines — try refreshing.</p>
+          )}
+          {!loadError && routines.length === 0 && !showForm && (
             <p className="text-xs text-text-subtle">No routines saved yet. Add one below to get smart muscle-load predictions and WHOOP workout matching.</p>
           )}
           {routines.map(r => (

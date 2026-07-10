@@ -50,6 +50,7 @@ export function InsightsWidget() {
   const [loading, setLoading] = useState(true)
   const [listRef] = useAutoAnimate<HTMLDivElement>()
   const [insufficient, setInsufficient] = useState(false)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     fetch('/api/insights')
@@ -58,7 +59,9 @@ export function InsightsWidget() {
         setInsights(data.insights ?? [])
         setInsufficient(data.insufficient ?? false)
       })
-      .catch(() => {})
+      // Previously swallowed silently, so a failed fetch looked identical
+      // to "no strong patterns found yet" — now distinguishable.
+      .catch(() => setError(true))
       .finally(() => setLoading(false))
   }, [])
 
@@ -72,13 +75,19 @@ export function InsightsWidget() {
         </div>
       )}
 
-      {!loading && insufficient && (
+      {!loading && error && (
+        <p className="text-text-subtle text-sm text-center py-4">
+          Couldn&apos;t load insights — try again shortly.
+        </p>
+      )}
+
+      {!loading && !error && insufficient && (
         <p className="text-text-subtle text-sm text-center py-4">
           Log at least 10 days of data to see insights.
         </p>
       )}
 
-      {!loading && !insufficient && insights.length === 0 && (
+      {!loading && !error && !insufficient && insights.length === 0 && (
         <p className="text-text-subtle text-sm text-center py-4">
           No strong patterns found yet — keep logging!
         </p>

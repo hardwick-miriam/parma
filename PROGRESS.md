@@ -111,6 +111,20 @@ Verified: `npm run build` clean.
 
 ## TIER 3 (MINOR) — in progress
 
+### N3 — correction: already fixed via C3
+The widget date-key builders (Heatmap, HabitGarden, SleepDebt, WidgetDetailSheets,
+TrainingLoad, Whoop, Mounjaro widgets, Nudges, SummaryCard, ShareButton, ProgressPhotos) were
+all fixed during the C3 pass. Attributing to 531f4e9; board just hadn't been updated.
+
+### N4 — swallowed fetch errors in Insights/Routines
+STARTING/DONE N4 — InsightsWidget and RoutineSection now distinguish a failed fetch from a
+genuinely empty state (separate `error`/`loadError` flags instead of a bare `.catch(() => {})`).
+While fixing InsightsDetail (WidgetDetailSheets.tsx) I found it had the same field-mismatch
+bug class as WeatherDetail/PRTrackerDetail: it expected
+`metric_a`/`metric_b`/`r`/`interpretation`, none of which exist on the real `/api/insights`
+response (`title`/`body`/`strength`/`type`) — every insight silently rendered blank even on a
+successful load. Fixed both issues together. Verified: `npm run build` clean.
+
 ### N2 — bgEffectsMobile localStorage-only
 STARTING N2 — wrote migration 019_bg_effects_mobile.sql adding
 `user_preferences.bg_effects_mobile`, extended /api/theme to accept and persist it (plus a
