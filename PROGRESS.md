@@ -111,6 +111,20 @@ Verified: `npm run build` clean.
 
 ## TIER 3 (MINOR) — in progress
 
+### N2 — bgEffectsMobile localStorage-only
+STARTING N2 — wrote migration 019_bg_effects_mobile.sql adding
+`user_preferences.bg_effects_mobile`, extended /api/theme to accept and persist it (plus a
+`parma-bg-effects-mobile` cookie, mirroring the existing theme-cookie pattern exactly so
+there's no DB hit on every page load), and threaded it through app/layout.tsx →
+ThemeProvider's `initialBgEffectsMobile` prop, seeded from cookie-or-DB as the source of
+truth instead of localStorage.
+**BLOCKED — marked `failed`, not `fixed`.** Same as C1/M15: no live DB credentials to run
+migration 019. Important deployment note: until the migration is applied, saving this toggle
+will silently fail server-side (the existing `.catch(() => {})` on the fetch swallows it,
+same as the theme save path already does) — not worse than the original bug, but genuinely
+not fixed live until the column exists. **Action needed**: run migration 019 before/alongside
+deploying this commit.
+
 ### N1 — console-error-and-continue reads
 STARTING/DONE N1 — this group was already largely following the "log then degrade gracefully"
 pattern per the original audit (lib/db/whoop.ts reads, food cache, review stats, insights

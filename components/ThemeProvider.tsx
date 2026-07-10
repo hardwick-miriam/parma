@@ -27,15 +27,21 @@ export function useTheme() {
 
 export function ThemeProvider({
   initialTheme,
+  initialBgEffectsMobile = false,
   children,
 }: {
   initialTheme: string
+  initialBgEffectsMobile?: boolean
   children: React.ReactNode
 }) {
   const [theme, setThemeState] = useState<Theme>((initialTheme as Theme) || 'normal')
   const [reduced, setReduced] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [bgEffectsMobile, setBgEffectsMobileState] = useState(false)
+  // Seeded from the DB (server-persisted, follows the user across devices)
+  // — localStorage is only a same-browser fast-path fallback for whichever
+  // signal arrives first, not the source of truth. Previously this setting
+  // was localStorage-only and never made it to user_preferences at all.
+  const [bgEffectsMobile, setBgEffectsMobileState] = useState(initialBgEffectsMobile)
 
   useEffect(() => {
     setMounted(true)
@@ -43,10 +49,12 @@ export function ThemeProvider({
     setReduced(mq.matches)
     const onChange = (e: MediaQueryListEvent) => setReduced(e.matches)
     mq.addEventListener('change', onChange)
-    // Restore mobile effects pref from localStorage
-    const stored = localStorage.getItem('parma-bg-effects-mobile')
-    if (stored === '1') setBgEffectsMobileState(true)
+    if (!initialBgEffectsMobile) {
+      const stored = localStorage.getItem('parma-bg-effects-mobile')
+      if (stored === '1') setBgEffectsMobileState(true)
+    }
     return () => mq.removeEventListener('change', onChange)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -66,6 +74,11 @@ export function ThemeProvider({
   const setBgEffectsMobile = useCallback((v: boolean) => {
     setBgEffectsMobileState(v)
     localStorage.setItem('parma-bg-effects-mobile', v ? '1' : '0')
+    fetch('/api/theme', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bgEffectsMobile: v }),
+    }).catch(() => {})
   }, [])
 
   const isMobile = mounted && typeof window !== 'undefined' && window.innerWidth < 768

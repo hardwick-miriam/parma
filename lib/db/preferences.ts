@@ -18,6 +18,7 @@ export interface UserPreferences {
   hidden_widgets: string[]
   theme: string
   weather_bg_enabled: boolean
+  bg_effects_mobile: boolean
   updated_at: string
 }
 
@@ -38,6 +39,7 @@ export async function getUserPreferences(userId: string): Promise<UserPreference
     hidden_widgets: (data.hidden_widgets as string[]) ?? [],
     theme: (data.theme as string) ?? 'normal',
     weather_bg_enabled: (data.weather_bg_enabled as boolean) ?? false,
+    bg_effects_mobile: (data.bg_effects_mobile as boolean) ?? false,
   }
 }
 

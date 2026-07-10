@@ -12,19 +12,39 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { theme } = await request.json() as { theme: string }
-  if (!VALID_THEMES.includes(theme)) {
-    return NextResponse.json({ error: 'Invalid theme' }, { status: 400 })
+  const { theme, bgEffectsMobile } = await request.json() as { theme?: string; bgEffectsMobile?: boolean }
+
+  const updates: { theme?: string; bg_effects_mobile?: boolean } = {}
+
+  if (theme !== undefined) {
+    if (!VALID_THEMES.includes(theme)) {
+      return NextResponse.json({ error: 'Invalid theme' }, { status: 400 })
+    }
+    updates.theme = theme
+  }
+  if (bgEffectsMobile !== undefined) {
+    updates.bg_effects_mobile = bgEffectsMobile
   }
 
-  await upsertUserPreferences(user.id, { theme })
+  await upsertUserPreferences(user.id, updates)
 
-  const cookieStore = await cookies()
-  cookieStore.set('parma-theme', theme, {
-    path: '/',
-    maxAge: 60 * 60 * 24 * 365,
-    sameSite: 'lax',
-  })
+  if (theme !== undefined || bgEffectsMobile !== undefined) {
+    const cookieStore = await cookies()
+    if (theme !== undefined) {
+      cookieStore.set('parma-theme', theme, {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 365,
+        sameSite: 'lax',
+      })
+    }
+    if (bgEffectsMobile !== undefined) {
+      cookieStore.set('parma-bg-effects-mobile', bgEffectsMobile ? '1' : '0', {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 365,
+        sameSite: 'lax',
+      })
+    }
+  }
 
-  return NextResponse.json({ theme })
+  return NextResponse.json({ theme, bgEffectsMobile })
 }

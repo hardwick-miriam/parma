@@ -553,7 +553,8 @@
         <div class="bug-ref">N1 · console-error-and-continue</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="N2">
+      <div class="bug-row" data-status="failed" data-id="N2" data-reason="Code written (server + client, migration 019 adds the column) but the migration isn't applied — same missing live-Supabase-credentials blocker as C1. Until it's run, saving this toggle will silently fail to persist server-side (same failure class as the bug being fixed, so no worse than before, but not actually fixed live yet).">
+
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Your "background effects on mobile" toggle only remembers itself on the one device or browser you set it on.</div><div class="bug-reason"></div></div>
         <div class="bug-ref">N2 · bgEffectsMobile localStorage-only</div>

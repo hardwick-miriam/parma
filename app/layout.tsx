@@ -55,21 +55,26 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies()
   let theme = cookieStore.get('parma-theme')?.value
+  const bgEffectsCookie = cookieStore.get('parma-bg-effects-mobile')?.value
+  let bgEffectsMobile = bgEffectsCookie === '1'
 
-  // The cookie is absent on a new browser/device/cleared-cookies, even
-  // though the user's real saved theme is in user_preferences.theme — fall
-  // back to the DB so it isn't effectively write-only outside this one
-  // browser. Only worth the round trip when there's no cookie to trust.
-  if (!theme) {
+  // Cookies are absent on a new browser/device/cleared-cookies, even though
+  // the real saved values are in user_preferences — fall back to the DB in
+  // that case so they aren't effectively write-only outside one browser.
+  // Only worth the round trip when a cookie is actually missing (checked
+  // per-field so a page load with the theme cookie already set doesn't pay
+  // for a DB hit just because bg-effects hasn't been touched yet).
+  if (!theme || bgEffectsCookie === undefined) {
     try {
       const supabase = await createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         const prefs = await getUserPreferences(user.id)
-        theme = prefs?.theme
+        theme ??= prefs?.theme
+        if (bgEffectsCookie === undefined) bgEffectsMobile = prefs?.bg_effects_mobile ?? false
       }
     } catch {
-      // Not authenticated / DB unavailable — fall through to default
+      // Not authenticated / DB unavailable — fall through to defaults
     }
   }
   theme ??= 'normal'
@@ -84,7 +89,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={`h-full ${fontVars}`} data-theme={theme} suppressHydrationWarning>
       <body className="min-h-full">
-        <ThemeProvider initialTheme={theme}>
+        <ThemeProvider initialTheme={theme} initialBgEffectsMobile={bgEffectsMobile}>
           <QueryProvider>
             {children}
             <SWRegister />
