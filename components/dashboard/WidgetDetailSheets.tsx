@@ -617,7 +617,7 @@ export function WidgetDetailRouter({
       {widget === 'supp'       && <GenericDetail key="supp"    title="Supplements"  message="Check off supplements directly in the widget each day."     onClose={onClose} />}
       {widget === 'photos'     && <GenericDetail key="photos"  title="Photos"       message="Progress photos are shown in the widget. Add via the log."  onClose={onClose} />}
       {widget === 'journal'    && <GenericDetail key="journal" title="Journal"      message="Your daily notes appear here. Add via the log input."       onClose={onClose} />}
-      {widget === 'clocks'     && <GenericDetail key="clocks"  title="World Clocks" message="Add cities in Settings → Saved Places."                    onClose={onClose} />}
+      {widget === 'clocks'     && <GenericDetail key="clocks"  title="World Clocks" message="Tap + Add city in the World Clocks widget to add a city."   onClose={onClose} />}
     </AnimatePresence>
   )
 }

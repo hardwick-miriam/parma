@@ -98,6 +98,17 @@ PRTrackerWidget.tsx which already used the correct fields) instead of the nonexi
 
 ## TIER 2 (MAJOR) — in progress
 
+### M18, M19, M20 — AI provider landmine, wrong help text, dead component
+STARTING/DONE M18/M19/M20 —
+- M18: lib/ai/index.ts now refuses to instantiate OpenAICompatibleProvider unless
+  `AI_PROVIDER_ACKNOWLEDGE_INCOMPLETE=true` is also set, with an error explaining the prompt
+  is out of sync with ParsedLogSchema — was previously a silent landmine, not just dead code.
+- M19: World Clocks detail sheet now says "Tap + Add city in the World Clocks widget" instead
+  of pointing to Settings → Saved Places (an unrelated Apple Shortcuts feature).
+- M20: deleted the orphaned components/dashboard/WorldMapWidget.tsx and its dead import in
+  DashboardGrid.tsx — confirmed unused (the 'map' widget slot renders GlobeWidget, not this).
+Verified: `npm run build` clean.
+
 ### M17 — /api/shortcuts/log missing most of saveLog's field coverage
 STARTING/DONE M17 — extracted saveLog's entire apply-to-DB body into a new shared
 `lib/logApply.ts:applyParsedLog(userId, rawText, parsed, supabaseClient)`, parametrized by an

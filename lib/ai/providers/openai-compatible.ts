@@ -1,5 +1,13 @@
 import type { AIProvider, ParsedLog } from '../types'
 
+// M18 (BUGS.md): this provider's prompt only requests 9 of the ~28 fields
+// ParsedLogSchema (lib/schemas.ts) actually validates — it predates most of
+// the schema's fields (weight_kg, habits_done, sick/injury tracking, media,
+// countries_visited, world_clock_cities, mounjaro_*, log_date,
+// muscle_soreness, estimates) and was never updated alongside them. It's
+// gated behind an explicit opt-in in lib/ai/index.ts (see the comment
+// there) precisely because of this gap — update this prompt to cover every
+// ParsedLogSchema field before relying on it for real logging.
 export class OpenAICompatibleProvider implements AIProvider {
   private baseUrl: string
   private apiKey: string
