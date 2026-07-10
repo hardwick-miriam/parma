@@ -138,11 +138,11 @@
         <div class="bug-ref">S1 · found firePR() in lib/confetti.ts already exists but unused anywhere — will wire it up. personal_records currently unconditional upsert (no "only if better" check) — new auto-PR logic must add that guard.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S2" data-time-est="30" data-time-actual="" data-credit-est="45000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S2" data-time-est="30" data-time-actual="18" data-credit-est="45000" data-credit-actual="34000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">TASK 1 — Data model: workout_sets table (linked to workout_sessions + exercise DB), RLS, migration run live + verified.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S2 · data model</div>
+        <div class="bug-ref">S2 · migration 024_workout_sets.sql run live, RLS + owner policy + all 8 columns confirmed via pg_class/pg_policies/information_schema</div>
       </div>
 
       <div class="bug-row" data-status="waiting" data-id="S3" data-time-est="20" data-time-actual="" data-credit-est="35000" data-credit-actual="">
