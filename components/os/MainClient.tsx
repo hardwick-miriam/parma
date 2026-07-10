@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { CircularProgress } from '@/components/ui/CircularProgress'
 import { computeRecovery } from '@/lib/recovery'
 import { MODULES } from '@/components/os/Sidebar'
+import { WeatherWidget } from '@/components/dashboard/widgets/WeatherWidget'
+import { ModulePageClient } from '@/components/os/ModulePageClient'
 import type { DailyStats, HealthStatus, WorkoutSession } from '@/lib/db/queries'
 import type { WhoopMetrics } from '@/lib/db/whoop'
 
@@ -57,6 +59,10 @@ export function MainClient({ stats, health, whoop, recentWorkouts, targets }: Ma
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-bold text-text">How am I doing today</h1>
+
+      <ModulePageClient w={8} h={5}>
+        <WeatherWidget />
+      </ModulePageClient>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Recovery ring — big, cinematic */}
