@@ -6,283 +6,85 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   :root {
-    --purple: #8b5cf6;
-    --purple-dim: rgba(139, 92, 246, 0.14);
-    --purple-glow: rgba(139, 92, 246, 0.35);
-    --bg: #0b0b10;
-    --panel: #16161f;
-    --panel-2: #1c1c28;
-    --border: #2a2a38;
-    --text: #f0f0f5;
-    --text-dim: #9a9aad;
-    --text-faint: #6b6b7d;
-    --grey: #4b4b5a;
-    --grey-bg: rgba(120, 120, 140, 0.14);
-    --blue: #38bdf8;
-    --blue-bg: rgba(56, 189, 248, 0.14);
-    --green: #34d399;
-    --green-bg: rgba(52, 211, 153, 0.14);
-    --red: #f87171;
-    --red-bg: rgba(248, 113, 113, 0.14);
-    --amber: #fbbf24;
-    --amber-bg: rgba(251, 191, 36, 0.14);
+    --purple: #8b5cf6; --purple-dim: rgba(139, 92, 246, 0.14); --purple-glow: rgba(139, 92, 246, 0.35);
+    --bg: #0b0b10; --panel: #16161f; --panel-2: #1c1c28;
+    --border: #2a2a38; --text: #f0f0f5; --text-dim: #9a9aad; --text-faint: #6b6b7d;
+    --grey: #4b4b5a; --grey-bg: rgba(120, 120, 140, 0.14);
+    --blue: #38bdf8; --blue-bg: rgba(56, 189, 248, 0.14);
+    --green: #34d399; --green-bg: rgba(52, 211, 153, 0.14);
+    --red: #f87171; --red-bg: rgba(248, 113, 113, 0.14);
+    --amber: #fbbf24; --amber-bg: rgba(251, 191, 36, 0.14);
   }
-
   * { box-sizing: border-box; }
-
   body {
     margin: 0;
     background: radial-gradient(circle at 20% -10%, rgba(139,92,246,0.10), transparent 45%), var(--bg);
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
-    padding: 32px 24px 80px;
-    min-height: 100vh;
+    padding: 32px 24px 80px; min-height: 100vh;
   }
-
   .wrap { max-width: 1100px; margin: 0 auto; }
-
   header { margin-bottom: 28px; }
-
-  h1 {
-    font-size: clamp(28px, 4vw, 40px);
-    margin: 0 0 6px;
-    letter-spacing: -0.02em;
-  }
+  h1 { font-size: clamp(28px, 4vw, 40px); margin: 0 0 6px; letter-spacing: -0.02em; }
   h1 span.brand { color: var(--purple); }
-
   .subtitle { color: var(--text-dim); font-size: 16px; margin: 0 0 24px; }
-
   .overall-card {
     background: linear-gradient(155deg, var(--panel-2), var(--panel));
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 28px 28px 24px;
+    border: 1px solid var(--border); border-radius: 20px; padding: 28px 28px 24px;
     box-shadow: 0 0 0 1px rgba(139,92,246,0.05), 0 20px 60px -30px rgba(139,92,246,0.4);
     margin-bottom: 20px;
   }
-
-  .overall-count {
-    font-size: clamp(36px, 6vw, 56px);
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    line-height: 1;
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-  }
+  .overall-count { font-size: clamp(36px, 6vw, 56px); font-weight: 800; letter-spacing: -0.03em; line-height: 1; display: flex; align-items: baseline; gap: 12px; }
   .overall-count .num { color: var(--purple); }
   .overall-count .label { font-size: 18px; font-weight: 500; color: var(--text-dim); }
-
-  .progress-track {
-    margin-top: 18px;
-    height: 16px;
-    border-radius: 999px;
-    background: #26263a;
-    overflow: hidden;
-    border: 1px solid var(--border);
-  }
-  .progress-fill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #7c3aed, var(--purple), #a78bfa);
-    box-shadow: 0 0 16px var(--purple-glow);
-    transition: width 0.4s ease;
-    border-radius: 999px;
-  }
-
-  .overall-breakdown {
-    margin-top: 16px;
-    display: flex;
-    gap: 18px;
-    flex-wrap: wrap;
-    font-size: 14px;
-    color: var(--text-dim);
-  }
+  .progress-track { margin-top: 18px; height: 16px; border-radius: 999px; background: #26263a; overflow: hidden; border: 1px solid var(--border); }
+  .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #7c3aed, var(--purple), #a78bfa); box-shadow: 0 0 16px var(--purple-glow); transition: width 0.4s ease; border-radius: 999px; }
+  .overall-breakdown { margin-top: 16px; display: flex; gap: 18px; flex-wrap: wrap; font-size: 14px; color: var(--text-dim); }
   .overall-breakdown b { color: var(--text); }
-
-  .status-banner {
-    display: none;
-    margin-top: 16px;
-    padding: 10px 16px;
-    border-radius: 12px;
-    background: var(--green-bg);
-    color: var(--green);
-    font-weight: 600;
-    font-size: 14px;
-  }
+  .status-banner { display: none; margin-top: 16px; padding: 10px 16px; border-radius: 12px; background: var(--green-bg); color: var(--green); font-weight: 600; font-size: 14px; }
   .status-banner.show { display: block; }
-
-  .live-dot {
-    display: inline-block;
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--blue);
-    margin-right: 8px;
-    box-shadow: 0 0 8px var(--blue);
-    animation: pulse 1.4s infinite ease-in-out;
-    vertical-align: middle;
-  }
+  .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--blue); margin-right: 8px; box-shadow: 0 0 8px var(--blue); animation: pulse 1.4s infinite ease-in-out; vertical-align: middle; }
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
   .refresh-note { margin-top: 10px; font-size: 13px; color: var(--text-faint); }
-
-  /* Summary strip: time + credits totals */
-  .summary-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 14px;
-    margin-bottom: 20px;
-  }
-  .summary-tile {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 18px 20px;
-  }
-  .summary-tile .tile-label {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-faint);
-    font-weight: 700;
-    margin-bottom: 8px;
-  }
-  .summary-tile .tile-value {
-    font-size: 24px;
-    font-weight: 800;
-    color: var(--text);
-  }
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .summary-tile { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 18px 20px; }
+  .summary-tile .tile-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); font-weight: 700; margin-bottom: 8px; }
+  .summary-tile .tile-value { font-size: 24px; font-weight: 800; color: var(--text); }
   .summary-tile .tile-value .vs { color: var(--text-dim); font-weight: 500; font-size: 15px; }
-
-  /* Credit burn meter */
-  .burn-meter-card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 18px 20px;
-  }
-  .burn-meter-label {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 10px;
-  }
+  .burn-meter-card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 18px 20px; }
+  .burn-meter-label { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
   .burn-meter-label .tile-label { margin-bottom: 0; }
-  .burn-meter-note {
-    font-size: 11px;
-    color: var(--text-faint);
-    font-style: italic;
-  }
-  .burn-track {
-    height: 22px;
-    border-radius: 999px;
-    background: #26263a;
-    overflow: hidden;
-    border: 1px solid var(--border);
-    position: relative;
-  }
-  .burn-fill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #7c3aed, var(--purple));
-    transition: width 0.4s ease, background 0.4s ease;
-    border-radius: 999px;
-  }
+  .burn-meter-note { font-size: 11px; color: var(--text-faint); font-style: italic; }
+  .burn-track { height: 22px; border-radius: 999px; background: #26263a; overflow: hidden; border: 1px solid var(--border); position: relative; }
+  .burn-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #7c3aed, var(--purple)); transition: width 0.4s ease, background 0.4s ease; border-radius: 999px; }
   .burn-fill.amber { background: linear-gradient(90deg, #d97706, var(--amber)); }
   .burn-fill.red { background: linear-gradient(90deg, #b91c1c, var(--red)); }
-  .burn-pct {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text);
-    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
-  }
+  .burn-pct { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--text); text-shadow: 0 1px 2px rgba(0,0,0,0.6); }
   .burn-detail { margin-top: 8px; font-size: 13px; color: var(--text-dim); }
-
   .tier-section { margin-top: 32px; }
-  .tier-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 14px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border);
-  }
+  .tier-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
   .tier-title { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 700; letter-spacing: 0.02em; }
-  .tier-badge {
-    display: inline-block;
-    padding: 3px 12px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    background: rgba(139,92,246,0.16);
-    color: var(--purple);
-  }
-
+  .tier-badge { display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: rgba(139,92,246,0.16); color: var(--purple); }
   .bug-list { display: flex; flex-direction: column; gap: 10px; }
-
-  .bug-row {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 16px 18px;
-    transition: border-color 0.3s, background 0.3s;
-    flex-wrap: wrap;
-  }
-  .bug-row[data-status="working"] {
-    border-color: rgba(56,189,248,0.4);
-    background: linear-gradient(90deg, rgba(56,189,248,0.06), var(--panel) 40%);
-  }
+  .bug-row { display: flex; align-items: center; gap: 16px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; transition: border-color 0.3s, background 0.3s; flex-wrap: wrap; }
+  .bug-row[data-status="working"] { border-color: rgba(56,189,248,0.4); background: linear-gradient(90deg, rgba(56,189,248,0.06), var(--panel) 40%); }
   .bug-row[data-status="done"] { border-color: rgba(52,211,153,0.3); }
   .bug-row[data-status="failed"] { border-color: rgba(248,113,113,0.35); }
-
-  .status-chip {
-    flex: 0 0 auto;
-    min-width: 100px;
-    text-align: center;
-    padding: 7px 10px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-  }
+  .status-chip { flex: 0 0 auto; min-width: 100px; text-align: center; padding: 7px 10px; border-radius: 10px; font-size: 13px; font-weight: 700; letter-spacing: 0.02em; }
   .bug-row[data-status="waiting"] .status-chip { background: var(--grey-bg); color: var(--text-dim); }
   .bug-row[data-status="working"] .status-chip { background: var(--blue-bg); color: var(--blue); }
   .bug-row[data-status="done"] .status-chip { background: var(--green-bg); color: var(--green); }
   .bug-row[data-status="failed"] .status-chip { background: var(--red-bg); color: var(--red); }
-
   .bug-main { flex: 1 1 260px; min-width: 0; }
   .bug-text { font-size: 16px; line-height: 1.4; }
   .bug-row[data-status="done"] .bug-text { color: var(--text-dim); }
-
   .bug-reason { margin-top: 6px; font-size: 13px; color: var(--red); font-style: italic; display: none; }
   .bug-row[data-status="failed"] .bug-reason.has-text { display: block; }
-
-  .metrics {
-    flex: 0 0 auto;
-    display: grid;
-    grid-template-columns: repeat(2, auto);
-    gap: 2px 16px;
-    font-size: 12px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    color: var(--text-faint);
-    text-align: right;
-  }
+  .metrics { flex: 0 0 auto; display: grid; grid-template-columns: repeat(2, auto); gap: 2px 16px; font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--text-faint); text-align: right; }
   .metrics .m-label { color: var(--text-faint); }
   .metrics .m-value { color: var(--text-dim); font-weight: 600; }
   .metrics .m-value.actual-set { color: var(--text); }
-
   footer { margin-top: 50px; text-align: center; color: var(--text-faint); font-size: 13px; }
-
   @media (max-width: 640px) {
     .bug-row { flex-wrap: wrap; }
     .status-chip { order: 1; }
@@ -293,14 +95,13 @@
 </head>
 <body>
 <div class="wrap">
-
   <header>
-    <h1><span class="brand">Parma</span> — Session Board</h1>
-    <p class="subtitle">Live step-by-step tracker for the current unattended work session. Edit rows in <code>board.html</code> to update.</p>
+    <h1><span class="brand">Parma</span> — Jarvis Restructure Session Board</h1>
+    <p class="subtitle">Portrait-first modular OS build. Old bento dashboard stays reachable throughout — this tracks the shell + module rollout.</p>
   </header>
 
   <div class="overall-card">
-    <div class="overall-count"><span class="num" id="overall-num">0</span><span class="label">of <span id="overall-total">12</span> done</span></div>
+    <div class="overall-count"><span class="num" id="overall-num">0</span><span class="label">of <span id="overall-total">14</span> done</span></div>
     <div class="progress-track"><div class="progress-fill" id="overall-progress"></div></div>
     <div class="overall-breakdown" id="overall-breakdown"></div>
     <div class="status-banner" id="done-banner">✓ All steps resolved — board is no longer auto-refreshing.</div>
@@ -326,119 +127,106 @@
     </div>
   </div>
 
-  <!-- ===================== STEPS ===================== -->
   <section class="tier-section tier-steps">
-    <div class="tier-header">
-      <div class="tier-title"><span class="tier-badge">Session steps</span></div>
-    </div>
+    <div class="tier-header"><div class="tier-title"><span class="tier-badge">Session steps</span></div></div>
     <div class="bug-list" data-tier="steps">
 
-      <div class="bug-row" data-status="done" data-id="S1"
-           data-time-est="15" data-time-actual="10"
-           data-credit-est="30000" data-credit-actual="29000">
+      <div class="bug-row" data-status="working" data-id="S1" data-time-est="15" data-time-actual="" data-credit-est="25000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Build board.html (this file) + add the "3+ steps → board.html first" standing rule to CLAUDE.md.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">Board.html for this session + survey existing shell/nav/widget/theme code before touching routes.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S1 · session board + standing rule</div>
+        <div class="bug-ref">S1 · board + recon</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S2"
-           data-time-est="20" data-time-actual="14"
-           data-credit-est="35000" data-credit-actual="32000">
+      <div class="bug-row" data-status="waiting" data-id="S2" data-time-est="45" data-time-actual="" data-credit-est="75000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Wardrobe: write + run live migration for wardrobe_items / wardrobe_wears, RLS verified.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 1 — The shell: new (os) route group, Sidebar nav component (portrait-first, collapses on mobile/narrow landscape), auth-gated layout, old bento left 100% untouched at root.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S2 · wardrobe migration + RLS — migration 021 run live, RLS + owner policy confirmed on both tables</div>
+        <div class="bug-ref">S2 · shell + sidebar</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S3"
-           data-time-est="15" data-time-actual="8"
-           data-credit-est="25000" data-credit-actual="18000">
+      <div class="bug-row" data-status="waiting" data-id="S3" data-time-est="15" data-time-actual="" data-credit-est="25000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Wardrobe: private storage bucket + signed-URL helper (reusing the progress-photos pattern, but with real owner-scoped RLS policies this time — see reason).</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">Recompose: Settings moved into the new shell (same URL, new chrome).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S3 · wardrobe storage bucket — 'wardrobe' bucket (private) created, 4 owner-scoped storage.objects policies confirmed. NOTE: found progress-photos bucket has storage.objects RLS on with ZERO policies + uses the anon-scoped client — likely already broken for real users, not fixed here, flagged for S11.</div>
+        <div class="bug-ref">S3 · settings module</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S4"
-           data-time-est="40" data-time-actual="45"
-           data-credit-est="70000" data-credit-actual="82000">
+      <div class="bug-row" data-status="waiting" data-id="S4" data-time-est="15" data-time-actual="" data-credit-est="25000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Wardrobe: photo-first add flow (client-side compress → one vision call proposing fields → confirm/edit → save) + manual add.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">Recompose: Food moved into the new shell (same URL, new chrome).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S4 · photo-first add flow — components/wardrobe/AddItemFlow.tsx, lib/wardrobeImage.ts (canvas compress), lib/ai/wardrobeVision.ts (one Haiku vision call, tool-use)</div>
+        <div class="bug-ref">S4 · food module</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S5"
-           data-time-est="30" data-time-actual="28"
-           data-credit-est="55000" data-credit-actual="51000">
+      <div class="bug-row" data-status="waiting" data-id="S5" data-time-est="20" data-time-actual="" data-credit-est="30000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Wardrobe: /wardrobe browse page — responsive grid, filter chips, search, sort, season toggle.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">Recompose: Wardrobe moved into the new shell (same URLs, new chrome).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S5 · /wardrobe browse page — components/wardrobe/WardrobeClient.tsx, TanStack Query + AutoAnimate grid, season defaults to currentSeason()</div>
+        <div class="bug-ref">S5 · wardrobe module</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S6"
-           data-time-est="25" data-time-actual="22"
-           data-credit-est="45000" data-credit-actual="41000">
+      <div class="bug-row" data-status="waiting" data-id="S6" data-time-est="30" data-time-actual="" data-credit-est="45000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Wardrobe: item detail (editable fields, wear count, last worn, cost-per-wear, mini wear-history calendar, delete).</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">Recompose: Body module — full page using BodyWidget's muscle map + recovery figure, reusing existing data functions.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S6 · item detail — app/(dashboard)/wardrobe/[id]/ItemDetailClient.tsx, 12-week wear heatmap grid</div>
+        <div class="bug-ref">S6 · body module</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S7"
-           data-time-est="25" data-time-actual="18"
-           data-credit-est="45000" data-credit-actual="33000">
+      <div class="bug-row" data-status="waiting" data-id="S7" data-time-est="25" data-time-actual="" data-credit-est="40000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Wardrobe: NLP wear logging (fuse.js match + chrono-node date), never-worn list, most-worn ranking.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">Recompose: Media module — full catalogue page (books/films/shows/songs), reusing lib/db/media.ts.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S7 · NLP wear logging — lib/wardrobeMatch.ts, zero AI cost (pure fuse.js + chrono-node, no LLM call), never-worn toggle + most/least-worn sort in browse page</div>
+        <div class="bug-ref">S7 · media module</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S8"
-           data-time-est="20" data-time-actual="25"
-           data-credit-est="35000" data-credit-actual="48000">
+      <div class="bug-row" data-status="waiting" data-id="S8" data-time-est="20" data-time-actual="" data-credit-est="35000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Wardrobe: compact widget + WIDGET_CATALOG registration + nav entry. Verify: 3 photo adds, filter, wear log, cost-per-wear.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">Recompose: Journal module — full page, reusing existing journal data functions.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S8 · REAL verified end-to-end: 3 synthetic photos → real Haiku vision calls → "Red t-shirt"/top/red (correct), "Blue jeans"/bottom/blue (correct), "Curved headband"/accessory (misread my crude trainers icon — honest miss, not hidden); inserted via real DB layer, wear logged for yesterday, season+type read back correctly, cost_per_wear = 40/1 = 40.00 (correct), then all 3 test items deleted (0 remaining after cleanup).</div>
+        <div class="bug-ref">S8 · journal module</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S9"
-           data-time-est="25" data-time-actual="30"
-           data-credit-est="45000" data-credit-actual="58000">
+      <div class="bug-row" data-status="waiting" data-id="S9" data-time-est="30" data-time-actual="" data-credit-est="45000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Food page: macro targets in settings (defaults) + migration for full macros (carbs/fat/fibre/salt) on food_log + daily_stats, live + verified + backfill.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">Health module — HRV/RHR/sleep/strain/sick/injury/sleep-debt in one page, Recovery lives here.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S9 · migration 022 run live: daily_stats/food_log/food_cache macro columns + user_preferences targets + food_notes table, all verified via information_schema/pg_policies, 0 nulls left in existing daily_stats rows</div>
+        <div class="bug-ref">S9 · health module</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S10"
-           data-time-est="45" data-time-actual="55"
-           data-credit-est="80000" data-credit-actual="95000">
+      <div class="bug-row" data-status="waiting" data-id="S10" data-time-est="45" data-time-actual="" data-credit-est="70000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Food page: /food timeline, quick re-log grid, food notes memory, day quality ring, TanStack Query + AutoAnimate.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 2 — Main command centre: recovery ring, calories ring + macro bars, training status, key vitals, quick-nav tiles into every module. Pulls from existing data, no forked logic.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S10 · REAL verified: Claude call for "full english + coke" returned all 7 macros per item; food_log + daily_stats additive writes matched expected sums exactly; timeline/most-eaten/quality-ring/NLP-lite note-match all correct on real data (caught + fixed a real bug: note text included the trigger phrase until fixed); full cleanup restored pre-test state exactly.</div>
+        <div class="bug-ref">S10 · main / command centre</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S11"
-           data-time-est="10" data-time-actual="20"
-           data-credit-est="15000" data-credit-actual="28000">
+      <div class="bug-row" data-status="waiting" data-id="S11" data-time-est="40" data-time-actual="" data-credit-est="60000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Remaining BUGS.md items: confirm nothing open besides N8 (already documented as blocked on the user's own WHOOP secret).</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 4 — Gym module: PR tracker, training load, routine, body-map link, per-exercise history. Real data only, clearly-marked space left for the future live logger (not built this session).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S11 · confirmed 44/44 original items resolved except N8 (genuinely blocked). Went further: fixed C11 (progress-photos storage RLS gap found this session, migration 023 run live + verified) — 45/46 total, only N8 open.</div>
+        <div class="bug-ref">S11 · gym module</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S12"
-           data-time-est="15" data-time-actual="12"
-           data-credit-est="20000" data-credit-actual="19000">
+      <div class="bug-row" data-status="waiting" data-id="S12" data-time-est="30" data-time-actual="" data-credit-est="45000" data-credit-actual="">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Final: clean build, verify production serves the latest commit, board.html + PROGRESS.md reflect true final state, plain-English summary written.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">Polish: theme parity across the shell + every module, ⌘K palette gains "go to [module]" jumps, mobile/landscape/portrait pass.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S12 · npm run build clean, commit d47b7d6 confirmed Ready/Production via vercel ls (2m old), /food and /wardrobe probed live</div>
+        <div class="bug-ref">S12 · polish + palette</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="S13" data-time-est="15" data-time-actual="" data-credit-est="20000" data-credit-actual="">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">Switch default view: root now redirects to /main; old bento relocates to /grid inside the new shell. Only after everything above is confirmed rendering.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref">S13 · default view switch</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="S14" data-time-est="15" data-time-actual="" data-credit-est="20000" data-credit-actual="">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">Final: clean build, verify production serves the latest commit (live fingerprint), board.html + PROGRESS.md true final state, plain-English summary.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref">S14 · final verification + summary</div>
       </div>
 
     </div>
@@ -448,24 +236,15 @@
     Session token budget (editable below): <span id="budget-display"></span> tokens (approx). ·
     Edit each row's <code>data-status</code> (waiting / working / done / failed), <code>data-time-actual</code>, and <code>data-credit-actual</code> to update this board.
   </footer>
-
 </div>
 
 <script>
-  // EDITABLE: approximate token budget for this session (self-estimated, not exact telemetry).
-  var SESSION_TOKEN_BUDGET = 600000;
+  var SESSION_TOKEN_BUDGET = 900000;
 </script>
 <script>
 (function () {
-  var STATUS_LABEL = {
-    waiting: 'WAITING',
-    working: 'WORKING',
-    done: '✓ DONE',
-    failed: '✗ FAILED'
-  };
-
+  var STATUS_LABEL = { waiting: 'WAITING', working: 'WORKING', done: '✓ DONE', failed: '✗ FAILED' };
   var rows = Array.prototype.slice.call(document.querySelectorAll('.bug-row'));
-
   var timeEstSum = 0, timeActualSum = 0, creditEstSum = 0, creditActualSum = 0;
 
   rows.forEach(function (row) {
@@ -475,18 +254,14 @@
 
     var reasonEl = row.querySelector('.bug-reason');
     var reasonText = row.getAttribute('data-reason') || '';
-    if (reasonText) {
-      reasonEl.textContent = 'Reason: ' + reasonText;
-      reasonEl.classList.add('has-text');
-    }
+    if (reasonText) { reasonEl.textContent = 'Reason: ' + reasonText; reasonEl.classList.add('has-text'); }
 
     var timeEst = parseFloat(row.getAttribute('data-time-est')) || 0;
     var timeActual = parseFloat(row.getAttribute('data-time-actual'));
     var creditEst = parseFloat(row.getAttribute('data-credit-est')) || 0;
     var creditActual = parseFloat(row.getAttribute('data-credit-actual'));
 
-    timeEstSum += timeEst;
-    creditEstSum += creditEst;
+    timeEstSum += timeEst; creditEstSum += creditEst;
     if (!isNaN(timeActual)) timeActualSum += timeActual;
     if (!isNaN(creditActual)) creditActualSum += creditActual;
 
@@ -517,24 +292,17 @@
   document.getElementById('time-actual-sum').textContent = timeActualSum;
   document.getElementById('credit-est-sum').textContent = creditEstSum.toLocaleString();
   document.getElementById('credit-actual-sum').textContent = creditActualSum.toLocaleString();
-
   document.getElementById('budget-display').textContent = SESSION_TOKEN_BUDGET.toLocaleString();
 
   var burnPct = SESSION_TOKEN_BUDGET ? Math.min(100, (creditActualSum / SESSION_TOKEN_BUDGET) * 100) : 0;
   var burnFill = document.getElementById('burn-fill');
   burnFill.style.width = burnPct + '%';
   burnFill.classList.remove('amber', 'red');
-  if (burnPct > 90) burnFill.classList.add('red');
-  else if (burnPct > 70) burnFill.classList.add('amber');
+  if (burnPct > 90) burnFill.classList.add('red'); else if (burnPct > 70) burnFill.classList.add('amber');
   document.getElementById('burn-pct').textContent = Math.round(burnPct) + '%';
-  document.getElementById('burn-detail').textContent =
-    creditActualSum.toLocaleString() + ' of ' + SESSION_TOKEN_BUDGET.toLocaleString() + ' approx tokens used this session.';
+  document.getElementById('burn-detail').textContent = creditActualSum.toLocaleString() + ' of ' + SESSION_TOKEN_BUDGET.toLocaleString() + ' approx tokens used this session.';
 
-  var allResolved = rows.every(function (r) {
-    var s = r.getAttribute('data-status');
-    return s === 'done' || s === 'failed';
-  });
-
+  var allResolved = rows.every(function (r) { var s = r.getAttribute('data-status'); return s === 'done' || s === 'failed'; });
   if (allResolved && total > 0) {
     document.getElementById('done-banner').classList.add('show');
     document.getElementById('refresh-note').style.display = 'none';
