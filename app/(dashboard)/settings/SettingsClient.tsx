@@ -8,6 +8,16 @@ import { PushNotificationSettings } from '@/components/settings/PushNotification
 import type { SavedPlace } from '@/lib/db/preferences'
 import type { Theme } from '@/components/ThemeProvider'
 
+interface MacroTargets {
+  calorie_target: number
+  protein_target_g: number
+  carbs_target_g: number
+  fat_target_g: number
+  fibre_target_g: number
+  sugar_target_g: number
+  salt_target_g: number
+}
+
 interface Props {
   userId: string
   currentEmail: string
@@ -17,6 +27,7 @@ interface Props {
     savedPlaces: SavedPlace[]
     mounjaroEnabled: boolean
     weatherBgEnabled: boolean
+    macroTargets: MacroTargets
   }
   whoopConnection: {
     displayName: string | null
@@ -45,6 +56,7 @@ const THEMES: { id: Theme; label: string; desc: string; preview: string }[] = [
 
 export function SettingsClient({ currentEmail, initialPrefs, whoopConnection }: Props) {
   const [weightGoal, setWeightGoal] = useState(initialPrefs.weightGoal?.toString() ?? '')
+  const [macroTargets, setMacroTargets] = useState<MacroTargets>(initialPrefs.macroTargets)
   const [mounjaroEnabled, setMounjaroEnabled] = useState(initialPrefs.mounjaroEnabled)
   const [weatherBgEnabled, setWeatherBgEnabled] = useState(initialPrefs.weatherBgEnabled)
   const [token, setToken] = useState(initialPrefs.token)
@@ -119,6 +131,7 @@ export function SettingsClient({ currentEmail, initialPrefs, whoopConnection }: 
       weight_goal_kg: weightGoal ? parseFloat(weightGoal) : null,
       mounjaro_enabled: mounjaroEnabled,
       weather_bg_enabled: weatherBgEnabled,
+      ...macroTargets,
     })
     setSaving(false)
     setSaved(true)
@@ -226,6 +239,29 @@ export function SettingsClient({ currentEmail, initialPrefs, whoopConnection }: 
             step="0.1"
             className="w-28 rounded-lg bg-surface-elevated border border-border text-text text-sm px-3 py-1.5 focus:outline-none focus:border-accent"
           />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 pt-1">
+          {([
+            ['calorie_target', 'Calories (kcal)'],
+            ['protein_target_g', 'Protein (g)'],
+            ['carbs_target_g', 'Carbs (g)'],
+            ['fat_target_g', 'Fat (g)'],
+            ['fibre_target_g', 'Fibre (g)'],
+            ['sugar_target_g', 'Sugar (g)'],
+            ['salt_target_g', 'Salt (g)'],
+          ] as const).map(([key, label]) => (
+            <label key={key} className="flex flex-col gap-1 text-xs text-text-muted">
+              {label}
+              <input
+                type="number"
+                step={key === 'salt_target_g' ? '0.1' : '1'}
+                value={macroTargets[key]}
+                onChange={(e) => setMacroTargets((m) => ({ ...m, [key]: Number(e.target.value) || 0 }))}
+                className="w-full rounded-lg bg-surface-elevated border border-border text-text text-sm px-3 py-1.5 focus:outline-none focus:border-accent"
+              />
+            </label>
+          ))}
         </div>
 
         <div className="flex items-center gap-4">

@@ -26,6 +26,15 @@ export default async function SettingsPage() {
         savedPlaces: prefs?.saved_places ?? [],
         mounjaroEnabled: prefs?.mounjaro_enabled ?? false,
         weatherBgEnabled: prefs?.weather_bg_enabled ?? false,
+        macroTargets: {
+          calorie_target: prefs?.calorie_target ?? 2000,
+          protein_target_g: prefs?.protein_target_g ?? 150,
+          carbs_target_g: prefs?.carbs_target_g ?? 250,
+          fat_target_g: prefs?.fat_target_g ?? 70,
+          fibre_target_g: prefs?.fibre_target_g ?? 30,
+          sugar_target_g: prefs?.sugar_target_g ?? 90,
+          salt_target_g: prefs?.salt_target_g ?? 6,
+        },
       }}
       whoopConnection={whoopConn ? {
         displayName: whoopConn.whoop_display_name,

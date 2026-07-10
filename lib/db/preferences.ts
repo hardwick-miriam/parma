@@ -19,6 +19,13 @@ export interface UserPreferences {
   theme: string
   weather_bg_enabled: boolean
   bg_effects_mobile: boolean
+  calorie_target: number
+  protein_target_g: number
+  carbs_target_g: number
+  fat_target_g: number
+  fibre_target_g: number
+  sugar_target_g: number
+  salt_target_g: number
   updated_at: string
 }
 
@@ -40,6 +47,13 @@ export async function getUserPreferences(userId: string): Promise<UserPreference
     theme: (data.theme as string) ?? 'normal',
     weather_bg_enabled: (data.weather_bg_enabled as boolean) ?? false,
     bg_effects_mobile: (data.bg_effects_mobile as boolean) ?? false,
+    calorie_target: (data.calorie_target as number) ?? 2000,
+    protein_target_g: (data.protein_target_g as number) ?? 150,
+    carbs_target_g: (data.carbs_target_g as number) ?? 250,
+    fat_target_g: (data.fat_target_g as number) ?? 70,
+    fibre_target_g: (data.fibre_target_g as number) ?? 30,
+    sugar_target_g: (data.sugar_target_g as number) ?? 90,
+    salt_target_g: (data.salt_target_g as number) ?? 6,
   }
 }
 

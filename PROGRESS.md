@@ -663,3 +663,42 @@ commit hash per step so a paused run resumes correctly.
       correctly, `cost_per_wear` computed as `40 / 1 = 40.00` (price_paid=40, wear_count=1) —
       correct. Deleted all 3 test items + their storage objects; re-queried, 0 remaining.
   - `npm run build` clean throughout.
+
+### S9/S10 — food page (macro targets, migration, timeline, quick re-log, notes, quality ring)
+- STARTING S9/S10
+- DONE S9/S10 — Full nutrition deep-dive shipped:
+  - `supabase/migrations/022_food_macros.sql` run live: `carbs_g/fat_g/fibre_g/sugar_g/salt_g`
+    added to `daily_stats` and `food_log` (NOT NULL DEFAULT 0 — Postgres fast-default backfills
+    existing rows automatically, verified 0 nulls remain), matching columns on `food_cache`,
+    7 macro-target columns on `user_preferences` with NHS-reference defaults (2000 kcal / 150g
+    protein / 250g carbs / 70g fat / 30g fibre / 90g sugar / 6g salt), and a new `food_notes`
+    table (RLS + owner policy, verified live).
+  - AI pipeline extended: `lib/ai/providers/claude.ts` tool schema + system prompt now estimate
+    all 7 macros per food item (not just calories/protein), `lib/schemas.ts` validates them,
+    `lib/db/queries.ts:upsertDailyStats` additively merges all 7 (same pattern as the existing
+    calories/protein_g merge), `lib/openFoodFacts.ts` now extracts fibre/sugar/salt from OFF too.
+  - Settings: macro targets editable in `SettingsClient.tsx` (7 number inputs), persisted via
+    `saveSettings()` → `user_preferences`.
+  - `/food` page (`components/food/FoodClient.tsx`): header with day-quality ring
+    (`lib/foodQuality.ts` — protein/fibre/sugar/salt-based 0-100 score) + 7 macro bars vs
+    targets; day-grouped timeline via TanStack `useInfiniteQuery` (`/api/food-log/timeline`,
+    paginated by distinct day, IntersectionObserver auto-load) with meal/source badges, search,
+    hydration+supplements folded per day; quick re-log grid (`/api/food-log/most-eaten` +
+    `/api/food-log/relog`, zero AI cost — repeats a known value, not a fresh estimate); food
+    notes memory (`/api/food-notes`, fuzzy per-food via `normaliseFoodKey`, surfaced as a chip
+    on both the timeline and the quick re-log cards) with NLP-lite free-text attach
+    (`lib/foodNoteMatch.ts` — zero AI cost, same fuse.js pattern as wardrobe wear-logging, not
+    an LLM call). `/food` added to nav.
+  - **Real end-to-end verification**: real Claude call on "had a full english for breakfast and
+    a can of coke" returned itemised macros for both foods with all 7 fields populated; wrote
+    through the real `food_log`/`daily_stats` additive-merge path and confirmed the post-write
+    totals matched pre-write-plus-parsed exactly; queried the real timeline/most-eaten
+    aggregations and got correct day-grouping and food counts; computed a real day-quality score
+    (61/100, correctly penalised by the coke's sugar); ran the NLP-lite note matcher on "the full
+    english made me feel bloated" — **this caught a real bug**: the note text initially included
+    the trigger phrase itself ("made me feel  bloated" instead of "bloated") because the original
+    `text.split(regex)` approach re-included the capturing group; fixed by switching to
+    `text.match()` + slicing around the match index, re-verified clean. Fully cleaned up
+    afterward (deleted test food_log/food_notes rows, restored daily_stats to its exact
+    pre-test values).
+  - `npm run build` clean throughout.

@@ -405,25 +405,25 @@
         <div class="bug-ref">S8 · REAL verified end-to-end: 3 synthetic photos → real Haiku vision calls → "Red t-shirt"/top/red (correct), "Blue jeans"/bottom/blue (correct), "Curved headband"/accessory (misread my crude trainers icon — honest miss, not hidden); inserted via real DB layer, wear logged for yesterday, season+type read back correctly, cost_per_wear = 40/1 = 40.00 (correct), then all 3 test items deleted (0 remaining after cleanup).</div>
       </div>
 
-      <div class="bug-row" data-status="working" data-id="S9"
-           data-time-est="25" data-time-actual=""
-           data-credit-est="45000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S9"
+           data-time-est="25" data-time-actual="30"
+           data-credit-est="45000" data-credit-actual="58000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Food page: macro targets in settings (defaults) + migration for full macros (carbs/fat/fibre/salt) on food_log + daily_stats, live + verified + backfill.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S9 · macro targets + migration</div>
+        <div class="bug-ref">S9 · migration 022 run live: daily_stats/food_log/food_cache macro columns + user_preferences targets + food_notes table, all verified via information_schema/pg_policies, 0 nulls left in existing daily_stats rows</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S10"
-           data-time-est="45" data-time-actual=""
-           data-credit-est="80000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S10"
+           data-time-est="45" data-time-actual="55"
+           data-credit-est="80000" data-credit-actual="95000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Food page: /food timeline, quick re-log grid, food notes memory, day quality ring, TanStack Query + AutoAnimate.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S10 · /food page</div>
+        <div class="bug-ref">S10 · REAL verified: Claude call for "full english + coke" returned all 7 macros per item; food_log + daily_stats additive writes matched expected sums exactly; timeline/most-eaten/quality-ring/NLP-lite note-match all correct on real data (caught + fixed a real bug: note text included the trigger phrase until fixed); full cleanup restored pre-test state exactly.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S11"
+      <div class="bug-row" data-status="working" data-id="S11"
            data-time-est="10" data-time-actual=""
            data-credit-est="15000" data-credit-actual="">
         <div class="status-chip"></div>

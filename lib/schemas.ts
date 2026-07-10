@@ -20,6 +20,11 @@ export const ParsedFoodItemSchema = z.object({
   meal: z.enum(['breakfast', 'lunch', 'dinner', 'snack']).optional(),
   calories: z.number().nonnegative().int(),
   protein_g: z.number().nonnegative(),
+  carbs_g: z.number().nonnegative().optional(),
+  fat_g: z.number().nonnegative().optional(),
+  fibre_g: z.number().nonnegative().optional(),
+  sugar_g: z.number().nonnegative().optional(),
+  salt_g: z.number().nonnegative().optional(),
 })
 
 export const ParsedInjuryCheckinSchema = z.object({
@@ -69,6 +74,11 @@ export const ParsedLogSchema = z.object({
   // breakdown, not a replacement for these totals.
   calories: z.number().nonnegative().int().optional(),
   protein_g: z.number().nonnegative().optional(),
+  carbs_g: z.number().nonnegative().optional(),
+  fat_g: z.number().nonnegative().optional(),
+  fibre_g: z.number().nonnegative().optional(),
+  sugar_g: z.number().nonnegative().optional(),
+  salt_g: z.number().nonnegative().optional(),
   foods: z.array(ParsedFoodItemSchema).optional(),
   steps: z.number().nonnegative().int().optional(),
   workouts: z.array(ParsedWorkoutSchema).optional(),

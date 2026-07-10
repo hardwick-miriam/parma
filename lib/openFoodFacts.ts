@@ -8,6 +8,9 @@ export interface OFFProduct {
   protein_per_100g: number
   carbs_per_100g: number
   fat_per_100g: number
+  fibre_per_100g: number
+  sugar_per_100g: number
+  salt_per_100g: number
   serving_size_g: number | null
   barcode: string | null
   confidence: 'high' | 'medium' | 'low'
@@ -18,12 +21,18 @@ function extractNutriments(n: Record<string, unknown>): Omit<OFFProduct, 'name' 
   const protein = Number(n['proteins_100g'])
   const carbs = Number(n['carbohydrates_100g'])
   const fat = Number(n['fat_100g'])
+  const fibre = Number(n['fiber_100g'])
+  const sugar = Number(n['sugars_100g'])
+  const salt = Number(n['salt_100g'])
   if (!kcal || isNaN(kcal)) return null
   return {
     kcal_per_100g: Math.round(kcal),
     protein_per_100g: Math.round((protein ?? 0) * 10) / 10,
     carbs_per_100g: Math.round((carbs ?? 0) * 10) / 10,
     fat_per_100g: Math.round((fat ?? 0) * 10) / 10,
+    fibre_per_100g: Math.round((isNaN(fibre) ? 0 : fibre) * 10) / 10,
+    sugar_per_100g: Math.round((isNaN(sugar) ? 0 : sugar) * 10) / 10,
+    salt_per_100g: Math.round((isNaN(salt) ? 0 : salt) * 100) / 100,
   }
 }
 

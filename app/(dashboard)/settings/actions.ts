@@ -17,6 +17,13 @@ export async function saveSettings(updates: {
   weight_goal_kg?: number | null
   mounjaro_enabled?: boolean
   weather_bg_enabled?: boolean
+  calorie_target?: number
+  protein_target_g?: number
+  carbs_target_g?: number
+  fat_target_g?: number
+  fibre_target_g?: number
+  sugar_target_g?: number
+  salt_target_g?: number
 }): Promise<void> {
   const user = await getUser()
   await upsertUserPreferences(user.id, updates)

@@ -66,6 +66,11 @@ export async function applyParsedLog(
       upsertDailyStats(userId, {
         calories: parsed.calories,
         protein_g: parsed.protein_g,
+        carbs_g: parsed.carbs_g,
+        fat_g: parsed.fat_g,
+        fibre_g: parsed.fibre_g,
+        sugar_g: parsed.sugar_g,
+        salt_g: parsed.salt_g,
         steps: parsed.steps,
         water_ml: parsed.water_ml,
         mood: parsed.mood,

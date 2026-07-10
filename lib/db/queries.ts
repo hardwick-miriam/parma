@@ -18,6 +18,11 @@ export interface DailyStats {
   date: string
   calories: number
   protein_g: number
+  carbs_g: number
+  fat_g: number
+  fibre_g: number
+  sugar_g: number
+  salt_g: number
   steps: number
   water_ml: number
   mood: string | null
@@ -125,7 +130,7 @@ export async function upsertDailyStats(
 
   const { data: existing, error: readError } = await supabase
     .from('daily_stats')
-    .select('calories, protein_g, steps, water_ml, supplements, habits_done')
+    .select('calories, protein_g, carbs_g, fat_g, fibre_g, sugar_g, salt_g, steps, water_ml, supplements, habits_done')
     .eq('user_id', userId)
     .eq('date', targetDate)
     .maybeSingle()
@@ -135,7 +140,7 @@ export async function upsertDailyStats(
   // accumulated calories/protein/water/steps with just today's increment.
   if (readError) throw readError
 
-  // Additive: calories, protein, water
+  // Additive: calories, protein, carbs, fat, fibre, sugar, salt, water
   // Max: steps
   // Union: supplements, habits_done
   // Overwrite: mood, sleep_hours, weight_kg, notes
@@ -144,6 +149,11 @@ export async function upsertDailyStats(
     date: targetDate,
     calories: (existing?.calories ?? 0) + (updates.calories ?? 0),
     protein_g: (existing?.protein_g ?? 0) + (updates.protein_g ?? 0),
+    carbs_g: (existing?.carbs_g ?? 0) + (updates.carbs_g ?? 0),
+    fat_g: (existing?.fat_g ?? 0) + (updates.fat_g ?? 0),
+    fibre_g: (existing?.fibre_g ?? 0) + (updates.fibre_g ?? 0),
+    sugar_g: (existing?.sugar_g ?? 0) + (updates.sugar_g ?? 0),
+    salt_g: (existing?.salt_g ?? 0) + (updates.salt_g ?? 0),
     steps: updates.steps != null
       ? Math.max(existing?.steps ?? 0, updates.steps)
       : (existing?.steps ?? 0),

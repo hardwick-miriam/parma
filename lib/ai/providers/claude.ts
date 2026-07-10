@@ -18,6 +18,11 @@ const PARSE_TOOL: Anthropic.Tool = {
         type: 'number',
         description: 'TOTAL protein in grams across everything mentioned in this message. Whenever ANY food is mentioned, you MUST estimate this alongside calories — never leave it absent if food was eaten. When `foods` has multiple items, this MUST equal the sum of their individual protein_g — it is the total, not a separate estimate.',
       },
+      carbs_g: { type: 'number', description: 'TOTAL carbohydrates in grams across everything mentioned. Same estimation rule as calories/protein_g — sum of `foods` items when present.' },
+      fat_g: { type: 'number', description: 'TOTAL fat in grams across everything mentioned. Same estimation rule as calories/protein_g — sum of `foods` items when present.' },
+      fibre_g: { type: 'number', description: 'TOTAL dietary fibre in grams across everything mentioned. Same estimation rule as calories/protein_g — sum of `foods` items when present.' },
+      sugar_g: { type: 'number', description: 'TOTAL sugar in grams across everything mentioned. Same estimation rule as calories/protein_g — sum of `foods` items when present.' },
+      salt_g: { type: 'number', description: 'TOTAL salt in grams across everything mentioned. Same estimation rule as calories/protein_g — sum of `foods` items when present.' },
       foods: {
         type: 'array',
         description:
@@ -34,6 +39,11 @@ const PARSE_TOOL: Anthropic.Tool = {
             meal: { type: 'string', enum: ['breakfast', 'lunch', 'dinner', 'snack'], description: 'Which meal this belongs to, if stated or clearly implied by time of day. Omit if genuinely unclear.' },
             calories: { type: 'number', description: 'Estimated calories for this one item' },
             protein_g: { type: 'number', description: 'Estimated protein in grams for this one item' },
+            carbs_g: { type: 'number', description: 'Estimated carbohydrates in grams for this one item' },
+            fat_g: { type: 'number', description: 'Estimated fat in grams for this one item' },
+            fibre_g: { type: 'number', description: 'Estimated dietary fibre in grams for this one item' },
+            sugar_g: { type: 'number', description: 'Estimated sugar in grams for this one item' },
+            salt_g: { type: 'number', description: 'Estimated salt in grams for this one item' },
           },
           required: ['description', 'calories', 'protein_g'],
           additionalProperties: false,
@@ -172,8 +182,8 @@ const PARSE_TOOL: Anthropic.Tool = {
 const BASE_SYSTEM =
   "You are a health data extraction assistant. Parse the user's natural-language log entry and extract every health and habit metric you can identify.\n\n" +
   "GENERAL RULE: omit fields when the information is genuinely absent — do not invent steps, sleep, mood, weight, or water that weren't mentioned.\n\n" +
-  "NUTRITION EXCEPTION — whenever the user mentions eating or drinking anything with nutritional value, you MUST populate BOTH calories AND protein_g (the TOTALS) using your nutritional knowledge. " +
-  "Estimate from what you know (e.g. a 15cm ham pizza slice ≈ 400 kcal, 20 g protein; a chicken breast ≈ 165 kcal, 31 g protein; scrambled eggs × 2 ≈ 180 kcal, 12 g protein). " +
+  "NUTRITION EXCEPTION — whenever the user mentions eating or drinking anything with nutritional value, you MUST populate calories, protein_g, carbs_g, fat_g, fibre_g, sugar_g, AND salt_g (the TOTALS) using your nutritional knowledge — all seven, not just calories/protein. " +
+  "Estimate from what you know (e.g. a 15cm ham pizza slice ≈ 400 kcal, 20 g protein, 40 g carbs, 18 g fat, 2 g fibre, 4 g sugar, 1.8 g salt; a chicken breast ≈ 165 kcal, 31 g protein, 0 g carbs, 4 g fat; scrambled eggs × 2 ≈ 180 kcal, 12 g protein, 1 g carbs, 14 g fat). " +
   "If you estimate because the user didn't state the exact number, add the field name to the estimates array.\n\n" +
   "ITEMISATION (F1) — whenever more than one distinct food, drink, or meal is mentioned in the same message, you MUST split them into separate entries in the `foods` array — one item per food, each tagged with its own meal (breakfast/lunch/dinner/snack) when stated or clearly implied. Do not collapse a whole day's eating into one blob. A message describing only one food should still produce a single `foods` entry. `calories`/`protein_g` above are always the SUM of the `foods` items.\n\n" +
   "UK CONVENTIONS: The user is UK-based. Convert stone and pounds to kg (1 stone = 6.35 kg; '13 stone 4 lbs' = 84.37 kg). " +
