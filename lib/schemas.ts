@@ -4,7 +4,10 @@ import { z } from 'zod'
 
 export const ParsedWorkoutSchema = z.object({
   description: z.string(),
-  duration_minutes: z.number().optional(),
+  // workout_sessions.duration_minutes is `integer` — a fractional value
+  // passes without .int() and then fails at insert with an opaque Postgres
+  // error instead of a clear validation message.
+  duration_minutes: z.number().int().optional(),
   feeling: z.enum(['great', 'good', 'okay', 'tired', 'rough']).optional(),
   exercises: z.array(z.string()).optional(),
 })
@@ -44,7 +47,9 @@ export const MuscleSorenessEntrySchema = z.object({
 })
 
 export const ParsedLogSchema = z.object({
-  calories: z.number().nonnegative().optional(),
+  // daily_stats.calories is `integer` — see duration_minutes above for the
+  // same class of bug this .int() guards against.
+  calories: z.number().nonnegative().int().optional(),
   protein_g: z.number().nonnegative().optional(),
   steps: z.number().nonnegative().int().optional(),
   workouts: z.array(ParsedWorkoutSchema).optional(),

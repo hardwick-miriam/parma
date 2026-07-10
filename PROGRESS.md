@@ -98,6 +98,21 @@ PRTrackerWidget.tsx which already used the correct fields) instead of the nonexi
 
 ## TIER 2 (MAJOR) — in progress
 
+### M14 — calories/duration_minutes not integer-constrained
+STARTING/DONE M14 — lib/schemas.ts: `calories` and `ParsedWorkoutSchema.duration_minutes` now
+have `.int()`, matching their `integer` Postgres columns (daily_stats.calories,
+workout_sessions.duration_minutes). Verified: `npm run build` clean.
+
+### M15 — no DB CHECK constraint on mood/feeling
+STARTING M15 — wrote `supabase/migrations/018_mood_feeling_checks.sql` adding CHECK
+constraints on daily_stats.mood and workout_sessions.feeling (NOT VALID, so it applies to new
+writes immediately without requiring a data backfill first), matching the pattern already
+used for media_log.category/status.
+**BLOCKED — marked `failed`, not `fixed`.** Same as C1: no live Supabase credentials in this
+session to actually run the migration. **Action needed**: run
+`supabase/migrations/018_mood_feeling_checks.sql` with the real service-role key, then
+`VALIDATE CONSTRAINT` both (commented at the bottom of the file) once confirmed clean.
+
 ### M12 — theme write-only on a new browser/device
 STARTING/DONE M12 — app/layout.tsx now falls back to `getUserPreferences(user.id).theme` when
 the `parma-theme` cookie is absent (new browser/device/cleared cookies), instead of always

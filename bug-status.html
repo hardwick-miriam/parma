@@ -469,19 +469,20 @@
         <div class="bug-ref">M12 · theme write-only on new device</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="M13">
+      <div class="bug-row" data-status="fixed" data-id="M13">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Logging food and a workout together as a backdated entry could split them onto two different days.</div><div class="bug-reason"></div></div>
         <div class="bug-ref">M13 · insertWorkout missing logDate</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="M14">
+      <div class="bug-row" data-status="fixed" data-id="M14">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">An oddly-estimated food or workout log could fail to save with a confusing, unexplained error.</div><div class="bug-reason"></div></div>
         <div class="bug-ref">M14 · calories/duration not integer-checked</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="M15">
+      <div class="bug-row" data-status="failed" data-id="M15" data-reason="Migration written (018_mood_feeling_checks.sql) but not applied — this session has no live Supabase credentials, same blocker as C1.">
+
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Nothing in the database itself stops junk values from ending up in your mood or workout-feeling fields if the normal checks get skipped.</div><div class="bug-reason"></div></div>
         <div class="bug-ref">M15 · no DB check on mood/feeling</div>
