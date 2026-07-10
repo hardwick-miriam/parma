@@ -32,6 +32,111 @@ just a claim.
 
 ---
 
+## FINAL SUMMARY (session end)
+
+**Result: 39/44 fixed, 5 honestly marked `failed` (blocked, not skipped).** Every fix is a
+separate commit, all pushed to `main`, all build-gated (`npm run build` clean after every
+single change, not just per-tier). Board (`bug-status.html`) row counts verified by direct
+grep against the file, not by memory: `39 fixed`, `5 failed`, `0` stuck on
+`waiting`/`fixing`.
+
+### Commit ledger (chronological, oldest first)
+
+| Commit | Items |
+|---|---|
+| `531f4e9` | C1 (RLS migration written, code regression fixed — blocked), C3 (UTC date bugs), C4 (backdating threading), C6, C7 (bundled in the same queries.ts pass) |
+| `130f59e` | C5 |
+| `8ffa6f9` | C2 |
+| `33a694b` | C8, C9 |
+| `00cb27a` | C10 — **Tier 1 (critical) complete: 9/10 fixed, C1 blocked** |
+| `1c328d5` | M1, M2, M3 |
+| `48ac6f5` | M4, M5, M6, M7, M8 |
+| `8ed3604` | M9, M10 |
+| `e507e18` | M11 |
+| `d70d505` | M12 |
+| `717a336` | M13 (already fixed via C4), M14, M15 (migration written — blocked) |
+| `085384c` | M16 |
+| `c5a6f6d` | M17 |
+| `78b04a9` | M18, M19, M20 |
+| `4b9fb9d` | M21 |
+| `f0ca159` | M22, M23 — **Tier 2 (major) complete: 22/23 fixed, M15 blocked** |
+| `ecc054f` | N1 |
+| `38d4287` | N2 (migration written — blocked) |
+| `04f9551` | N3 (already fixed via C3), N4 |
+| `8eba1fd` | N5 |
+| `b01761d` | N6 |
+| `a5522b9` | N7 |
+| `dc50c8f` | N8 (confirmed, not newly actionable — not a code bug) |
+| `d26b5e3` | N9 (confirmed clean) — **Tier 3 (minor) complete: 8/9 fixed, N8 not applicable** |
+| `656c361` | F2 |
+| `438ed6f` | F1 (full pipeline written — blocked, two independent reasons) — **Tier 4 complete: 1/2 fixed** |
+
+### The 5 `failed` items — every one blocked by something outside my control tonight, not skipped
+
+1. **C1** — RLS migration (`017_rls_untracked_tables.sql`) written and verified idempotent
+   against the existing migration style, plus the real regression it would have caused
+   (`/api/shortcuts/log` breaking under RLS) was found and fixed proactively. Not run: no live
+   `SUPABASE_SERVICE_ROLE_KEY`-backed connection in this sandboxed session.
+2. **M15** — CHECK constraints migration (`018_mood_feeling_checks.sql`) written (`NOT VALID`
+   so it's safe to apply without a data audit first). Same blocker as C1.
+3. **N2** — `bg_effects_mobile` column migration (`019_bg_effects_mobile.sql`) + full
+   server/client wiring written. Same blocker as C1. Note: deploying this code before running
+   the migration is safe (fails silently the same way the original bug did, via the existing
+   `.catch(() => {})` on the fetch) but genuinely inert until the column exists.
+4. **N8** — Re-confirmed true (voice logging off, no AI rate limiting, WHOOP webhook secret
+   skip). Not blocked by missing credentials — blocked by needing either a real GROQ_API_KEY
+   from the user, new infrastructure (Redis) I shouldn't add unilaterally, or is deliberately
+   documented dev-mode behavior. Different class of "failed" than the other four.
+5. **F1** — Full itemisation pipeline written: migration `020_food_log.sql`, zod schema,
+   updated Claude tool schema/prompt, apply-logic, UI preview, GET endpoint. Blocked by *two*
+   things: the migration (same as C1) AND no working `ANTHROPIC_API_KEY` in this session, so
+   the actual model behavior against the new prompt was never verified with a real call — only
+   reasoned through by hand (see the worked example in the F1 section above).
+
+### Migrations written but NOT applied (all need the real `SUPABASE_SERVICE_ROLE_KEY`)
+
+Run in this order, each is idempotent/safe to re-run:
+1. `supabase/migrations/017_rls_untracked_tables.sql` — enables RLS on the 8 previously-
+   untracked tables. **Highest priority — this is the actual security gap C1 exists to close.**
+   Verify with the `select relname, relrowsecurity from pg_class where...` query in the file's
+   comment block.
+2. `supabase/migrations/018_mood_feeling_checks.sql` — adds CHECK constraints (mood/feeling).
+   After applying, run the two `VALIDATE CONSTRAINT` statements at the bottom of the file.
+3. `supabase/migrations/019_bg_effects_mobile.sql` — adds `user_preferences.bg_effects_mobile`.
+4. `supabase/migrations/020_food_log.sql` — adds the new `food_log` table + RLS.
+
+### New env vars
+
+- `AI_PROVIDER_ACKNOWLEDGE_INCOMPLETE` — optional, only relevant if someone tries to set
+  `AI_PROVIDER=openai-compatible` (M18's new safety gate). Not needed for normal operation
+  (default `AI_PROVIDER=claude` is unaffected).
+- No other new required env vars. All other fixes work within the existing env var set
+  documented in CLAUDE.md.
+
+### Production deployment verification
+
+Commit `438ed6f` (this session's final commit, containing all 44 items' final state) —
+confirmed via `gh api repos/hardwick-miriam/parma/commits/438ed6f/status` → Vercel deployment
+`state: "success"` (target: `https://vercel.com/hardwick-s-projects/parma/BrvkzcF4JgFdjNgFpS2sGBaDKXLA`).
+`vercel ls` independently confirms this as a `Production`-target deployment. Direct HTTP probes
+of `https://www.parma.ink/` and the new `/api/food-log` route both return `307 → /login`
+(expected — Next.js middleware redirects every unauthenticated request, including genuinely
+nonexistent paths, before routing even happens, so this confirms the deployment is serving
+traffic but can't distinguish route-exists from route-doesn't — verified this by also probing
+a deliberately made-up path, which 307s identically). Deeper behavioral verification of
+authenticated routes was not possible without a real login session.
+
+### What still needs a human (or a future session with real credentials)
+
+1. Run the 4 migrations above, in order, with the real service-role key.
+2. Make one real `/api/parse-log` call with a multi-food sentence and confirm `foods` comes
+   back itemised (F1's actual unverified risk).
+3. Decide on N8's rate-limiting approach (needs an infrastructure decision, not just code).
+4. Spot-check a few of the UI-behavior fixes (M9/M10 Weather, N7's 8 widgets, N5's body-widget
+   injury tap) in a real browser at real widths — I verified these compile and reasoned through
+   the CSS/logic carefully, but never had a running dev server with a live session to click
+   through them tonight.
+
 ## Log
 
 ### C1, C3, C4 — RLS migration + UTC date bugs + backdating (grouped)
