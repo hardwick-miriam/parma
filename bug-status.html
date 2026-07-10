@@ -590,7 +590,8 @@
         <div class="bug-ref">N7 · mobile compact branches missing</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="N8">
+      <div class="bug-row" data-status="failed" data-id="N8" data-reason="These are pre-existing, intentional tradeoffs, not bugs with a safe one-line fix: voice logging needs a GROQ_API_KEY only you can add; real rate limiting needs new infrastructure (e.g. Redis) that shouldn't be added unilaterally overnight; the WHOOP webhook secret skip is deliberately documented dev-mode behavior. Confirmed still true, not changed.">
+
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Voice logging is still switched off, there's no spending limit on AI usage, and WHOOP's webhook security check can be skipped if it's not configured.</div><div class="bug-reason"></div></div>
         <div class="bug-ref">N8 · known documented gaps</div>

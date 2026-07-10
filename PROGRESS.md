@@ -111,7 +111,17 @@ Verified: `npm run build` clean.
 
 ## TIER 3 (MINOR) — in progress
 
-### N7 — mobile compact-size gaps across 8 widgets
+### N8 — known documented gaps
+STARTING/DONE-BUT-FAILED N8 — re-confirmed all three are still true (voice transcription
+still 503s with GROQ_API_KEY unset; no rate limiting on any AI endpoint; WHOOP webhook
+signature check still skips entirely if WHOOP_WEBHOOK_SECRET is unset). **Marked `failed`,
+not `fixed`** — none of these have a safe one-line code fix: voice logging is blocked on the
+user adding a real GROQ_API_KEY; meaningful rate limiting needs new infrastructure (a
+Redis-backed counter or similar) that I shouldn't unilaterally introduce overnight without
+discussion; the webhook secret skip is deliberately documented dev-mode behavior (CLAUDE.md
+already flags it as "fine for local dev, a real gap in prod") — hardcoding a requirement
+would break local dev for anyone who hasn't set the secret yet. This is a "confirmed, not
+newly actionable tonight" item, distinct from the DB-credential-blocked items. — mobile compact-size gaps across 8 widgets
 STARTING/DONE N7 —
 - WorldClocksWidget: add-city row now wraps onto its own line with the error message on a
   second line, instead of cramming input+Add+Cancel+error into one unwrapped row.
