@@ -63,6 +63,83 @@ export async function insertFoodItems(
   if (error) throw error
 }
 
+/**
+ * Recomputes daily_stats' 7 food-macro fields from scratch by summing every
+ * food_log row for that user+date — the safe way to keep totals correct
+ * after an edit or delete, rather than trying to do delta math. Only
+ * touches those 7 columns (never steps/water/mood/sleep/weight/notes/etc),
+ * and — matching the C6/C7 "don't zero the day" precedent — aborts on a
+ * failed read instead of upserting zeros.
+ */
+export async function recomputeDailyFoodMacros(
+  userId: string,
+  date: string,
+  client?: SupabaseClient
+): Promise<void> {
+  const supabase = client ?? (await createClient())
+  const { data, error: readError } = await supabase
+    .from('food_log')
+    .select('calories, protein_g, carbs_g, fat_g, fibre_g, sugar_g, salt_g')
+    .eq('user_id', userId)
+    .eq('date', date)
+  if (readError) throw readError
+
+  const totals = (data ?? []).reduce(
+    (acc, item) => ({
+      calories: acc.calories + item.calories,
+      protein_g: acc.protein_g + Number(item.protein_g),
+      carbs_g: acc.carbs_g + Number(item.carbs_g),
+      fat_g: acc.fat_g + Number(item.fat_g),
+      fibre_g: acc.fibre_g + Number(item.fibre_g),
+      sugar_g: acc.sugar_g + Number(item.sugar_g),
+      salt_g: acc.salt_g + Number(item.salt_g),
+    }),
+    { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, fibre_g: 0, sugar_g: 0, salt_g: 0 }
+  )
+
+  const { error: writeError } = await supabase
+    .from('daily_stats')
+    .upsert({ user_id: userId, date, ...totals }, { onConflict: 'user_id,date' })
+  if (writeError) throw writeError
+}
+
+export async function updateFoodItem(
+  userId: string,
+  itemId: string,
+  updates: Partial<Pick<FoodLogItem, 'description' | 'meal' | 'calories' | 'protein_g' | 'carbs_g' | 'fat_g' | 'fibre_g' | 'sugar_g' | 'salt_g'>>,
+  client?: SupabaseClient
+): Promise<FoodLogItem> {
+  const supabase = client ?? (await createClient())
+  const { data, error } = await supabase
+    .from('food_log')
+    .update(updates)
+    .eq('id', itemId)
+    .eq('user_id', userId)
+    .select('*')
+    .single()
+  if (error) throw error
+
+  await recomputeDailyFoodMacros(userId, data.date, supabase)
+  return data
+}
+
+export async function deleteFoodItem(userId: string, itemId: string, client?: SupabaseClient): Promise<void> {
+  const supabase = client ?? (await createClient())
+  const { data: item, error: readError } = await supabase
+    .from('food_log')
+    .select('date')
+    .eq('id', itemId)
+    .eq('user_id', userId)
+    .maybeSingle()
+  if (readError) throw readError
+  if (!item) return
+
+  const { error: deleteError } = await supabase.from('food_log').delete().eq('id', itemId).eq('user_id', userId)
+  if (deleteError) throw deleteError
+
+  await recomputeDailyFoodMacros(userId, item.date, supabase)
+}
+
 export interface FoodNote {
   id: string
   user_id: string

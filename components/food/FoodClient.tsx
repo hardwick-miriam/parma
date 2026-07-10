@@ -52,6 +52,110 @@ function MacroBar({ label, value, target, unit = 'g' }: { label: string; value: 
   )
 }
 
+type EditableMacro = 'calories' | 'protein_g' | 'carbs_g' | 'fat_g' | 'fibre_g' | 'sugar_g' | 'salt_g'
+const EDITABLE_MACROS: { key: EditableMacro; label: string }[] = [
+  { key: 'calories', label: 'kcal' }, { key: 'protein_g', label: 'Protein g' },
+  { key: 'carbs_g', label: 'Carbs g' }, { key: 'fat_g', label: 'Fat g' },
+  { key: 'fibre_g', label: 'Fibre g' }, { key: 'sugar_g', label: 'Sugar g' }, { key: 'salt_g', label: 'Salt g' },
+]
+
+function FoodItemRow({ item, note }: { item: FoodLogItem; note: FoodNote | undefined }) {
+  const queryClient = useQueryClient()
+  const [editing, setEditing] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [draft, setDraft] = useState<Record<EditableMacro, string>>({
+    calories: String(item.calories), protein_g: String(item.protein_g), carbs_g: String(item.carbs_g),
+    fat_g: String(item.fat_g), fibre_g: String(item.fibre_g), sugar_g: String(item.sugar_g), salt_g: String(item.salt_g),
+  })
+
+  function invalidate() {
+    queryClient.invalidateQueries({ queryKey: ['food-timeline'] })
+    queryClient.invalidateQueries({ queryKey: ['food-today'] })
+  }
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const updates: Record<string, number> = {}
+      for (const { key } of EDITABLE_MACROS) updates[key] = Number(draft[key]) || 0
+      const res = await fetch(`/api/food-log/${item.id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates),
+      })
+      if (!res.ok) throw new Error('Failed to save')
+    },
+    onSuccess: () => { invalidate(); setEditing(false) },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/food-log/${item.id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Failed to delete')
+    },
+    onSuccess: invalidate,
+  })
+
+  if (editing) {
+    return (
+      <div className="py-3 flex flex-col gap-2">
+        <p className="text-sm font-medium text-text">{item.description}</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {EDITABLE_MACROS.map(({ key, label }) => (
+            <label key={key} className="flex flex-col gap-0.5 text-[10px] text-text-muted">
+              {label}
+              <input
+                type="number" step={key === 'salt_g' ? '0.1' : '1'} min="0"
+                value={draft[key]}
+                onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.value }))}
+                className="w-full rounded-md bg-surface-elevated border border-border text-text text-xs px-2 py-1 focus:outline-none focus:border-accent"
+              />
+            </label>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white disabled:opacity-50" style={{ background: 'var(--accent)' }}>
+            {saveMutation.isPending ? 'Saving…' : 'Save'}
+          </button>
+          <button onClick={() => setEditing(false)} className="text-xs px-3 py-1.5 rounded-lg border border-border text-text-muted">Cancel</button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="py-2 flex flex-col gap-1">
+      <div className="flex items-center gap-2">
+        <span>{item.meal ? MEAL_EMOJI[item.meal] : '🍴'}</span>
+        <span className="text-sm text-text flex-1">{item.description}</span>
+        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-surface-elevated text-text-faint border border-border">
+          {SOURCE_LABEL[item.source] ?? item.source}
+        </span>
+      </div>
+      <div className="flex items-center justify-between pl-6">
+        <p className="text-xs text-text-subtle">
+          {item.calories} kcal · {Number(item.protein_g).toFixed(0)}g P · {Number(item.carbs_g).toFixed(0)}g C · {Number(item.fat_g).toFixed(0)}g F
+        </p>
+        {!confirmDelete ? (
+          <div className="flex gap-2 shrink-0">
+            <button onClick={() => setEditing(true)} className="text-[11px] text-text-subtle hover:text-text-muted">Edit</button>
+            <button onClick={() => setConfirmDelete(true)} className="text-[11px] text-red-400 hover:text-red-300">Delete</button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 shrink-0">
+            <button onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending} className="text-[11px] font-semibold text-red-400 hover:text-red-300">
+              {deleteMutation.isPending ? 'Deleting…' : 'Confirm'}
+            </button>
+            <button onClick={() => setConfirmDelete(false)} className="text-[11px] text-text-subtle">Cancel</button>
+          </div>
+        )}
+      </div>
+      {note && (
+        <span className="ml-6 self-start text-[11px] px-2 py-0.5 rounded-full bg-accent/10 border border-accent/30 text-accent">
+          📝 {note.note}
+        </span>
+      )}
+    </div>
+  )
+}
+
 function DayCard({ day, notesByKey }: { day: FoodDay; notesByKey: Map<string, FoodNote> }) {
   const [listRef] = useAutoAnimate<HTMLDivElement>()
   const totals = dayTotals(day.items)
@@ -62,28 +166,9 @@ function DayCard({ day, notesByKey }: { day: FoodDay; notesByKey: Map<string, Fo
         <p className="text-xs text-text-subtle">{Math.round(totals.calories)} kcal · {Math.round(totals.protein_g)}g protein</p>
       </div>
       <div ref={listRef} className="flex flex-col divide-y divide-border">
-        {day.items.map((item) => {
-          const note = notesByKey.get(normaliseFoodKey(item.description))
-          return (
-            <div key={item.id} className="py-2 flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <span>{item.meal ? MEAL_EMOJI[item.meal] : '🍴'}</span>
-                <span className="text-sm text-text flex-1">{item.description}</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-surface-elevated text-text-faint border border-border">
-                  {SOURCE_LABEL[item.source] ?? item.source}
-                </span>
-              </div>
-              <p className="text-xs text-text-subtle pl-6">
-                {item.calories} kcal · {Number(item.protein_g).toFixed(0)}g P · {Number(item.carbs_g).toFixed(0)}g C · {Number(item.fat_g).toFixed(0)}g F
-              </p>
-              {note && (
-                <span className="ml-6 self-start text-[11px] px-2 py-0.5 rounded-full bg-accent/10 border border-accent/30 text-accent">
-                  📝 {note.note}
-                </span>
-              )}
-            </div>
-          )
-        })}
+        {day.items.map((item) => (
+          <FoodItemRow key={item.id} item={item} note={notesByKey.get(normaliseFoodKey(item.description))} />
+        ))}
       </div>
       {(day.water_ml > 0 || day.supplements.length > 0) && (
         <div className="flex flex-wrap gap-2 pt-1 border-t border-border text-xs text-text-subtle">

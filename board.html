@@ -166,11 +166,11 @@
         <div class="bug-ref">S5 · lib/moduleContext.ts single source of truth, threaded through ParseLogPayloadSchema -> /api/parse-log -> ClaudeProvider system prompt as a soft nudge line. REAL test: "ate a chicken wrap for lunch" submitted with moduleContext=health still correctly extracted a full foods[] array — bias does not suppress genuine signal, the one property that mattered most.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S6" data-time-est="35" data-time-actual="" data-credit-est="50000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S6" data-time-est="35" data-time-actual="32" data-credit-est="50000" data-credit-actual="46000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">TASK 4 — Edit/delete individual food items with correct day-total recompute (no zeroing, no silent failure).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S6 · food item edit/delete</div>
+        <div class="bug-ref">S6 · recomputeDailyFoodMacros (sums all food_log rows for the date, only touches the 7 macro columns, aborts on read failure per the C6/C7 precedent) + PATCH/DELETE /api/food-log/[id] + inline edit/delete UI on every food row. REAL test against prod: logged 3 foods, edited the wrap (400->450kcal), deleted the curry, porridge untouched (150kcal/5g confirmed), daily_stats recomputed to exactly 600kcal/35g protein (MATCH). Full cleanup verified.</div>
       </div>
 
       <div class="bug-row" data-status="waiting" data-id="S7" data-time-est="40" data-time-actual="" data-credit-est="60000" data-credit-actual="">
