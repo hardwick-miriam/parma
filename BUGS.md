@@ -2,9 +2,27 @@
 
 Report only — nothing in this document has been fixed. Ordered by severity within each category. File+line references are accurate as of this commit (`e2428c8`).
 
+**Addendum (2026-07-10, later session)**: C11 below was found and fixed during the wardrobe
+feature build, not part of the original audit — see PROGRESS.md for detail.
+
 ---
 
 ## CRITICAL
+
+### C11. `progress-photos` storage bucket: RLS enabled, zero policies — feature likely non-functional for real users
+Found while building the wardrobe feature's storage bucket and comparing against the existing
+pattern. `storage.objects` has row-level security **enabled** but had **no policies at all**
+scoped to the `progress-photos` bucket, while `app/api/photos/route.ts` performs its upload and
+both `createSignedUrl` calls through the anon/session-scoped client
+(`lib/supabase/server.ts:createClient()`, not the service-role client). With RLS on and no
+permissive policy, Postgres denies access to non-superuser roles by default — every real
+(non-service-role) request against this bucket almost certainly failed, and only looked fine to
+prior debugging because the service-role/superuser DB connection used for migrations and
+manual checks bypasses RLS entirely.
+**Fixed**: `supabase/migrations/023_progress_photos_storage_rls.sql` — 4 owner-scoped
+`storage.objects` policies (select/insert/update/delete), gated on
+`(storage.foldername(name))[1] = auth.uid()::text`, matching the `${user_id}/...` path
+convention already used by `addProgressPhoto`. Run live and verified via `pg_policies`.
 
 ### C1. Missing RLS on 8 untracked tables — potential cross-user data leak
 `user_preferences`, `health_status`, `injuries`, `injury_checkins`, `journal_notes`, `progress_photos`, `mounjaro_doses`, `mounjaro_effects` have no `CREATE TABLE`/`ENABLE ROW LEVEL SECURITY`/`CREATE POLICY` anywhere in `supabase/migrations/*.sql` (confirmed by exhaustive grep — the only hits are `ALTER TABLE ... ADD COLUMN` on `user_preferences`). Every other table in the repo (`profiles`, `daily_stats`, `workout_sessions`, `media_log`, `personal_records`, `muscle_soreness`, `routines`, `push_subscriptions`) has an explicit `ENABLE ROW LEVEL SECURITY` + `auth.uid() = user_id` policy sitting right next to its `CREATE TABLE`. The app writes to these 8 tables via the anon-key (RLS-scoped) client and relies entirely on app-level `user_id` filtering. Supabase tables default to **RLS disabled** unless explicitly toggled — if that's the case here, any authenticated user can read/write another user's injuries, journal notes, progress photos, health status, and Mounjaro dosing by guessing/enumerating a `user_id`.

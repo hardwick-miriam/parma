@@ -702,3 +702,14 @@ commit hash per step so a paused run resumes correctly.
     afterward (deleted test food_log/food_notes rows, restored daily_stats to its exact
     pre-test values).
   - `npm run build` clean throughout.
+
+### S11 — BUGS.md sweep + new finding fixed
+- STARTING S11
+- DONE S11 — Confirmed all 44 original BUGS.md items resolved except N8 (WHOOP webhook secret —
+  genuinely blocked on the user setting `WHOOP_WEBHOOK_SECRET`, not fixable from here; re-checked
+  directly against `.env.local` in the earlier follow-up session, still absent). Went further:
+  fixed C11, the `progress-photos` storage RLS gap discovered while building wardrobe storage
+  (S3) — `supabase/migrations/023_progress_photos_storage_rls.sql` run live, 4 owner-scoped
+  `storage.objects` policies confirmed via `pg_policies`. Added C11 to `BUGS.md` and
+  `bug-status.html` (fixed on arrival, not left as a dangling TODO). Board: **45/46 resolved,
+  only N8 open.**
