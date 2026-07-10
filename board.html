@@ -101,7 +101,7 @@
   </header>
 
   <div class="overall-card">
-    <div class="overall-count"><span class="num" id="overall-num">0</span><span class="label">of <span id="overall-total">11</span> done</span></div>
+    <div class="overall-count"><span class="num" id="overall-num">0</span><span class="label">of <span id="overall-total">13</span> done</span></div>
     <div class="progress-track"><div class="progress-fill" id="overall-progress"></div></div>
     <div class="overall-breakdown" id="overall-breakdown"></div>
     <div class="status-banner" id="done-banner">✓ All steps resolved — board is no longer auto-refreshing.</div>
@@ -203,9 +203,23 @@
 
       <div class="bug-row" data-status="done" data-id="S11" data-time-est="15" data-time-actual="16" data-credit-est="20000" data-credit-actual="19000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">Final: clean build, verify production serves latest commit, board.html + PROGRESS.md true final state, plain-English summary (incl. flagging the truncated Task 4).</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">Final (interim, before Task 4 arrived): clean build, verify production serves latest commit, board.html + PROGRESS.md true final state, plain-English summary (incl. flagging the truncated Task 4).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
         <div class="bug-ref">S11 · commit afa7380 confirmed Ready/Production via vercel ls (2m old); /gym, /main, /health, /body all curled live, correct 307 auth-gating, no 500s</div>
+      </div>
+
+      <div class="bug-row" data-status="done" data-id="S12" data-time-est="20" data-time-actual="15" data-credit-est="25000" data-credit-actual="20000">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">TASK 4 — Gym module home: live logger as centrepiece + PR tracker/training load/routine/body-map link as a proper training command centre. Remove "coming soon" placeholder.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref">S12 · placeholder was already removed last session when LiveLogger was wired in (confirmed by re-reading the file, no "coming soon" text present) — added consistent section labels (Log a set / Training status / Personal records / Routine / Recent exercises) so the page reads as one cohesive training command centre instead of an unlabeled stack. Build clean.</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="S13" data-time-est="20" data-time-actual="" data-credit-est="30000" data-credit-actual="">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">FINAL: real end-to-end proof — pick exercise, log 3 sets, confirm persistence + PR update + trend/history render + muscle map reflects it. Build clean, verify deploy, true final board/PROGRESS state.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref">S13 · real end-to-end proof + final verification</div>
       </div>
 
     </div>

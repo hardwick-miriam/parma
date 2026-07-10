@@ -35,30 +35,42 @@ export default async function GymPage() {
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold text-text">Gym</h1>
 
-      <LiveLogger />
+      <div className="flex flex-col gap-3">
+        <p className="text-xs font-semibold text-text-muted uppercase tracking-widest">Log a set</p>
+        <LiveLogger />
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <ModulePageClient w={8} h={5}>
-          <TrainingLoadWidget recentWorkouts={recentWorkouts} />
-        </ModulePageClient>
+      <div className="flex flex-col gap-3">
+        <p className="text-xs font-semibold text-text-muted uppercase tracking-widest">Training status</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <ModulePageClient w={8} h={5}>
+            <TrainingLoadWidget recentWorkouts={recentWorkouts} />
+          </ModulePageClient>
 
-        <div className="rounded-2xl bg-surface border border-border p-5 flex flex-col justify-center gap-1">
-          <p className="text-xs font-semibold text-text-muted uppercase tracking-widest">Days since rest</p>
-          <p className="text-3xl font-bold text-text tabular-nums">{restDays}</p>
-          <p className="text-xs text-text-subtle">{restDays === 0 ? "Rested today" : `${restDays} consecutive training day${restDays === 1 ? '' : 's'}`}</p>
+          <div className="rounded-2xl bg-surface border border-border p-5 flex flex-col justify-center gap-1">
+            <p className="text-xs font-semibold text-text-muted uppercase tracking-widest">Days since rest</p>
+            <p className="text-3xl font-bold text-text tabular-nums">{restDays}</p>
+            <p className="text-xs text-text-subtle">{restDays === 0 ? "Rested today" : `${restDays} consecutive training day${restDays === 1 ? '' : 's'}`}</p>
+          </div>
         </div>
       </div>
 
-      <ModulePageClient w={8} h={6}>
-        <PRTrackerWidget />
-      </ModulePageClient>
+      <div className="flex flex-col gap-3">
+        <p className="text-xs font-semibold text-text-muted uppercase tracking-widest">Personal records</p>
+        <ModulePageClient w={8} h={6}>
+          <PRTrackerWidget />
+        </ModulePageClient>
+      </div>
 
       <div className="rounded-2xl bg-surface border border-border p-5">
         <p className="text-xs font-semibold text-text-muted uppercase tracking-widest mb-3">Routine</p>
         <RoutineSection />
       </div>
 
-      <ExerciseHistory recentWorkouts={recentWorkouts} />
+      <div className="flex flex-col gap-3">
+        <p className="text-xs font-semibold text-text-muted uppercase tracking-widest">Recent exercises</p>
+        <ExerciseHistory recentWorkouts={recentWorkouts} />
+      </div>
 
       <Link
         href="/body"
