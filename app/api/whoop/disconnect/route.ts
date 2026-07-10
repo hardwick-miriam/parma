@@ -24,7 +24,12 @@ export async function POST() {
     } catch {
       // Ignore revocation errors — still delete local record
     }
-    await deleteWhoopConnection(user.id)
+    try {
+      await deleteWhoopConnection(user.id)
+    } catch (err) {
+      console.error('WHOOP disconnect delete error:', err)
+      return NextResponse.json({ error: 'Failed to disconnect WHOOP' }, { status: 500 })
+    }
   }
 
   return NextResponse.json({ success: true })

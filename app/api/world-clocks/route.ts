@@ -29,19 +29,21 @@ async function geocodeCity(name: string): Promise<CityConfig | null> {
 
 async function getCities(userId: string) {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('user_preferences')
     .select('world_clocks')
     .eq('user_id', userId)
     .maybeSingle()
+  if (error) throw error
   return (data?.world_clocks as CityConfig[]) ?? []
 }
 
 async function saveCities(userId: string, cities: CityConfig[]) {
   const supabase = await createClient()
-  await supabase
+  const { error } = await supabase
     .from('user_preferences')
     .upsert({ user_id: userId, world_clocks: cities, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
+  if (error) throw error
 }
 
 export async function GET() {
@@ -69,7 +71,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ cities: current }) // already exists
   }
   const updated = [...current, city]
-  await saveCities(user.id, updated)
+  try {
+    await saveCities(user.id, updated)
+  } catch (err) {
+    console.error('world-clocks save error:', err)
+    return NextResponse.json({ error: 'Failed to save city' }, { status: 500 })
+  }
   return NextResponse.json({ cities: updated })
 }
 
@@ -83,6 +90,11 @@ export async function DELETE(request: NextRequest) {
 
   const current = await getCities(user.id)
   const updated = current.filter((c) => c.name !== name)
-  await saveCities(user.id, updated)
+  try {
+    await saveCities(user.id, updated)
+  } catch (err) {
+    console.error('world-clocks delete error:', err)
+    return NextResponse.json({ error: 'Failed to remove city' }, { status: 500 })
+  }
   return NextResponse.json({ cities: updated })
 }

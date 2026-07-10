@@ -21,6 +21,11 @@ export async function POST(request: NextRequest) {
   const { date, note } = await request.json() as { date: string; note: string }
   if (!date) return NextResponse.json({ error: 'date required' }, { status: 400 })
 
-  const result = await upsertJournalNote(user.id, date, note ?? '')
-  return NextResponse.json({ note: result })
+  try {
+    const result = await upsertJournalNote(user.id, date, note ?? '')
+    return NextResponse.json({ note: result })
+  } catch (err) {
+    console.error('journal upsert error:', err)
+    return NextResponse.json({ error: 'Failed to save journal note' }, { status: 500 })
+  }
 }

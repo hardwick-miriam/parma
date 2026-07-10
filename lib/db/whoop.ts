@@ -51,7 +51,8 @@ export async function upsertWhoopConnection(
 
 export async function deleteWhoopConnection(userId: string): Promise<void> {
   const supabase = await createClient()
-  await supabase.from('whoop_connections').delete().eq('user_id', userId)
+  const { error } = await supabase.from('whoop_connections').delete().eq('user_id', userId)
+  if (error) throw error
 }
 
 export async function updateLastSync(userId: string): Promise<void> {

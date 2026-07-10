@@ -24,9 +24,9 @@ export async function upsertJournalNote(
   userId: string,
   date: string,
   note: string,
-): Promise<JournalNote | null> {
+): Promise<JournalNote> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('journal_notes')
     .upsert(
       { user_id: userId, note_date: date, note, updated_at: new Date().toISOString() },
@@ -34,5 +34,6 @@ export async function upsertJournalNote(
     )
     .select()
     .single()
-  return data as JournalNote | null
+  if (error) throw error
+  return data as JournalNote
 }

@@ -96,6 +96,19 @@ STARTING/DONE C10 — components/dashboard/WidgetDetailSheets.tsx PRTrackerDetai
 PRTrackerWidget.tsx which already used the correct fields) instead of the nonexistent
 `max_weight_kg`/`max_reps`/`logged_date`. Verified: `npm run build` clean.
 
+## TIER 2 (MAJOR) — in progress
+
+### M1, M2, M3 — unchecked writes returning fake success
+STARTING/DONE M1/M2/M3 —
+- M1: lib/db/journal.ts upsertJournalNote now throws on error instead of returning null;
+  app/api/journal/route.ts POST catches it and returns 500 instead of `{note: null}` with
+  implicit 200.
+- M2: lib/db/whoop.ts deleteWhoopConnection now throws on error; disconnect route catches it
+  and returns 500 instead of always `{success: true}`.
+- M3: app/api/world-clocks/route.ts getCities/saveCities now check their errors; POST/DELETE
+  catch save failures and return 500 instead of returning the "updated" list regardless.
+Verified: `npm run build` clean.
+
 ## TIER 1 (CRITICAL) COMPLETE
 9 of 10 fixed (C2, C3, C4, C5, C6, C7, C8, C9, C10). C1 is code-complete but blocked on live
 DB access — see its entry above. Running full Tier 1 build gate now before Tier 2.
