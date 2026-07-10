@@ -871,3 +871,65 @@ in order: `ff82088` → `7d0b397` → `e986206` → `7b1bb15` → `c27becc` → 
 `Ready`/`Production` via `vercel ls`, and every route (`/`, `/main`, `/grid`, `/health`, `/body`,
 `/media`, `/journal`, `/food`, `/wardrobe`, `/settings`, `/gym`) curled live with a consistent,
 correct `307 → /login` (no 500s, no redirect loops).
+
+---
+
+## Session 2 — Live workout logger (2026-07-10)
+
+**All 11 board.html steps done. Task 4 of the brief was cut off mid-message ("TASK 4 —" with
+nothing after it) — flagged at the start of this session, Tasks 1-3 built as specified, Task 4
+still awaiting the rest of that instruction.**
+
+### What got done, in plain English
+
+The Gym module now has a real, working set-by-set logger, not just the read-only training
+dashboard from the OS restructure.
+
+1. **Data model** — a new `workout_sets` table (weight, reps, warm-up flag, timestamp), tied to
+   the existing `workout_sessions` table rather than a parallel structure. RLS on, run live and
+   verified.
+
+2. **The logger itself** — tap "Pick an exercise," search (fuzzy, your own recently-used exercises
+   surface first) across the same 873-exercise database the rest of the app already uses. Once
+   picked: your last time's top set shown right there, a weight box, a row of rep buttons 1
+   through 12 (plus a box for anything higher), and a big Log Set button. Sets you log stack up
+   under "This session" with edit/delete on each.
+
+3. **A next-set suggestion** — genuinely simple, and deliberately not hidden: if you hit the top
+   of your rep range last time, it suggests +2.5kg for fewer reps; otherwise, same weight for one
+   more rep. The whole rule lives in one file (`lib/gymRecommendation.ts`) so it's easy to tune
+   later without hunting through the codebase.
+
+4. **Stats and trend** — estimated 1-rep max (Epley formula), your best set ever, how many
+   sessions you've done it, and a graph of that estimate over your last 12 sessions.
+
+5. **PRs update themselves** — log a set heavier than your current record and it becomes your new
+   PR automatically, with the same confetti burst the app already had wired up but wasn't using
+   anywhere. Logging something lighter never quietly overwrites a real PR with a worse number —
+   checked this specifically with a real test against the live database (log 60kg → PR; log 70kg →
+   new PR; log 50kg → correctly NOT counted as a PR, the 70kg stays on record; log a 90kg warm-up →
+   correctly ignored entirely).
+
+6. **Nothing else broke** — the muscle map, training load, journal, and Main's "last session" all
+   already read from the same `workout_sessions` table with no filtering on how an entry got
+   there, so live-logged sessions show up in all of them automatically — verified this by reading
+   the actual query code, not assuming it. And logging by text still works exactly as before
+   ("benched 80kg for 5 reps" still creates a normal entry) — checked with a real call to the AI,
+   not assumed.
+
+### What's still open / needs you
+
+1. **Task 4 was cut off in your message** — everything after "TASK 4 —" didn't come through.
+   Nothing was built for it since I don't know what it says; send it over and I'll pick this back
+   up.
+2. **No visual testing again** — same limitation as the OS restructure session: no browser tool
+   here, so the logger's layout (rep-button row, weight input, trend chart) hasn't been seen on an
+   actual screen. Worth a real run-through, especially on a phone where the rep buttons need to be
+   comfortably tappable.
+3. Finances module (mentioned as Session 3 in the OS restructure brief) — still not started.
+
+### Evidence trail
+Commits this session, in order: `64a66fd` → `f158efd` → `bacfafa` → `d1e6958` → `afa7380`. Every
+step has a build log and either a direct database verification or a real API/AI call — see
+`board.html`'s `bug-ref` text per row. Final commit confirmed `Ready`/`Production` via `vercel ls`;
+`/gym`, `/main`, `/health`, `/body` all curled live with correct auth-gating, no 500s.
