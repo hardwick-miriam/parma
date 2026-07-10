@@ -32,6 +32,7 @@ Personal health/life OS at **parma.ink**. Next.js 16 (App Router, Turbopack) + S
 5. **Keep AI usage cheap**: cheap/fast models for extraction-style calls, cache aggressively (see `food_cache` migration 015, Satori font cache, 24h insights cache), no vision APIs except explicitly pre-approved one-offs.
 6. **Verify with evidence.** State what you actually observed, not what should be true. Never mark a task done without proof (build output, a live curl, a screenshot, a deployment ID) — see MORNING.md for the format this project already uses.
 7. **Vercel Hobby plan**: only daily cron schedules are allowed. A sub-daily schedule in `vercel.json` **breaks all deploys on the project**, not just the cron. Sub-15-min WHOOP sync is handled by an external pinger (cron-job.org) hitting `/api/sync-tick`, not a Vercel cron. Current `vercel.json` crons: `sync-tick` at `0 6 * * *` (belt-and-braces daily, real cadence is the external pinger) and `cron/insights-refresh` at `0 3 * * *`.
+8. **For any task with 3+ steps, generate and live-update `board.html` first** — mandatory the same way committing is mandatory. Write every step as a `waiting` row up front with time/credit estimates, then flip each row to `working` → `done`/`failed` with actuals before starting the next step. Never batch board updates to the end.
 
 ## Env vars
 

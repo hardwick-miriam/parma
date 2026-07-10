@@ -598,3 +598,18 @@ STARTING/DONE C2 —
   keystroke that doesn't parse to a finite number is ignored instead of committed); `mood` is
   now a `<select>` constrained to the 5 real enum values instead of a free-text `<input>`.
 Verified: `npm run build` clean.
+
+---
+
+## Long unattended session — board.html, wardrobe, food page (started 2026-07-10T11:12Z)
+
+Real credentials still in place from the previous session. Working strictly in order per the
+brief. `board.html` (new, session-scoped) is the mandatory live tracker for this session's 12
+steps — see it for granular status/estimates/actuals; this log only records STARTING/DONE +
+commit hash per step so a paused run resumes correctly.
+
+### S1 — board.html + CLAUDE.md standing rule
+- STARTING S1
+- DONE S1 — `board.html` created (dark/purple theme matching `bug-status.html`, 12-step tracker,
+  time+credit estimate/actual columns, credit burn meter labelled APPROXIMATE). Added rule 8 to
+  CLAUDE.md: "3+ step tasks get board.html first, mandatory like committing." Commit: (see below)
