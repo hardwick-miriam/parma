@@ -118,6 +118,59 @@ original audit found). No real TODO/FIXME/HACK/XXX markers introduced or found.
 
 ## TIER 4 (FOOD PARSER) — in progress
 
+### F1 — itemisation
+STARTING F1 — no itemised-food data model existed at all before tonight; `calories`/
+`protein_g` were flat daily aggregates with no record of individual foods, meals, or where
+the numbers came from. Built the full pipeline:
+- `supabase/migrations/020_food_log.sql` — new `food_log` table (date, meal, description,
+  calories, protein_g, source, log_entry_id FK, RLS + owner policy).
+- `lib/db/food.ts` — `getFoodLog`/`insertFoodItems`, client-injectable (same pattern as
+  every other writer touched tonight).
+- `lib/schemas.ts` — new `ParsedFoodItemSchema` + `foods: array` on `ParsedLogSchema`;
+  `calories`/`protein_g` documented as remaining the SUM across `foods`, not a separate value.
+- `lib/ai/providers/claude.ts` — added `foods` to the tool's `input_schema` with an explicit
+  itemisation instruction and worked example, plus a new "ITEMISATION (F1)" paragraph in the
+  system prompt instructing the model to split every distinct food/meal into its own entry
+  instead of collapsing them, and to keep the totals consistent with the sum.
+- `lib/logApply.ts` — inserts `parsed.foods` into `food_log` (linked to the log_entry via
+  `log_entry_id`) alongside the existing daily_stats aggregate write — additive, doesn't
+  change existing behavior for any entry that doesn't include `foods`.
+- `components/dashboard/ConfirmationDrawer.tsx` — shows a "Foods detected (N)" preview list
+  (description, meal, per-item kcal/protein) before saving, same pattern as the existing
+  workouts/media previews.
+- `app/api/food-log/route.ts` — new `GET ?date=` endpoint to retrieve a day's itemised foods
+  (there was no way to read this data back before).
+
+**Illustrative walkthrough for "porridge for breakfast, chicken wrap and a monster at lunch,
+curry for dinner"** (hand-reasoned against the new tool schema — NOT a live API call, see
+below):
+```json
+{
+  "foods": [
+    { "description": "porridge", "meal": "breakfast", "calories": 150, "protein_g": 5 },
+    { "description": "chicken wrap", "meal": "lunch", "calories": 450, "protein_g": 30 },
+    { "description": "Monster energy drink", "meal": "lunch", "calories": 110, "protein_g": 0 },
+    { "description": "curry", "meal": "dinner", "calories": 650, "protein_g": 25 }
+  ],
+  "calories": 1360,
+  "protein_g": 60,
+  "estimates": ["calories", "protein_g"]
+}
+```
+Four separate `food_log` rows would result, each tagged with its meal, instead of one blob.
+
+**BLOCKED — marked `failed`, not `fixed`.** Two independent blockers, both pre-existing in
+this session (see environment note at top of file):
+1. Migration 020 is written but not applied — no live Supabase credentials, same as
+   C1/M15/N2.
+2. `ANTHROPIC_API_KEY` is also blank in this session, so I cannot make a real call to Claude
+   to confirm it actually itemises correctly against the new tool schema — the walkthrough
+   above is my own reasoning about what the schema/prompt should produce, not a verified
+   model output. **This is the single highest-priority thing to verify live** before trusting
+   this fix: run a real log-entry through `/api/parse-log` with a multi-food sentence and
+   confirm `foods` comes back populated and itemised, not just `calories`/`protein_g`.
+Verified: `npm run build` clean (schema/types/route all compile and typecheck correctly).
+
 ### F2 — after-midnight backdating
 STARTING/DONE F2 —
 - lib/date.ts: added `getLocalHour(tz, now)` and moved `subtractDay` here from

@@ -78,7 +78,7 @@ export function ConfirmationDrawer({ rawText, parsed, saveError, onConfirm, onDi
     edited.mood != null ||
     edited.sick != null || edited.injured != null ||
     edited.supplements?.length || edited.habits_done?.length ||
-    edited.workouts?.length ||
+    edited.workouts?.length || edited.foods?.length ||
     edited.injury_checkin != null || edited.injury_resolved != null ||
     edited.media?.length || edited.countries_visited?.length ||
     edited.world_clock_cities?.length
@@ -246,6 +246,23 @@ export function ConfirmationDrawer({ rawText, parsed, saveError, onConfirm, onDi
                 className="rounded-lg bg-surface-elevated border border-border text-text text-sm px-3 py-2 focus:outline-none focus:border-border-strong"
               />
             </label>
+          ) : null}
+
+          {edited.foods?.length ? (
+            <div>
+              <p className="text-xs text-text-muted mb-2">Foods detected ({edited.foods.length})</p>
+              <ul className="flex flex-col gap-1">
+                {edited.foods.map((f, i) => (
+                  <li key={i} className="text-sm text-text bg-surface-elevated rounded-lg px-3 py-2 flex items-baseline justify-between gap-2">
+                    <span className="truncate">
+                      {f.description}
+                      {f.meal && <span className="text-text-subtle capitalize"> · {f.meal}</span>}
+                    </span>
+                    <span className="text-xs text-text-subtle shrink-0 tabular-nums">{f.calories} kcal · {f.protein_g}g</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ) : null}
 
           {edited.workouts?.length ? (

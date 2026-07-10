@@ -12,11 +12,32 @@ const PARSE_TOOL: Anthropic.Tool = {
     properties: {
       calories: {
         type: 'number',
-        description: 'Total calories consumed. Whenever ANY food or drink with calories is mentioned, you MUST estimate this using nutritional knowledge — even for vague descriptions. Never omit when food was clearly eaten.',
+        description: 'TOTAL calories consumed across everything mentioned in this message. Whenever ANY food or drink with calories is mentioned, you MUST estimate this using nutritional knowledge — even for vague descriptions. Never omit when food was clearly eaten. When `foods` has multiple items, this MUST equal the sum of their individual calories — it is the total, not a separate estimate.',
       },
       protein_g: {
         type: 'number',
-        description: 'Total protein in grams. Whenever ANY food is mentioned, you MUST estimate this alongside calories — never leave it absent if food was eaten. Use nutritional knowledge: ham pizza slice ~20g, chicken breast ~30g, eggs 6g each, oats ~5g per serving. Best-estimate is always better than 0 or omitting.',
+        description: 'TOTAL protein in grams across everything mentioned in this message. Whenever ANY food is mentioned, you MUST estimate this alongside calories — never leave it absent if food was eaten. When `foods` has multiple items, this MUST equal the sum of their individual protein_g — it is the total, not a separate estimate.',
+      },
+      foods: {
+        type: 'array',
+        description:
+          'One entry per DISTINCT food/drink or meal mentioned — split them out instead of collapsing everything into one item. ' +
+          '"porridge for breakfast, chicken wrap and a monster at lunch, curry for dinner" → FOUR separate items ' +
+          '(porridge/breakfast, chicken wrap/lunch, monster energy drink/lunch, curry/dinner), each with its own calorie and protein estimate. ' +
+          'A message about a single food/meal should still produce exactly one item here. Use nutritional knowledge per item ' +
+          '(ham pizza slice ~400kcal/20g protein, chicken breast ~165kcal/31g protein, eggs ~90kcal/6g protein each, oats ~150kcal/5g protein per serving, energy drink ~110kcal/0g protein). ' +
+          'The `calories`/`protein_g` fields above must equal the sum of these items.',
+        items: {
+          type: 'object',
+          properties: {
+            description: { type: 'string', description: 'Short name of the food/drink, e.g. "chicken wrap", "porridge", "Monster energy drink"' },
+            meal: { type: 'string', enum: ['breakfast', 'lunch', 'dinner', 'snack'], description: 'Which meal this belongs to, if stated or clearly implied by time of day. Omit if genuinely unclear.' },
+            calories: { type: 'number', description: 'Estimated calories for this one item' },
+            protein_g: { type: 'number', description: 'Estimated protein in grams for this one item' },
+          },
+          required: ['description', 'calories', 'protein_g'],
+          additionalProperties: false,
+        },
       },
       steps: { type: 'number', description: 'Step count' },
       workouts: {
@@ -151,9 +172,10 @@ const PARSE_TOOL: Anthropic.Tool = {
 const BASE_SYSTEM =
   "You are a health data extraction assistant. Parse the user's natural-language log entry and extract every health and habit metric you can identify.\n\n" +
   "GENERAL RULE: omit fields when the information is genuinely absent — do not invent steps, sleep, mood, weight, or water that weren't mentioned.\n\n" +
-  "NUTRITION EXCEPTION — whenever the user mentions eating or drinking anything with nutritional value, you MUST populate BOTH calories AND protein_g using your nutritional knowledge. " +
+  "NUTRITION EXCEPTION — whenever the user mentions eating or drinking anything with nutritional value, you MUST populate BOTH calories AND protein_g (the TOTALS) using your nutritional knowledge. " +
   "Estimate from what you know (e.g. a 15cm ham pizza slice ≈ 400 kcal, 20 g protein; a chicken breast ≈ 165 kcal, 31 g protein; scrambled eggs × 2 ≈ 180 kcal, 12 g protein). " +
   "If you estimate because the user didn't state the exact number, add the field name to the estimates array.\n\n" +
+  "ITEMISATION (F1) — whenever more than one distinct food, drink, or meal is mentioned in the same message, you MUST split them into separate entries in the `foods` array — one item per food, each tagged with its own meal (breakfast/lunch/dinner/snack) when stated or clearly implied. Do not collapse a whole day's eating into one blob. A message describing only one food should still produce a single `foods` entry. `calories`/`protein_g` above are always the SUM of the `foods` items.\n\n" +
   "UK CONVENTIONS: The user is UK-based. Convert stone and pounds to kg (1 stone = 6.35 kg; '13 stone 4 lbs' = 84.37 kg). " +
   "Recognise UK food terms: 'crisps' = potato chips, 'chips' = thick-cut fries, 'biscuit' = cookie, 'jacket potato' = baked potato, 'full English' ≈ 900 kcal 45 g protein, 'beans on toast' ≈ 300 kcal 15 g protein, 'fish and chips' ≈ 900 kcal 40 g protein. " +
   "Dates may be in DD/MM format — interpret accordingly.\n\n" +

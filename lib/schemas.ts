@@ -12,6 +12,16 @@ export const ParsedWorkoutSchema = z.object({
   exercises: z.array(z.string()).optional(),
 })
 
+// F1: one entry per distinct food/meal instead of collapsing a whole day's
+// worth of eating into a single calories/protein_g total with no record of
+// what was actually eaten or when.
+export const ParsedFoodItemSchema = z.object({
+  description: z.string(),
+  meal: z.enum(['breakfast', 'lunch', 'dinner', 'snack']).optional(),
+  calories: z.number().nonnegative().int(),
+  protein_g: z.number().nonnegative(),
+})
+
 export const ParsedInjuryCheckinSchema = z.object({
   body_part: z.string().optional(),
   feeling_pct: z.number().min(0).max(100),
@@ -54,8 +64,12 @@ export const MuscleSorenessEntrySchema = z.object({
 export const ParsedLogSchema = z.object({
   // daily_stats.calories is `integer` — see duration_minutes above for the
   // same class of bug this .int() guards against.
+  // Remain the SUM across `foods` when multiple items are present (still
+  // what daily_stats additively accumulates) — `foods` is the itemised
+  // breakdown, not a replacement for these totals.
   calories: z.number().nonnegative().int().optional(),
   protein_g: z.number().nonnegative().optional(),
+  foods: z.array(ParsedFoodItemSchema).optional(),
   steps: z.number().nonnegative().int().optional(),
   workouts: z.array(ParsedWorkoutSchema).optional(),
   mood: z.enum(['great', 'good', 'okay', 'low', 'bad']).optional(),

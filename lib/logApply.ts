@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { getLocalDate } from '@/lib/date'
 import {
   upsertDailyStats,
   upsertHealthStatus,
@@ -11,6 +12,7 @@ import {
 } from '@/lib/db/queries'
 import { insertMounjaroDose, upsertMounjaroEffects } from '@/lib/db/mounjaro'
 import { insertMediaEntry } from '@/lib/db/media'
+import { insertFoodItems } from '@/lib/db/food'
 import type { ParsedLog } from '@/lib/ai/types'
 import type { Injury } from '@/lib/db/queries'
 
@@ -75,6 +77,12 @@ export async function applyParsedLog(
       }, logDate, supabase),
       insertLogEntry(userId, rawText, parsed, logDate, supabase),
     ])
+
+    if (parsed.foods?.length) {
+      // F1: itemised breakdown alongside the aggregate total daily_stats
+      // already received above — not a replacement for it.
+      await insertFoodItems(userId, logDate ?? getLocalDate(), parsed.foods, entryId, supabase)
+    }
 
     if (parsed.workouts?.length) {
       await Promise.all(parsed.workouts.map((w) => insertWorkout(userId, w, logDate, supabase)))
