@@ -9,6 +9,7 @@ import { TrainingLoadWidget } from '@/components/dashboard/widgets/TrainingLoadW
 import { RoutineSection } from '@/components/settings/RoutineSection'
 import { ExerciseHistory } from '@/components/os/ExerciseHistory'
 import { ModulePageClient } from '@/components/os/ModulePageClient'
+import { LiveLogger } from '@/components/os/LiveLogger'
 
 function daysSinceRest(recentWorkouts: { date: string }[]): number {
   const trainedDates = new Set(recentWorkouts.map((w) => w.date))
@@ -33,6 +34,8 @@ export default async function GymPage() {
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold text-text">Gym</h1>
+
+      <LiveLogger />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <ModulePageClient w={8} h={5}>
@@ -68,16 +71,6 @@ export default async function GymPage() {
         </div>
         <span className="text-2xl" aria-hidden>🫁</span>
       </Link>
-
-      {/* Deliberately not built this session — clearly-marked space per the brief */}
-      <div
-        className="rounded-2xl border border-dashed p-6 flex flex-col items-center gap-1 text-center"
-        style={{ borderColor: 'var(--border-strong)' }}
-      >
-        <span className="text-2xl" aria-hidden>🏗️</span>
-        <p className="text-sm font-semibold text-text-muted">Live set-by-set logger</p>
-        <p className="text-xs text-text-faint">Coming in Session 2 — real-time sets, reps, and weight per exercise.</p>
-      </div>
     </div>
   )
 }

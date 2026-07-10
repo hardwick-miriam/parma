@@ -152,32 +152,32 @@
         <div class="bug-ref">S3 · lib/db/workoutSets.ts (session/set CRUD, Epley 1RM, PR-guard upsert) + searchExercises() added to lib/exerciseDb.ts + 5 new /api/gym/* routes. Build clean, all routes compiled.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S4" data-time-est="35" data-time-actual="" data-credit-est="55000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S4" data-time-est="35" data-time-actual="40" data-credit-est="55000" data-credit-actual="64000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Exercise picker + last-time reference + weight input + tappable rep selector (1-12+) + big Log Set button.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S4 · picker + logging UI</div>
+        <div class="bug-ref">S4 · components/os/LiveLogger.tsx — found + fixed a real bug before shipping: estimate1RM/WorkoutSet were imported from the server-only lib/db/workoutSets.ts into this client component (same class of bug as the wardrobe session's currentSeason issue) — split into client-safe lib/gymTypes.ts. Build clean.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S5" data-time-est="20" data-time-actual="" data-credit-est="30000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S5" data-time-est="20" data-time-actual="12" data-credit-est="30000" data-credit-actual="19000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Next-set recommendation card — transparent progressive-overload rule in one config spot.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S5 · recommendation logic</div>
+        <div class="bug-ref">S5 · lib/gymRecommendation.ts — PROGRESSION_CONFIG is the single spot to change the rule (top-of-range weight bump vs same-weight rep bump)</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S6" data-time-est="30" data-time-actual="" data-credit-est="45000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S6" data-time-est="30" data-time-actual="26" data-credit-est="45000" data-credit-actual="38000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Stats row (est. 1RM via Epley, best set, sessions) + trend graph (top set / est-1RM over last N sessions).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S6 · stats + trend</div>
+        <div class="bug-ref">S6 · stats row + recharts LineChart trend, built as part of LiveLogger.tsx</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S7" data-time-est="20" data-time-actual="" data-credit-est="30000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S7" data-time-est="20" data-time-actual="14" data-credit-est="30000" data-credit-actual="22000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">History list — past sessions for the selected exercise, dated, weight x reps. Sets stack/editable/deletable within the current session.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S7 · history + session sets list</div>
+        <div class="bug-ref">S7 · history list + this-session sets list (edit/delete), built as part of LiveLogger.tsx. Build clean overall.</div>
       </div>
 
       <div class="bug-row" data-status="waiting" data-id="S8" data-time-est="25" data-time-actual="" data-credit-est="40000" data-credit-actual="">

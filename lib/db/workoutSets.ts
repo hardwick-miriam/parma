@@ -1,22 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getLocalDate } from '@/lib/date'
+import type { WorkoutSet } from '@/lib/gymTypes'
+import { estimate1RM } from '@/lib/gymTypes'
 
-export interface WorkoutSet {
-  id: string
-  user_id: string
-  workout_session_id: string
-  exercise_name: string
-  weight: number
-  reps: number
-  is_warmup: boolean
-  logged_at: string
-}
-
-/** Epley formula — the one config spot for the 1RM estimate used everywhere in the logger. */
-export function estimate1RM(weight: number, reps: number): number {
-  return Math.round(weight * (1 + reps / 30) * 10) / 10
-}
+export type { WorkoutSet } from '@/lib/gymTypes'
+export { estimate1RM } from '@/lib/gymTypes'
 
 /**
  * Get today's live-logger session, creating one if it doesn't exist yet.
