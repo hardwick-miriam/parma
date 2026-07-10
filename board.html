@@ -215,11 +215,11 @@
         <div class="bug-ref">S12 · HeatmapWidget reused unmodified (same history/workouts props every other consumer passes), StreakBadge reused for the logging streak, quick-nav tiles unchanged from the OS-restructure session. Build clean.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S13" data-time-est="25" data-time-actual="" data-credit-est="35000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S13" data-time-est="25" data-time-actual="22" data-credit-est="35000" data-credit-actual="30000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">FINAL: build clean, verify production serves latest commit, board.html + PROGRESS.md true final state, evidence per task.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S13 · final verification + summary</div>
+        <div class="bug-ref">S13 · commit b7bbbea confirmed Ready/Production via vercel ls (2m old); every route curled live (/, /main, /gym, /body, /food, /health, /media, /wardrobe, /journal, /settings, /grid) -- all correct 307 auth-gating, no 500s; body-front.png/body-back.png confirmed serving on production (200, exact byte match). node_modules restored to lockfile via npm ci, final build clean.</div>
       </div>
 
     </div>

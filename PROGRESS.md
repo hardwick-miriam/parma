@@ -979,3 +979,62 @@ reads as one training command centre top to bottom, not an unlabelled stack of c
 Commits: `3450638` (Task 4 layout) → `3f2d8c8` (final board + proof notes). Confirmed
 `Ready`/`Production` via `vercel ls`; `/`, `/gym`, `/main`, `/body` all curled live with correct
 307 auth-gating.
+
+---
+
+## Big session — real body figure, chat bar, foods, saved meals, Main upgrade (2026-07-10)
+
+**All 13 board.html steps done.**
+
+### What got done, in plain English
+
+1. **Real body figure** — the muscle map now shows the actual anatomical artwork you generated
+   tonight (front and back), not a hand-drawn outline. I found the two newest images in your
+   Downloads folder, confirmed which was front/back by looking at them, and built a glow overlay
+   aligned to the real muscles on that artwork. I couldn't just eyeball the alignment — I measured
+   the actual image (finding exactly where the torso, arms, and legs sit in pixels) and then
+   rendered my proposed overlay directly onto your images to check it by eye before shipping. One
+   real placement mistake (the tricep glow overlapping too far into the bicep) was caught and fixed
+   this way, not guessed at.
+2. **Weather is back on Main** — confirmed the underlying live weather data source is genuinely
+   live (real current London conditions pulled during the session).
+3. **The chat bar is everywhere** — Main's log input is back, and every module (Food, Health,
+   Media, Wardrobe, Journal, Gym) now has the same bar with a gentle steer toward what you'd
+   usually log there. Tested for real: logging actual food while sitting in the Health section
+   still logged as food correctly — the steer never overrides what you actually typed.
+4. **Food items are editable and deletable** — tap any logged food to change its macros or remove
+   it, and the day's totals recalculate correctly. Verified for real: logged three foods, edited
+   one, deleted another, the third was untouched, and the day's total matched exactly.
+5. **Saved meals** — save a whole day's foods as a named meal ("usual breakfast") and re-add all of
+   it in one tap, or just by typing "log my usual breakfast" in the Food chat bar (no AI needed for
+   that part — it's a fast, free text match, deliberately built so it can't be confused with an
+   ordinary sentence like "had a chicken wrap for lunch"). Verified for real: saved, quick-added on
+   a different day, all three items and their macros landed correctly.
+6. **Main is now a real command centre** — a short, sharp daily briefing written once a day
+   (verified with a genuinely generated example: *"You hit your protein target yesterday but ran a
+   calorie deficit of roughly 350-400 kcal on a heavy leg day..."*), a plain-computation "what to
+   train today" line, tappable rings, six trend graphs, the activity heatmap, a streak badge, and
+   quick links to everything.
+
+### What's still open / needs you
+
+1. **Still no way to see it rendered here** — this environment has no browser, so the body-figure
+   alignment, the chat bar layout, and the new Main page have all been verified by data and by
+   compositing test overlays onto the real images, not by looking at the actual running app. This
+   is the one thing worth you checking yourself, especially the muscle-glow alignment on a real
+   phone screen and at a couple of different widget sizes.
+2. Your account currently has very little real day-to-day data (no WHOOP syncs, no logged workouts
+   with exercise names yet), so the daily briefing, the "train today" line, and several trend
+   graphs will look sparse or show their honest fallback messages until you actually use the app
+   for a few days — that's expected, not a bug.
+3. Live workout logger (mentioned in an earlier session) and Finances — both still untouched, as
+   agreed.
+
+### Evidence trail
+Commits, in order: `ca8a98c` (body figure) → `e4fa509` (weather) → `8d9706e` (chat bar) →
+`9e6eea6` (food edit/delete) → `9ecc917` (saved meals) → `b7bbbea` (Main upgrade). Every step has
+either a real API/DB test with before/after proof and cleanup, or a direct visual check against
+the actual production images — see `board.html`'s `bug-ref` text per row for the compressed
+version. Final commit confirmed `Ready`/`Production` via `vercel ls`; every route curled live with
+correct auth-gating and no 500s; both body-figure images confirmed serving on production with an
+exact byte match to source.
