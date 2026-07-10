@@ -66,6 +66,12 @@ function lookupFuzzy(name: string): ExerciseRecord | null {
   return best.item
 }
 
+/** Multi-result fuzzy search over the 873-exercise catalog, for the live logger's exercise picker. */
+export function searchExercises(query: string, limit = 20): ExerciseRecord[] {
+  if (!query.trim()) return []
+  return fuse.search(query, { limit }).map((r) => r.item)
+}
+
 /**
  * Main lookup: name → { primaryMuscles, secondaryMuscles, bodyZones }
  * Returns null when no match found (logged for alias additions).

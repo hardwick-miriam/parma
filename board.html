@@ -145,11 +145,11 @@
         <div class="bug-ref">S2 · migration 024_workout_sets.sql run live, RLS + owner policy + all 8 columns confirmed via pg_class/pg_policies/information_schema</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S3" data-time-est="20" data-time-actual="" data-credit-est="35000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S3" data-time-est="20" data-time-actual="28" data-credit-est="35000" data-credit-actual="52000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">API layer: session start/continue, exercise search (fuzzy + recent-first), set log/edit/delete, stats/history/trend queries.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S3 · API layer</div>
+        <div class="bug-ref">S3 · lib/db/workoutSets.ts (session/set CRUD, Epley 1RM, PR-guard upsert) + searchExercises() added to lib/exerciseDb.ts + 5 new /api/gym/* routes. Build clean, all routes compiled.</div>
       </div>
 
       <div class="bug-row" data-status="waiting" data-id="S4" data-time-est="35" data-time-actual="" data-credit-est="55000" data-credit-actual="">
