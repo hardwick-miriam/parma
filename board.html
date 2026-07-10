@@ -208,11 +208,11 @@
         <div class="bug-ref">S11 · gym module — TrainingLoadWidget (acute/chronic), new days-since-rest stat, PRTrackerWidget, RoutineSection, ExerciseHistory.tsx (new — real session-level history from actual logged exercises, no fabricated set/rep data), link to /body, dashed-border placeholder card for the deferred live logger. Build clean.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S12" data-time-est="30" data-time-actual="" data-credit-est="45000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S12" data-time-est="30" data-time-actual="42" data-credit-est="45000" data-credit-actual="58000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">Polish: theme parity across the shell + every module, ⌘K palette gains "go to [module]" jumps, mobile/landscape/portrait pass.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S12 · polish + palette</div>
+        <div class="bug-ref">S12 · found + fixed 2 real bugs during this pass: (1) hardcoded dark rgba() bar backgrounds would've broken the brutalism theme (confirmed a genuine light theme, --bg:#fff, via globals.css) — switched to var(--surface). (2) sm:pl-[var(--os-sidebar-w,208px)] never actually compiled (verified by inspecting the built CSS directly — zero matches) so content would've rendered under the fixed sidebar on desktop/portrait-monitor widths; replaced with plain sm:pl-52, re-verified the exact rule now exists in the compiled CSS. Added /grid route (was a dead sidebar link). CommandPalette "Go to module" group added, sourced from Sidebar's MODULES array. Build clean.</div>
       </div>
 
       <div class="bug-row" data-status="waiting" data-id="S13" data-time-est="15" data-time-actual="" data-credit-est="20000" data-credit-actual="">

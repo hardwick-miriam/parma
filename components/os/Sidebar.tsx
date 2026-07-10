@@ -33,7 +33,7 @@ export function Sidebar() {
       <nav
         className="hidden sm:flex fixed left-0 top-0 bottom-0 z-40 flex-col gap-1 py-6 px-3 overflow-y-auto"
         style={{
-          width: 'var(--os-sidebar-w, 208px)',
+          width: '13rem', // matches app/(os)/layout.tsx's sm:pl-52 (13rem) exactly
           background: 'var(--surface)',
           borderRight: '1px solid var(--border)',
         }}
@@ -83,9 +83,7 @@ export function Sidebar() {
       <nav
         className="sm:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center gap-0.5 overflow-x-auto px-1"
         style={{
-          background: 'rgba(17,17,19,0.94)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
+          background: 'var(--surface)',
           borderTop: '1px solid var(--border)',
           paddingTop: '0.4rem',
           paddingBottom: 'calc(0.4rem + env(safe-area-inset-bottom))',
