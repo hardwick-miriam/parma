@@ -98,6 +98,14 @@ PRTrackerWidget.tsx which already used the correct fields) instead of the nonexi
 
 ## TIER 2 (MAJOR) — in progress
 
+### M16 — duplicate ParsedLog type vs zod schema
+STARTING/DONE M16 — lib/ai/types.ts's ParsedLog/ParsedWorkout/ParsedInjuryCheckin/
+ParsedInjuryResolved/ParsedMediaItem are now `z.infer<>` derived from the zod schemas in
+lib/schemas.ts instead of hand-declared duplicates — one source of truth instead of two that
+could silently drift. Verified: `npm run build` clean (TypeScript passed with no new errors
+despite `mood`/`feeling` becoming strict enums instead of `string` everywhere they're
+consumed).
+
 ### M14 — calories/duration_minutes not integer-constrained
 STARTING/DONE M14 — lib/schemas.ts: `calories` and `ParsedWorkoutSchema.duration_minutes` now
 have `.int()`, matching their `integer` Postgres columns (daily_stats.calories,
