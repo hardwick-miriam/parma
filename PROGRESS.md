@@ -90,6 +90,16 @@ STARTING/DONE C8/C9 —
   as if it were persisted while the DB still holds the invalidated old refresh token.
 Verified: `npm run build` clean.
 
+### C10 — PRTrackerDetail field mismatch
+STARTING/DONE C10 — components/dashboard/WidgetDetailSheets.tsx PRTrackerDetail now reads
+`value`/`unit`/`reps`/`logged_at` (the real /api/personal-records shape, confirmed against
+PRTrackerWidget.tsx which already used the correct fields) instead of the nonexistent
+`max_weight_kg`/`max_reps`/`logged_date`. Verified: `npm run build` clean.
+
+## TIER 1 (CRITICAL) COMPLETE
+9 of 10 fixed (C2, C3, C4, C5, C6, C7, C8, C9, C10). C1 is code-complete but blocked on live
+DB access — see its entry above. Running full Tier 1 build gate now before Tier 2.
+
 ### C6, C7 — correction to earlier log entry
 These were actually already fixed inside the same lib/db/queries.ts pass as C1/C3/C4
 (commit 531f4e9) — `upsertDailyStats`'s read now checks `readError` and throws instead of

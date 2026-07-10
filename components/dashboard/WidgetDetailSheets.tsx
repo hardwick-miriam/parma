@@ -402,7 +402,11 @@ export function GlobeDetail({ visitedCountries: initialVisited = [], onClose }: 
 }
 
 export function PRTrackerDetail({ onClose }: { onClose: () => void }) {
-  const [prs, setPrs] = useState<Array<{ exercise: string; max_weight_kg: number | null; max_reps: number | null; logged_date: string }>>([])
+  // Matches the real /api/personal-records / personal_records shape (see
+  // PRTrackerWidget.tsx) — the previous max_weight_kg/max_reps/logged_date
+  // fields never existed on the API response, so every PR here silently
+  // rendered with no value/reps/date at all.
+  const [prs, setPrs] = useState<Array<{ id: string; exercise: string; value: number; unit: string; reps: number | null; logged_at: string }>>([])
 
   useEffect(() => {
     fetch('/api/personal-records').then((r) => r.json()).then((d) => { if (d.records) setPrs(d.records) }).catch(() => {})
@@ -417,14 +421,14 @@ export function PRTrackerDetail({ onClose }: { onClose: () => void }) {
         ) : (
           <div className="flex flex-col divide-y divide-border">
             {prs.map((pr) => (
-              <div key={pr.exercise} className="flex items-center justify-between py-2.5">
+              <div key={pr.id} className="flex items-center justify-between py-2.5">
                 <span className="text-sm text-text capitalize">{pr.exercise.replace(/_/g, ' ')}</span>
                 <div className="text-right">
-                  {pr.max_weight_kg != null && (
-                    <p className="text-sm font-semibold text-text tabular-nums">{pr.max_weight_kg} kg</p>
-                  )}
-                  {pr.max_reps != null && (
-                    <p className="text-xs text-text-subtle">{pr.max_reps} reps</p>
+                  <p className="text-sm font-semibold text-text tabular-nums">
+                    {Number.isInteger(pr.value) ? pr.value : pr.value.toFixed(1)} {pr.unit}
+                  </p>
+                  {pr.reps != null && (
+                    <p className="text-xs text-text-subtle">{pr.reps} reps</p>
                   )}
                 </div>
               </div>
