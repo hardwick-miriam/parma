@@ -7,6 +7,7 @@ import { CircularProgress } from '@/components/ui/CircularProgress'
 import { computeDayQuality, type MacroTargets, type MacroTotals } from '@/lib/foodQuality'
 import { getLocalDate } from '@/lib/date'
 import type { FoodLogItem, MostEatenFood, FoodNote } from '@/lib/db/food'
+import type { SavedMeal, SavedMealItem } from '@/lib/db/savedMeals'
 
 function normaliseFoodKey(description: string): string {
   return description.toLowerCase().trim().replace(/\s+/g, ' ')
@@ -156,14 +157,19 @@ function FoodItemRow({ item, note }: { item: FoodLogItem; note: FoodNote | undef
   )
 }
 
-function DayCard({ day, notesByKey }: { day: FoodDay; notesByKey: Map<string, FoodNote> }) {
+function DayCard({ day, notesByKey, onSaveAsMeal }: { day: FoodDay; notesByKey: Map<string, FoodNote>; onSaveAsMeal: (day: FoodDay) => void }) {
   const [listRef] = useAutoAnimate<HTMLDivElement>()
   const totals = dayTotals(day.items)
   return (
     <div className="rounded-2xl bg-surface border border-border p-4 flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold text-text">{day.date === getLocalDate() ? 'Today' : day.date}</p>
-        <p className="text-xs text-text-subtle">{Math.round(totals.calories)} kcal · {Math.round(totals.protein_g)}g protein</p>
+        <div className="flex items-center gap-3">
+          <p className="text-xs text-text-subtle">{Math.round(totals.calories)} kcal · {Math.round(totals.protein_g)}g protein</p>
+          <button onClick={() => onSaveAsMeal(day)} className="text-[11px] text-accent hover:opacity-80" title="Save this day's foods as a named meal">
+            💾 Save as meal
+          </button>
+        </div>
       </div>
       <div ref={listRef} className="flex flex-col divide-y divide-border">
         {day.items.map((item) => (
@@ -238,6 +244,47 @@ export function FoodClient({ targets }: { targets: MacroTargets }) {
       queryClient.invalidateQueries({ queryKey: ['food-today'] })
       queryClient.invalidateQueries({ queryKey: ['food-timeline'] })
     },
+  })
+
+  const savedMeals = useQuery({
+    queryKey: ['saved-meals'],
+    queryFn: async () => (await fetch('/api/saved-meals')).json() as Promise<{ meals: SavedMeal[] }>,
+  })
+
+  const saveMealMutation = useMutation({
+    mutationFn: async (day: FoodDay) => {
+      const name = prompt('Name this meal (e.g. "usual breakfast")')
+      if (!name) throw new Error('cancelled')
+      const items: SavedMealItem[] = day.items.map((i) => ({
+        description: i.description, meal: i.meal ?? undefined, calories: i.calories, protein_g: Number(i.protein_g),
+        carbs_g: Number(i.carbs_g), fat_g: Number(i.fat_g), fibre_g: Number(i.fibre_g), sugar_g: Number(i.sugar_g), salt_g: Number(i.salt_g),
+      }))
+      const res = await fetch('/api/saved-meals', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, items }),
+      })
+      if (!res.ok) throw new Error('Failed to save meal')
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['saved-meals'] }),
+    onError: (e) => { if (e instanceof Error && e.message !== 'cancelled') alert(e.message) },
+  })
+
+  const quickAddMealMutation = useMutation({
+    mutationFn: async (mealId: string) => {
+      const res = await fetch(`/api/saved-meals/${mealId}/quick-add`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })
+      if (!res.ok) throw new Error('Quick-add failed')
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['food-today'] })
+      queryClient.invalidateQueries({ queryKey: ['food-timeline'] })
+    },
+  })
+
+  const deleteMealMutation = useMutation({
+    mutationFn: async (mealId: string) => {
+      const res = await fetch(`/api/saved-meals/${mealId}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Delete failed')
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['saved-meals'] }),
   })
 
   async function submitNote(e: React.FormEvent) {
@@ -322,6 +369,31 @@ export function FoodClient({ targets }: { targets: MacroTargets }) {
         </div>
       )}
 
+      {savedMeals.data && savedMeals.data.meals.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <p className="text-xs font-semibold text-text-muted uppercase tracking-widest">Saved meals</p>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {savedMeals.data.meals.map((meal) => (
+              <div key={meal.id} className="shrink-0 flex flex-col gap-1 rounded-xl bg-surface border border-border px-3 py-2 min-w-[150px]">
+                <button
+                  onClick={() => quickAddMealMutation.mutate(meal.id)}
+                  disabled={quickAddMealMutation.isPending}
+                  className="text-left disabled:opacity-50"
+                >
+                  <span className="text-sm text-text truncate block">{meal.name}</span>
+                  <span className="text-[11px] text-text-subtle">
+                    {meal.items.length} item{meal.items.length === 1 ? '' : 's'} · {meal.items.reduce((s, i) => s + i.calories, 0)} kcal
+                  </span>
+                </button>
+                <button onClick={() => deleteMealMutation.mutate(meal.id)} className="text-[10px] text-red-400 hover:text-red-300 self-start">
+                  Delete
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <form onSubmit={submitNote} className="flex flex-col gap-1">
         <input
           value={noteText}
@@ -341,7 +413,7 @@ export function FoodClient({ targets }: { targets: MacroTargets }) {
 
       <div className="flex flex-col gap-3">
         {timeline.isLoading && <p className="text-sm text-text-subtle">Loading…</p>}
-        {filteredDays.map((day) => <DayCard key={day.date} day={day} notesByKey={notesByKey} />)}
+        {filteredDays.map((day) => <DayCard key={day.date} day={day} notesByKey={notesByKey} onSaveAsMeal={(d) => saveMealMutation.mutate(d)} />)}
         {filteredDays.length === 0 && !timeline.isLoading && (
           <p className="text-sm text-text-subtle py-10 text-center">No food logged yet.</p>
         )}

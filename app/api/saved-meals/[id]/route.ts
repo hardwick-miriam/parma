@@ -1,0 +1,36 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { updateSavedMeal, deleteSavedMeal } from '@/lib/db/savedMeals'
+
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const updates = await request.json().catch(() => null)
+  if (!updates) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+
+  try {
+    const meal = await updateSavedMeal(user.id, id, updates, supabase)
+    return NextResponse.json({ meal })
+  } catch (err) {
+    console.error('[saved-meals/:id] update error:', err)
+    return NextResponse.json({ error: 'Failed to update meal' }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  try {
+    await deleteSavedMeal(user.id, id, supabase)
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    console.error('[saved-meals/:id] delete error:', err)
+    return NextResponse.json({ error: 'Failed to delete meal' }, { status: 500 })
+  }
+}

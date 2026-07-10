@@ -173,11 +173,11 @@
         <div class="bug-ref">S6 · recomputeDailyFoodMacros (sums all food_log rows for the date, only touches the 7 macro columns, aborts on read failure per the C6/C7 precedent) + PATCH/DELETE /api/food-log/[id] + inline edit/delete UI on every food row. REAL test against prod: logged 3 foods, edited the wrap (400->450kcal), deleted the curry, porridge untouched (150kcal/5g confirmed), daily_stats recomputed to exactly 600kcal/35g protein (MATCH). Full cleanup verified.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S7" data-time-est="40" data-time-actual="" data-credit-est="60000" data-credit-actual="">
+      <div class="bug-row" data-status="done" data-id="S7" data-time-est="40" data-time-actual="42" data-credit-est="60000" data-credit-actual="58000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">TASK 5 — saved_meals table (migration live+verified), save/quick-add UI, NLP quick-add via the food chat bar.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S7 · saved meals</div>
+        <div class="bug-ref">S7 · migration 025 run live + verified. "Save as meal" from a day's logged group, quick-add cards on Food page, zero-AI-cost NLP match (lib/savedMealMatch.ts) wired into /api/parse-log for moduleContext=food, deliberately narrow trigger (log/add + my/the only, not "had") to avoid hijacking genuine food logs. REAL test: saved a 3-item meal, matched "log my usual breakfast" correctly, confirmed "had a chicken wrap for lunch" does NOT match (safety check), quick-added on a different day (2 days back) -- all 3 items + macros landed exactly, daily_stats totaled correctly (260kcal/6.6g). Full cleanup verified.</div>
       </div>
 
       <div class="bug-row" data-status="waiting" data-id="S8" data-time-est="45" data-time-actual="" data-credit-est="70000" data-credit-actual="">

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getAIProvider } from '@/lib/ai'
 import { getActiveInjuries } from '@/lib/db/queries'
+import { getSavedMeals } from '@/lib/db/savedMeals'
+import { matchSavedMealQuickAdd } from '@/lib/savedMealMatch'
 import { ParseLogPayloadSchema, ParsedLogSchema } from '@/lib/schemas'
 import { getLocalDate, getWeekdayName, getLocalHour } from '@/lib/date'
 import { chronoParseDate } from '@/lib/chronoParse'
@@ -31,6 +33,42 @@ export async function POST(request: NextRequest) {
   // Pre-parse date expressions locally — gives AI ground truth, shrinks prompt
   const chrono = chronoParseDate(text, tz)
   const resolvedDate = chrono.resolvedDate ?? today
+
+  // Zero-AI-cost saved-meal quick-add: "log my usual breakfast" from the Food
+  // chat bar matches against the user's saved meal names before ever calling
+  // the AI. Still goes through the normal confirm-before-save flow (same as
+  // every other text log) — this only skips the Claude call, not the review step.
+  if (moduleContext === 'food') {
+    try {
+      const savedMeals = await getSavedMeals(user.id)
+      if (savedMeals.length) {
+        const matchedName = matchSavedMealQuickAdd(text, savedMeals.map((m) => m.name))
+        const meal = matchedName ? savedMeals.find((m) => m.name === matchedName) : undefined
+        if (meal) {
+          const totals = meal.items.reduce(
+            (acc, i) => ({
+              calories: acc.calories + i.calories,
+              protein_g: acc.protein_g + i.protein_g,
+              carbs_g: acc.carbs_g + i.carbs_g,
+              fat_g: acc.fat_g + i.fat_g,
+              fibre_g: acc.fibre_g + i.fibre_g,
+              sugar_g: acc.sugar_g + i.sugar_g,
+              salt_g: acc.salt_g + i.salt_g,
+            }),
+            { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, fibre_g: 0, sugar_g: 0, salt_g: 0 }
+          )
+          const parsed = ParsedLogSchema.parse({
+            foods: meal.items,
+            ...totals,
+            notes: `Quick-added from saved meal "${meal.name}"`,
+          })
+          return NextResponse.json({ parsed })
+        }
+      }
+    } catch (err) {
+      console.error('[parse-log] saved-meal quick-add lookup failed, falling through to AI:', err)
+    }
+  }
 
   try {
     const [provider, activeInjuries] = await Promise.all([
