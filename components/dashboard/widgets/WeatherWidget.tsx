@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTheme, type Theme } from '@/components/ThemeProvider'
+import { useGridItemSize } from '@/components/dashboard/GridItemSizeContext'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -495,6 +496,13 @@ function formatPeriodTime(dt: number) {
 // ─── Widget ───────────────────────────────────────────────────────────────────
 
 export function WeatherWidget({ onData }: { onData?: (d: WeatherData) => void }) {
+  const { w, h } = useGridItemSize()
+  // Same threshold convention as the other size-aware widgets (e.g.
+  // StepsWidget). Weather's default grid width (2 cols) equals its own
+  // minW, so this widget is "compact" most of the time by design — that's
+  // the fix: the forecast grid and detail row no longer render
+  // unconditionally at a width they don't fit.
+  const compact = w <= 2 || h <= 4
   const [data, setData] = useState<WeatherData | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -598,31 +606,33 @@ export function WeatherWidget({ onData }: { onData?: (d: WeatherData) => void })
 
         {data && !loading && (
           <>
-            {/* Current */}
+            {/* Current — always shown, fits at any size */}
             <div className="flex items-start gap-2">
-              <div>
+              <div className="min-w-0">
                 <div className="flex items-baseline gap-2">
                   <span className="text-4xl font-bold text-white tabular-nums" style={{ textShadow: '0 2px 12px rgba(0,0,0,0.6)' }}>
                     {data.temp}°
                   </span>
                   <span className="text-2xl leading-none">{data.emoji}</span>
                 </div>
-                <p className="text-xs text-white/70 mt-0.5 capitalize">{data.description}</p>
-                <p className="text-[10px] text-white/45 mt-0.5">{data.location}</p>
+                <p className="text-xs text-white/70 mt-0.5 capitalize truncate">{data.description}</p>
+                {!compact && <p className="text-[10px] text-white/45 mt-0.5 truncate">{data.location}</p>}
               </div>
             </div>
 
-            {/* Details */}
-            <div className="flex flex-wrap gap-x-3 gap-y-0.5">
-              <span className="text-[11px] text-white/50">Feels {data.feelsLike}°</span>
-              <span className="text-[11px] text-white/50">{data.humidity}% humidity</span>
-              {data.windKph > 0 && (
-                <span className="text-[11px] text-white/50">{data.windKph} km/h</span>
-              )}
-            </div>
+            {/* Details — cut at small sizes rather than wrapping/clipping */}
+            {!compact && (
+              <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+                <span className="text-[11px] text-white/50">Feels {data.feelsLike}°</span>
+                <span className="text-[11px] text-white/50">{data.humidity}% humidity</span>
+                {data.windKph > 0 && (
+                  <span className="text-[11px] text-white/50">{data.windKph} km/h</span>
+                )}
+              </div>
+            )}
 
-            {/* Forecast */}
-            {data.periods.length > 0 && (
+            {/* Forecast — 3-col grid only fits once the widget has room */}
+            {!compact && data.periods.length > 0 && (
               <div
                 className="grid grid-cols-3 gap-1 pt-2 mt-auto"
                 style={{ borderTop: '1px solid rgba(255,255,255,0.12)' }}

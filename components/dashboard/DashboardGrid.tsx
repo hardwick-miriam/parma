@@ -992,6 +992,7 @@ export function DashboardGrid({
         whoopHistory={whoopHistory}
         streaks={streaks}
         injuries={injuries}
+        weather={weather}
       />
 
       <MilestoneToast milestones={milestones} />

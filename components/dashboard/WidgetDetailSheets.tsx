@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { MetricAreaChart } from '@/components/ui/MetricAreaChart'
 import { getLocalDate } from '@/lib/date'
 import type { DailyStats, WorkoutSession, InjuryWithCheckins } from '@/lib/db/queries'
+import type { WeatherData } from './widgets/WeatherWidget'
 import type { WhoopMetrics } from '@/lib/db/whoop'
 import type { StreakData } from '@/lib/streaks'
 
@@ -531,27 +532,28 @@ export function BodyDetail({ injuries, onClose }: { injuries: InjuryWithCheckins
   )
 }
 
-export function WeatherDetail({ onClose }: { onClose: () => void }) {
-  const [data, setData] = useState<{ location?: string; conditions?: string; temp?: number; feels_like?: number; humidity?: number; wind_speed?: number } | null>(null)
-
-  useEffect(() => {
-    fetch('/api/weather').then((r) => r.json()).then(setData).catch(() => {})
-  }, [])
-
+export function WeatherDetail({ weather, onClose }: { weather: WeatherData | null; onClose: () => void }) {
+  // Reuses the WeatherData the WeatherWidget already fetched (it has the
+  // user's geolocated lat/lon; this sheet has no way to get those itself)
+  // instead of re-fetching /api/weather with no coordinates, which used to
+  // 400 and render a silent blank sheet. Field names also now match the
+  // real WeatherData shape (description/feelsLike/windKph) — the old ones
+  // (conditions/feels_like/wind_speed) never existed on any response this
+  // app produces.
   return (
     <WidgetShell title="Weather" onClose={onClose}>
-      {!data ? (
-        <p className="text-sm text-text-subtle">Loading weather data…</p>
+      {!weather ? (
+        <p className="text-sm text-text-subtle">Weather isn&apos;t available yet — open the Weather widget on your dashboard first.</p>
       ) : (
         <>
-          {data.location && <p className="text-sm text-text-muted">{data.location}</p>}
+          {weather.location && <p className="text-sm text-text-muted">{weather.location}</p>}
           <div className="grid grid-cols-2 gap-2">
-            {data.temp != null && <StatRow label="Temperature" value={`${data.temp}°C`} />}
-            {data.feels_like != null && <StatRow label="Feels like" value={`${data.feels_like}°C`} />}
-            {data.humidity != null && <StatRow label="Humidity" value={`${data.humidity}%`} />}
-            {data.wind_speed != null && <StatRow label="Wind" value={`${data.wind_speed} km/h`} />}
+            <StatRow label="Temperature" value={`${weather.temp}°C`} />
+            <StatRow label="Feels like" value={`${weather.feelsLike}°C`} />
+            <StatRow label="Humidity" value={`${weather.humidity}%`} />
+            {weather.windKph > 0 && <StatRow label="Wind" value={`${weather.windKph} km/h`} />}
           </div>
-          {data.conditions && <p className="text-sm text-text">{data.conditions}</p>}
+          {weather.description && <p className="text-sm text-text capitalize">{weather.emoji} {weather.description}</p>}
         </>
       )}
     </WidgetShell>
@@ -586,19 +588,21 @@ interface WidgetDetailRouterProps {
   streaks?: StreakData
   injuries?: InjuryWithCheckins[]
   visitedCountries?: string[]
+  weather?: WeatherData | null
 }
 
 export function WidgetDetailRouter({
   widget, onClose,
   workouts = [], recentWorkouts = [], history = [],
   whoopHistory = [], streaks, injuries = [], visitedCountries = [],
+  weather = null,
 }: WidgetDetailRouterProps) {
   const defaultStreaks: StreakData = streaks ?? { logging: 0, protein: 0, workouts: 0, hydration: 0, steps: 0 }
 
   return (
     <AnimatePresence>
       {widget === 'work'       && <WorkoutsDetail    key="work"       workouts={workouts} history={history} onClose={onClose} />}
-      {widget === 'weather'    && <WeatherDetail      key="weather"    onClose={onClose} />}
+      {widget === 'weather'    && <WeatherDetail      key="weather"    weather={weather} onClose={onClose} />}
       {widget === 'whoop'      && <WhoopDetail        key="whoop"      whoopHistory={whoopHistory} onClose={onClose} />}
       {widget === 'insights'   && <InsightsDetail     key="insights"   onClose={onClose} />}
       {widget === 'body'       && <BodyDetail         key="body"       injuries={injuries} onClose={onClose} />}

@@ -98,6 +98,21 @@ PRTrackerWidget.tsx which already used the correct fields) instead of the nonexi
 
 ## TIER 2 (MAJOR) — in progress
 
+### M9, M10 — Weather detail sheet + widget mobile sizing
+STARTING/DONE M9/M10 — while fixing this I found the bug was worse than described:
+`WeatherDetail` didn't just fetch with no lat/lon (400), its field names
+(conditions/feels_like/wind_speed) never matched any real `/api/weather` response shape at
+all (real shape: description/feelsLike/windKph). Fixed both by having `WeatherDetail` accept
+the already-fetched `WeatherData` as a prop instead of fetching independently — DashboardGrid
+already tracks this in `weather` state (used for the AI context line) via
+`WeatherWidget`'s `onData` callback, so it's threaded through `WidgetDetailRouter` →
+`WeatherDetail` instead of re-fetching. Shows a plain-English "open the widget first" message
+if `weather` is still null rather than spinning forever.
+M10: WeatherWidget now uses `useGridItemSize()` with the same `w<=2 || h<=4` compact
+convention as the rest of the widgets — hides the details row and 3-column forecast grid at
+small sizes, keeping only the large temp/emoji/description which always fits.
+Verified: `npm run build` clean.
+
 ### M4-M8 — more unchecked writes / silent-success routes
 STARTING/DONE M4/M5/M6/M7/M8 —
 - M4: routine PUT's deactivate-others update now checked; returns 500 instead of risking two
