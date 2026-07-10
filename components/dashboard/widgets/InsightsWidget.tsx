@@ -104,8 +104,14 @@ export function InsightsWidget() {
               <span className="text-lg shrink-0 mt-0.5">{TYPE_ICON[ins.type] ?? '💡'}</span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
-                  <span className="text-xs font-semibold text-text truncate">{ins.title}</span>
-                  <StrengthBadge type={ins.type} strength={ins.strength} />
+                  {/* min-w-0 on the flex item itself, not just its ancestor
+                      — without it, truncate can't kick in inside a flex row
+                      and the strength badge gets pushed off / the row
+                      overflows the card at narrow widths. */}
+                  <span className="min-w-0 text-xs font-semibold text-text truncate">{ins.title}</span>
+                  <span className="shrink-0">
+                    <StrengthBadge type={ins.type} strength={ins.strength} />
+                  </span>
                 </div>
                 <p className="text-xs text-text-muted leading-relaxed">{ins.body}</p>
               </div>

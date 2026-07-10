@@ -163,9 +163,12 @@ export function HabitGardenWidget({ history, todayHabits, streak = 0 }: HabitGar
         )}
       </div>
 
-      {/* Plant */}
-      <div className="flex-1 flex items-center justify-center" style={{ minHeight: 100, maxHeight: 160 }}>
-        <div style={{ width: '100%', maxWidth: 120, height: 140 }}>
+      {/* Plant — height:'100%'/maxHeight (not a fixed height) so this
+          shrinks to fit a short grid cell instead of forcing the card
+          taller than its cell or overflowing past it (the outer card has
+          no overflow-hidden to catch that). */}
+      <div className="flex-1 min-h-0 flex items-center justify-center">
+        <div style={{ width: '100%', maxWidth: 120, height: '100%', maxHeight: 140 }}>
           <PlantSVG level={level} accent="var(--accent)" />
         </div>
       </div>

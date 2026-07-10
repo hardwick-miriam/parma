@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { removeHabit } from '@/app/actions'
 import { StreakBadge } from '@/components/ui/StreakBadge'
+import { useGridItemSize } from '@/components/dashboard/GridItemSizeContext'
 
 interface HabitsWidgetProps {
   habits_done: string[] | null
@@ -11,6 +12,8 @@ interface HabitsWidgetProps {
 }
 
 export function HabitsWidget({ habits_done, loggedTimes = {}, streak = 0 }: HabitsWidgetProps) {
+  const { w, h } = useGridItemSize()
+  const compact = w <= 2 || h <= 3
   const doneHabits = (habits_done ?? []).filter(Boolean)
   const [confirmItem, setConfirmItem] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -54,10 +57,10 @@ export function HabitsWidget({ habits_done, loggedTimes = {}, streak = 0 }: Habi
                 </div>
               ) : (
                 <>
-                  <span className="text-accent font-bold mr-2">✓</span>
-                  <span className="flex-1 text-sm text-text capitalize">{h}</span>
-                  {loggedTimes[h.toLowerCase()] && (
-                    <span className="text-[10px] text-text-subtle tabular-nums mr-1">
+                  <span className="text-accent font-bold mr-2 shrink-0">✓</span>
+                  <span className="min-w-0 flex-1 text-sm text-text capitalize truncate">{h}</span>
+                  {!compact && loggedTimes[h.toLowerCase()] && (
+                    <span className="text-[10px] text-text-subtle tabular-nums mr-1 shrink-0">
                       {new Date(loggedTimes[h.toLowerCase()]).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
                     </span>
                   )}

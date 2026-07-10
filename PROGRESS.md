@@ -111,6 +111,28 @@ Verified: `npm run build` clean.
 
 ## TIER 3 (MINOR) — in progress
 
+### N7 — mobile compact-size gaps across 8 widgets
+STARTING/DONE N7 —
+- WorldClocksWidget: add-city row now wraps onto its own line with the error message on a
+  second line, instead of cramming input+Add+Cancel+error into one unwrapped row.
+- MediaWidget: added `useGridItemSize()` compact branch, hides the want-to/in-progress badge
+  row and "last logged" block at small sizes.
+- SupplementsWidget: hides the per-pill logged-time sub-label at compact sizes.
+- InsightsWidget: title span now has its own `min-w-0` (not just an ancestor) so `truncate`
+  actually engages inside the flex row — was letting the strength badge get pushed off /
+  overflow the card.
+- PRTrackerWidget: add-PR form's fixed `w-20`/`w-12` inputs replaced with `min-w-0 flex-1` +
+  `flex-wrap`; PR list row hides the date at compact size, keeping exercise/value/share.
+- TrainingLoadWidget: compact mode shows 7 days instead of 14 (bars were becoming
+  unreadably thin rather than being cut), with the AC-ratio stat correctly showing "—" since
+  it needs the full 14-day window.
+- HabitGardenWidget: plant SVG container now sized `height:'100%'`/`maxHeight` instead of a
+  fixed `height:140`, so it shrinks to fit a short grid cell instead of overflowing past it
+  (the outer card has no overflow-hidden to catch that).
+- HabitsWidget: habit name now truncates properly (`min-w-0` + `truncate`, it was missing
+  both) and hides the logged-time label at compact size.
+Verified: `npm run build` clean.
+
 ### N6 — detail sheets with no loading timeout/retry
 STARTING/DONE N6 — PRTrackerDetail and InsightsDetail now have explicit loading/error states
 with a Retry button, matching the pattern the main WeatherWidget already used. (WeatherDetail

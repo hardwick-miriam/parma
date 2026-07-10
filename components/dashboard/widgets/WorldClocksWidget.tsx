@@ -214,33 +214,37 @@ export function WorldClocksWidget() {
         </button>
       </div>
 
-      {/* Add city form */}
+      {/* Add city form — wraps onto its own line and drops the error onto a
+          second row instead of cramming input+buttons+error into one row,
+          which used to overflow at the widget's own minW:3. */}
       {adding && (
-        <div className="flex items-center gap-2 px-4 pb-3 shrink-0">
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') { setAdding(false); setInput('') } }}
-            placeholder="City name (e.g. London, Tokyo)"
-            className="flex-1 rounded-lg text-sm text-text placeholder:text-text-subtle px-3 py-1.5 focus:outline-none focus:border-border-strong transition-colors"
-            style={{ background: 'var(--surface-elevated)', border: '1px solid var(--border)' }}
-          />
-          <button
-            onClick={handleAdd}
-            disabled={searching}
-            className="px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-medium disabled:opacity-50 hover:opacity-90 transition-opacity"
-          >
-            {searching ? '…' : 'Add'}
-          </button>
-          <button
-            onClick={() => { setAdding(false); setInput(''); setAddError('') }}
-            className="text-text-subtle hover:text-text text-sm transition-colors"
-          >
-            ✕
-          </button>
-          {addError && <p className="text-[10px] text-negative ml-1">{addError}</p>}
+        <div className="flex flex-col gap-1.5 px-4 pb-3 shrink-0">
+          <div className="flex items-center gap-2">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') { setAdding(false); setInput('') } }}
+              placeholder="City name (e.g. London, Tokyo)"
+              className="flex-1 min-w-0 rounded-lg text-sm text-text placeholder:text-text-subtle px-3 py-1.5 focus:outline-none focus:border-border-strong transition-colors"
+              style={{ background: 'var(--surface-elevated)', border: '1px solid var(--border)' }}
+            />
+            <button
+              onClick={handleAdd}
+              disabled={searching}
+              className="shrink-0 px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-medium disabled:opacity-50 hover:opacity-90 transition-opacity"
+            >
+              {searching ? '…' : 'Add'}
+            </button>
+            <button
+              onClick={() => { setAdding(false); setInput(''); setAddError('') }}
+              className="shrink-0 text-text-subtle hover:text-text text-sm transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+          {addError && <p className="text-[10px] text-negative">{addError}</p>}
         </div>
       )}
 

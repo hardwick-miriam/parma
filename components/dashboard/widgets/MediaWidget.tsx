@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { LottieEmpty } from '@/components/ui/LottieEmpty'
+import { useGridItemSize } from '@/components/dashboard/GridItemSizeContext'
 import type { MediaEntry, MediaCategory, MediaCounts, MediaStatus } from '@/lib/db/media'
 
 const CATEGORY_EMOJI: Record<MediaCategory, string> = {
@@ -282,6 +283,8 @@ interface MediaWidgetProps {
 }
 
 export function MediaWidget({ initialEntries, initialCounts }: MediaWidgetProps) {
+  const { w, h } = useGridItemSize()
+  const compact = w <= 2 || h <= 4
   const [entries, setEntries] = useState<MediaEntry[]>(initialEntries ?? [])
   const [counts, setCounts] = useState<MediaCounts>(
     initialCounts ?? { book: 0, film: 0, show: 0, song: 0 }
@@ -359,7 +362,9 @@ export function MediaWidget({ initialEntries, initialCounts }: MediaWidgetProps)
               ))}
             </div>
 
-            {(wantTo > 0 || inProgress > 0) && (
+            {/* Secondary detail — cut at small sizes rather than cramming
+                badges and the last-logged block into a narrow card. */}
+            {!compact && (wantTo > 0 || inProgress > 0) && (
               <div className="flex gap-2 flex-wrap">
                 {wantTo > 0 && (
                   <span className="text-[11px] px-2 py-0.5 rounded-full bg-accent/10 text-accent/80">
@@ -374,7 +379,7 @@ export function MediaWidget({ initialEntries, initialCounts }: MediaWidgetProps)
               </div>
             )}
 
-            {mostRecent && (
+            {!compact && mostRecent && (
               <div className="pt-1 border-t border-border">
                 <p className="text-[10px] text-text-subtle uppercase tracking-widest mb-1">Last logged</p>
                 <div className="flex items-baseline gap-1.5">

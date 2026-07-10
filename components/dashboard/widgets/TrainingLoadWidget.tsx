@@ -1,6 +1,7 @@
 'use client'
 
 import { getLocalDate } from '@/lib/date'
+import { useGridItemSize } from '@/components/dashboard/GridItemSizeContext'
 import type { WorkoutSession } from '@/lib/db/queries'
 
 const FEELING_INTENSITY: Record<string, number> = {
@@ -20,11 +21,18 @@ interface TrainingLoadWidgetProps {
 }
 
 export function TrainingLoadWidget({ recentWorkouts }: TrainingLoadWidgetProps) {
-  // Build last 14 days
+  const { w, h } = useGridItemSize()
+  // At small sizes, 14 daily bars become a few pixels wide each —
+  // unreadable rather than "cut". Show the last 7 days instead of
+  // shrinking every bar further.
+  const compact = w <= 3 || h <= 3
+  const dayCount = compact ? 7 : 14
+
+  // Build last N days
   const today = new Date()
   const days: Array<{ label: string; date: string; load: number }> = []
 
-  for (let i = 13; i >= 0; i--) {
+  for (let i = dayCount - 1; i >= 0; i--) {
     const d = new Date(today)
     d.setDate(d.getDate() - i)
     const dateStr = getLocalDate(undefined, d)
@@ -40,16 +48,17 @@ export function TrainingLoadWidget({ recentWorkouts }: TrainingLoadWidgetProps) 
   const totalLoad = days.reduce((sum, d) => sum + d.load, 0)
   const avgLoad = totalLoad / days.filter((d) => d.load > 0).length || 0
 
-  // Acute (last 7d) vs chronic (7–14d) workload
-  const acute = days.slice(7).reduce((s, d) => s + d.load, 0)
-  const chronic = days.slice(0, 7).reduce((s, d) => s + d.load, 0)
-  const acwr = chronic > 0 ? (acute / chronic).toFixed(2) : '—'
+  // Acute (last 7d) vs chronic (7–14d) workload — needs the full 14-day
+  // window, so only meaningful when not compact (dayCount === 14).
+  const acute = dayCount === 14 ? days.slice(7).reduce((s, d) => s + d.load, 0) : 0
+  const chronic = dayCount === 14 ? days.slice(0, 7).reduce((s, d) => s + d.load, 0) : 0
+  const acwr = dayCount === 14 && chronic > 0 ? (acute / chronic).toFixed(2) : '—'
 
   return (
     <div className="rounded-2xl bg-surface border border-border p-4 flex flex-col gap-3 h-full overflow-hidden" style={{ boxShadow: 'var(--shadow-md)' }}>
       <div className="flex items-center justify-between shrink-0">
         <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest">Training Load</h2>
-        <span className="text-xs text-text-subtle">14 days</span>
+        <span className="text-xs text-text-subtle">{dayCount} days</span>
       </div>
 
       {/* Stats row */}
@@ -90,7 +99,7 @@ export function TrainingLoadWidget({ recentWorkouts }: TrainingLoadWidgetProps) 
       </div>
 
       {totalLoad === 0 && (
-        <p className="text-text-subtle text-xs text-center -mt-2">No workouts with duration in last 14 days</p>
+        <p className="text-text-subtle text-xs text-center -mt-2">No workouts with duration in last {dayCount} days</p>
       )}
     </div>
   )

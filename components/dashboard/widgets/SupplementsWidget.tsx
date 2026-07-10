@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { removeSupplement } from '@/app/actions'
+import { useGridItemSize } from '@/components/dashboard/GridItemSizeContext'
 
 interface SupplementsWidgetProps {
   supplements: string[] | null
@@ -9,6 +10,8 @@ interface SupplementsWidgetProps {
 }
 
 export function SupplementsWidget({ supplements, loggedTimes = {} }: SupplementsWidgetProps) {
+  const { w, h } = useGridItemSize()
+  const compact = w <= 3 || h <= 3
   const list = supplements?.filter(Boolean) ?? []
   const [confirmItem, setConfirmItem] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -53,7 +56,7 @@ export function SupplementsWidget({ supplements, loggedTimes = {} }: Supplements
                     {s}
                     <span className="text-accent/40 group-hover:text-red-400 transition-colors">×</span>
                   </button>
-                  {loggedTimes[s.toLowerCase()] && (
+                  {!compact && loggedTimes[s.toLowerCase()] && (
                     <span className="text-[10px] text-text-subtle pl-1 tabular-nums">
                       {new Date(loggedTimes[s.toLowerCase()]).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
                     </span>
