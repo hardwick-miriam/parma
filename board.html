@@ -84,6 +84,7 @@
   .metrics .m-label { color: var(--text-faint); }
   .metrics .m-value { color: var(--text-dim); font-weight: 600; }
   .metrics .m-value.actual-set { color: var(--text); }
+  .bug-ref { flex-basis: 100%; font-size: 13px; color: var(--text-dim); line-height: 1.5; padding-top: 6px; border-top: 1px dashed var(--border); margin-top: 4px; }
   footer { margin-top: 50px; text-align: center; color: var(--text-faint); font-size: 13px; }
   @media (max-width: 640px) {
     .bug-row { flex-wrap: wrap; }
@@ -96,12 +97,12 @@
 <body>
 <div class="wrap">
   <header>
-    <h1><span class="brand">Parma</span> — Meal Selection on the Food Page</h1>
-    <p class="subtitle">Multi-select individual logged food items (not just whole-day) so a real "save as meal" and bulk delete/re-time become possible, plus meal-time grouping (Breakfast/Lunch/Dinner/Snacks) per day.</p>
+    <h1><span class="brand">Parma</span> — Quality &amp; Polish Pass</h1>
+    <p class="subtitle">Re-homing the 3 features orphaned by the /grid retirement, then a full sweep for loading/empty states, error resilience, mobile polish at 390px, perceived speed (optimistic UI), and cross-module consistency.</p>
   </header>
 
   <div class="overall-card">
-    <div class="overall-count"><span class="num" id="overall-num">0</span><span class="label">of <span id="overall-total">5</span> done</span></div>
+    <div class="overall-count"><span class="num" id="overall-num">0</span><span class="label">of <span id="overall-total">9</span> done</span></div>
     <div class="progress-track"><div class="progress-fill" id="overall-progress"></div></div>
     <div class="overall-breakdown" id="overall-breakdown"></div>
     <div class="status-banner" id="done-banner">✓ All steps resolved — board is no longer auto-refreshing.</div>
@@ -131,39 +132,67 @@
     <div class="tier-header"><div class="tier-title"><span class="tier-badge">Session steps</span></div></div>
     <div class="bug-list" data-tier="steps">
 
-      <div class="bug-row" data-status="done" data-id="F1" data-time-est="20" data-time-actual="15" data-credit-est="25000" data-credit-actual="18000">
+      <div class="bug-row" data-status="done" data-id="P1" data-time-est="30" data-time-actual="25" data-credit-est="35000" data-credit-actual="32000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">F1 — Backend: bulk-delete + bulk-set-meal-time lib functions and API routes, meal-time inference helper.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">P1 — Re-home Mounjaro dose/effects history + cadence intelligence into Health module.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">F1 · Added bulkDeleteFoodItems (reads affected dates first, deletes exactly the given ids, then recomputeDailyFoodMacros per distinct date -- no zeroing) and bulkSetFoodItemsMeal (plain .in('id',ids) update, no recompute needed since meal-time doesn't touch totals) to lib/db/food.ts. New routes POST /api/food-log/bulk-delete and /api/food-log/bulk-meal, same auth/validation shape as existing food-log routes. New lib/foodMealTime.ts: pure inferMealTime(createdAt) bucketing by Europe/London local hour (breakfast &lt;11, lunch &lt;15, snack &lt;18, else dinner) -- display-only inference, never writes to the DB; only the explicit "Set meal-time" action changes item.meal.</div>
+        <div class="bug-ref">P1 · New GET /api/mounjaro/history (doses+effects+cadence status, reusing getMounjaroDoses/getMounjaroEffects/computeDueStatus unchanged) and components/os/MounjaroHistorySection.tsx -- full scrollable dose+symptom history (not just the old widget's top-5), cadence/next-due line reusing the same intelligence as DoseDueBanner, proper skeleton + LottieEmpty empty state. Wired into HealthClient.tsx gated on mounjaroEnabled, right under the due banner. Added mounjaro-history to TABLE_QUERY_KEYS so it live-updates.</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="F2" data-time-est="35" data-time-actual="30" data-credit-est="45000" data-credit-actual="40000">
+      <div class="bug-row" data-status="done" data-id="P2" data-time-est="35" data-time-actual="30" data-credit-est="40000" data-credit-actual="35000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">F2 — FoodClient: select-mode toggle, checkboxes on items, selected-count action bar.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">P2 — Re-home progress photos into Body module: gallery, compare two side-by-side, upload, delete.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">F2 · Added global selectMode + selectedIds (Set&lt;string&gt;) state on FoodClient (deliberately not scoped per-day, so a saved meal can in principle span days, though in practice selection happens within one DayCard). "Select items" toggle button next to the search box; while active every FoodItemRow shows a checkbox and the whole row becomes tap-to-toggle (inline Edit/Delete hidden during select mode -- bulk delete now covers it). SelectionActionBar appears once count&gt;0: count, "Set meal-time" dropdown, "Save as meal", "Delete selected". Each DayCard also gets a "Select all" convenience link while in select mode, since removing the old whole-day button meant the whole-day case needed a one-click path back.</div>
+        <div class="bug-ref">P2 · New components/os/ProgressPhotosSection.tsx, rebuilt on the recovered ProgressPhotos.tsx logic but converted from raw useState/fetch to TanStack Query (upload/delete mutations, invalidates the existing 'photos' query key already wired in realtimeInvalidation.ts) and given a genuinely new "Compare" mode (tap exactly 2 thumbnails, renders them side-by-side) that didn't exist before. Reuses /api/photos untouched -- private bucket + signed URLs already worked. Wired into BodyClient.tsx next to Measurements.</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="F3" data-time-est="25" data-time-actual="20" data-credit-est="30000" data-credit-actual="22000">
+      <div class="bug-row" data-status="done" data-id="P3" data-time-est="25" data-time-actual="25" data-credit-est="30000" data-credit-actual="28000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">F3 — Meal-time grouping: Breakfast/Lunch/Dinner/Snacks sections per day with calorie+protein subtotals.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">P3 — Re-home visited-countries globe + world clocks onto Main.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">F3 · New MealSection component (own useAutoAnimate instance per section so add/remove animations still work correctly within a section, not just within the whole day). groupByMealTime() buckets each day's items by item.meal if set, else lib/foodMealTime.ts's inferMealTime(created_at) -- a pure, read-only Europe/London hour-bucket function (breakfast &lt;11h, lunch &lt;15h, snack &lt;18h, else dinner). Inference is display-only: it never writes to food_log.meal, only the explicit "Set meal-time" bulk action does that.</div>
+        <div class="bug-ref">P3 · New components/os/GlobeSection.tsx (reuses GlobeGL.tsx unchanged, which survived the grid removal) converted to TanStack Query with an optimistic toggle mutation (tap a country, it flips instantly, rolls back on failure) instead of the old widget's manual setState+fetch. New components/os/WorldClocksSection.tsx, same conversion. Both dropped into MainClient.tsx under a new "World" section. Added visited-countries + world-clocks to the user_preferences row of TABLE_QUERY_KEYS so NLP-driven changes ("add Tokyo to my clocks") stay live. Checked the live DB: this account has zero doses/photos/countries/clocks logged yet, so what's actually exercised right now is the empty-state path for all three -- confirmed each shows a proper LottieEmpty/empty message rather than a blank box; the populated-data rendering needs your own use to see (add a photo, log a dose, tap a country).</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="F4" data-time-est="20" data-time-actual="15" data-credit-est="25000" data-credit-actual="16000">
+      <div class="bug-row" data-status="waiting" data-id="P4" data-time-est="45" data-credit-est="55000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">F4 — Save-as-meal from exact selection; delete-selected; set-meal-time actions wired end to end.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">P4 — Loading &amp; empty states: audit every module/widget, add skeletons + keepPreviousData + friendly empty states.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">F4 · saveMealMutation replaced with saveSelectedAsMealMutation, which builds SavedMealItem[] from ONLY the ticked FoodLogItems (looked up via an itemsById map built from all loaded timeline days) and POSTs to the existing unmodified /api/saved-meals -- zero forked logic, exactly reuses SavedMealItemSchema/createSavedMeal. bulkDeleteMutation -> POST /api/food-log/bulk-delete (window.confirm first, then bulkDeleteFoodItems + recompute, no zeroing). bulkSetMealMutation -> POST /api/food-log/bulk-meal. All three invalidate the correct query keys (food-timeline/food-today/saved-meals) and clear selection (exitSelectMode) on success; errors surface via alert(), never swallowed.</div>
+        <div class="bug-ref"></div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="F5" data-time-est="25" data-time-actual="20" data-credit-est="30000" data-credit-actual="28000">
+      <div class="bug-row" data-status="waiting" data-id="P5" data-time-est="45" data-credit-est="55000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">F5 — Build clean; verify with real evidence (5 foods, select 3, save, quick-add elsewhere); commit, push, verify production.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">P5 — Error resilience: audit main logging/save paths, add error toasts + error boundaries, confirm no silent failures.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">F5 · Ran a throwaway tsx script against the LIVE Supabase project (service-role key, cleaned up after itself) calling the real lib/db/food.ts + lib/db/savedMeals.ts functions end to end: logged 5 real food_log rows for hardwickars@gmail.com on 2026-07-11 (1625 kcal/110.3g protein total), selected exactly 3 (Chicken salad wrap, Greek yoghurt, Salmon+rice), called createSavedMeal -- stored meal contained EXACTLY those 3 items (verified by name diff) with macros 1300 kcal/98g protein/122g carbs/43g fat/12g fibre/27g sugar/2.6g salt, matching the 3-item sum exactly (not the 5-item day total). quickAddSavedMeal onto a DIFFERENT day (2026-07-12) landed exactly those same 3 items and daily_stats for that day read back 1300 kcal/98g protein -- correct. Also exercised bulkDeleteFoodItems on the original day (deleted the 2 NOT-selected items) and confirmed daily_stats recomputed to the remaining-3 total (1300 kcal) rather than zeroing or staying at the stale 5-item total. deleteSavedMeal cleanup confirmed the test meal no longer appears in getSavedMeals. npm run build clean. Committed and pushed; production verified serving the new commit.</div>
+        <div class="bug-ref"></div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="P6" data-time-est="40" data-credit-est="45000">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">P6 — Mobile polish at 390px: chat bar, action bars, tap targets, clipping/overlap across every module.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref"></div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="P7" data-time-est="30" data-credit-est="35000">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">P7 — Perceived speed: optimistic UI pass on logging/tick/save mutations.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref"></div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="P8" data-time-est="30" data-credit-est="35000">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">P8 — Consistency sweep: buttons/spacing/headers/detail-view pattern/theme correctness across all 7 themes.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref"></div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="P9" data-time-est="20" data-credit-est="25000">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">P9 — Build clean; commit+push per task already done along the way; final production verification; PROGRESS.md.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref"></div>
       </div>
 
     </div>
@@ -176,7 +205,7 @@
 </div>
 
 <script>
-  var SESSION_TOKEN_BUDGET = 1800000;
+  var SESSION_TOKEN_BUDGET = 3500000;
 </script>
 <script>
 (function () {

@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { BodyWidget } from '@/components/dashboard/widgets/BodyWidget'
 import { ModulePageClient } from '@/components/os/ModulePageClient'
 import { BodyMeasurementsSection } from '@/components/os/BodyMeasurementsSection'
+import { ProgressPhotosSection } from '@/components/os/ProgressPhotosSection'
 import type { BodyPageData } from '@/lib/pageData/body'
 
 export function BodyClient({ initialData }: { initialData: BodyPageData }) {
@@ -23,6 +24,8 @@ export function BodyClient({ initialData }: { initialData: BodyPageData }) {
       <ModulePageClient w={10} h={9}>
         <BodyWidget recentWorkouts={data.recentWorkouts} activeInjuries={data.activeInjuries} recoveryMap={data.recoveryMap} />
       </ModulePageClient>
+
+      <ProgressPhotosSection />
 
       <div>
         <p className="text-xs font-semibold text-text-muted uppercase tracking-widest mb-2">Measurements</p>

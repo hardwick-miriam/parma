@@ -10,6 +10,7 @@ import { ModulePageClient } from '@/components/os/ModulePageClient'
 import { TappableWidget } from '@/components/os/TappableWidget'
 import { MoodCorrelationsSection } from '@/components/os/MoodCorrelationsSection'
 import { DoseDueBanner } from '@/components/os/DoseDueBanner'
+import { MounjaroHistorySection } from '@/components/os/MounjaroHistorySection'
 import type { HealthPageData } from '@/lib/pageData/health'
 
 export function HealthClient({ initialData }: { initialData: HealthPageData }) {
@@ -33,6 +34,7 @@ export function HealthClient({ initialData }: { initialData: HealthPageData }) {
       <h1 className="text-2xl font-bold text-text">Health</h1>
 
       {mounjaroEnabled && <DoseDueBanner mounjaroEnabled={mounjaroEnabled} />}
+      {mounjaroEnabled && <MounjaroHistorySection />}
 
       <RecoveryWidget stats={stats} health={health} whoop={whoop} />
 

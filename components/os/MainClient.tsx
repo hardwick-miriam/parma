@@ -16,6 +16,8 @@ import { ModulePageClient } from '@/components/os/ModulePageClient'
 import { TappableWidget } from '@/components/os/TappableWidget'
 import { OnboardingTour } from '@/components/OnboardingTour'
 import { DoseDueBanner } from '@/components/os/DoseDueBanner'
+import { GlobeSection } from '@/components/os/GlobeSection'
+import { WorldClocksSection } from '@/components/os/WorldClocksSection'
 import type { MainPageData } from '@/lib/pageData/main'
 
 interface MainClientProps {
@@ -303,6 +305,15 @@ export function MainClient({ initialData, briefing }: MainClientProps) {
           </TappableWidget>
         </div>
       )}
+
+      {/* World: visited-countries globe + world clocks */}
+      <div>
+        <p className="text-xs font-semibold text-text-muted uppercase tracking-widest mb-2">World</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <GlobeSection />
+          <WorldClocksSection />
+        </div>
+      </div>
 
       {/* 6. Streak / consistency counter */}
       {loggingStreak >= 2 && (
