@@ -8,6 +8,7 @@ import { MODULES } from './os/Sidebar'
 
 interface CommandPaletteProps {
   onQuickLog?: (text: string) => void
+  onAskQuestion?: (text: string) => void
   onToggleEditMode?: () => void
   onSyncWhoop?: () => void
   editMode?: boolean
@@ -23,10 +24,11 @@ const THEMES: Array<{ id: Theme; label: string }> = [
   { id: 'synthwave', label: 'Synthwave' },
 ]
 
-export function CommandPalette({ onQuickLog, onToggleEditMode, onSyncWhoop, editMode }: CommandPaletteProps) {
+export function CommandPalette({ onQuickLog, onAskQuestion, onToggleEditMode, onSyncWhoop, editMode }: CommandPaletteProps) {
   const [open, setOpen] = useState(false)
   const [logInput, setLogInput] = useState('')
-  const [mode, setMode] = useState<'default' | 'log' | 'theme'>('default')
+  const [askInput, setAskInput] = useState('')
+  const [mode, setMode] = useState<'default' | 'log' | 'ask' | 'theme'>('default')
   const { setTheme } = useTheme()
   const router = useRouter()
 
@@ -61,6 +63,14 @@ export function CommandPalette({ onQuickLog, onToggleEditMode, onSyncWhoop, edit
     setOpen(false)
     setMode('default')
     setLogInput('')
+  }
+
+  function submitAsk() {
+    if (!askInput.trim()) return
+    onAskQuestion?.(askInput.trim())
+    setOpen(false)
+    setMode('default')
+    setAskInput('')
   }
 
   if (!open) {
@@ -114,6 +124,28 @@ export function CommandPalette({ onQuickLog, onToggleEditMode, onSyncWhoop, edit
               Log
             </button>
           </div>
+        ) : mode === 'ask' ? (
+          <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
+            <span className="text-xs text-text-muted shrink-0">Ask:</span>
+            <input
+              autoFocus
+              value={askInput}
+              onChange={(e) => setAskInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') submitAsk()
+                if (e.key === 'Escape') { setMode('default'); setAskInput('') }
+              }}
+              placeholder="when did I last squat 100kg?"
+              className="flex-1 bg-transparent outline-none text-sm text-text placeholder:text-text-muted"
+            />
+            <button
+              onClick={submitAsk}
+              className="text-xs px-2 py-1 rounded font-medium"
+              style={{ background: 'var(--accent)', color: '#fff' }}
+            >
+              Ask
+            </button>
+          </div>
         ) : (
           <Command.Input
             autoFocus
@@ -131,6 +163,7 @@ export function CommandPalette({ onQuickLog, onToggleEditMode, onSyncWhoop, edit
 
             <Command.Group heading="Log" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:text-text-muted">
               <CmdItem icon="✏️" label="Quick log" onSelect={() => setMode('log')} />
+              {onAskQuestion && <CmdItem icon="🔎" label="Ask a question about my data" onSelect={() => setMode('ask')} />}
             </Command.Group>
 
             <Command.Group heading="Go to module" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:text-text-muted">

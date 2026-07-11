@@ -203,6 +203,21 @@ export const JournalPayloadSchema = z.object({
   content: z.string().optional(),
 })
 
+// ── natural-language search (feature 9) ───────────────────────────────────────
+// Intent-parse output for /api/query — translates a free-text question into
+// structured parameters for a real, targeted DB query. Never used to answer
+// the question directly (no raw rows are ever sent back to the model).
+export const ParsedQuestionSchema = z.object({
+  intent: z.enum(['exercise_threshold_date', 'rest_day_count', 'food_on_sick_day', 'metric_extreme', 'general_fallback']),
+  exercise: z.string().optional(),
+  weight_kg: z.number().positive().optional(),
+  period_start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  period_end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  metric: z.enum(['recovery_score', 'steps', 'sleep_hours', 'calories', 'weight_kg', 'strain', 'hrv']).optional(),
+  direction: z.enum(['max', 'min']).optional(),
+})
+export type ParsedQuestion = z.infer<typeof ParsedQuestionSchema>
+
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 export function validateOrThrow<T>(schema: z.ZodSchema<T>, data: unknown, label: string): T {

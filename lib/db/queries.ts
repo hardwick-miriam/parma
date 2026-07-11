@@ -106,8 +106,8 @@ export async function getRecentWorkouts(userId: string, days = 30, client?: Supa
   return data ?? []
 }
 
-export async function getHealthStatus(userId: string): Promise<HealthStatus | null> {
-  const supabase = await createClient()
+export async function getHealthStatus(userId: string, client?: SupabaseClient): Promise<HealthStatus | null> {
+  const supabase = client ?? (await createClient())
 
   const { data, error } = await supabase
     .from('health_status')

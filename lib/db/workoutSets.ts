@@ -236,6 +236,28 @@ export async function getExerciseStats(
   }
 }
 
+/** Most recent set at or above a weight threshold — used by the NL-search "when did I last squat 100kg" intent. */
+export async function getLastDateAtWeight(
+  userId: string,
+  exerciseName: string,
+  minWeight: number,
+  client?: SupabaseClient
+): Promise<{ date: string; weight: number; reps: number } | null> {
+  const supabase = client ?? (await createClient())
+  const { data, error } = await supabase
+    .from('workout_sets')
+    .select('weight, reps, logged_at')
+    .eq('user_id', userId)
+    .ilike('exercise_name', `%${exerciseName}%`)
+    .gte('weight', minWeight)
+    .eq('is_warmup', false)
+    .order('logged_at', { ascending: false })
+    .limit(1)
+  if (error) throw error
+  if (!data?.length) return null
+  return { date: data[0].logged_at.slice(0, 10), weight: data[0].weight, reps: data[0].reps }
+}
+
 export interface TrendPoint {
   date: string
   topWeight: number

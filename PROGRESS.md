@@ -1184,3 +1184,10 @@ Main/Health (real push wiring added to the existing daily cron, previously dead 
 side-effect correlations via the same plain-stats engine as mood correlations. Real account
 honestly has mounjaro_enabled=true but 0 doses logged (reported as insufficient data); correlation
 logic separately proven with synthetic data, cleaned up. See board.html E4 for full evidence.
+
+**DONE Task 5 — Natural-language search.** Replaced /api/query's raw-data-dump approach with a
+real parse-intent (one cheap AI call) -> targeted query -> plain-English-in-code pipeline. Found
+and fixed the existing chat-bar Q&A entry point (used across every module) rather than building a
+new surface; added a dedicated Ask mode to CommandPalette. Verified with the 3 example questions
+plus a 4th against real (sparse) account data, honestly reported "no data" where true, then proved
+the pipeline with cleaned-up synthetic data. See board.html E5 for full evidence.

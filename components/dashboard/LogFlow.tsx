@@ -34,20 +34,12 @@ export function LogFlow({ moduleContext, placeholder }: { moduleContext?: string
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question }),
       })
-      if (!res.ok || !res.body) {
-        setQna({ question, answer: 'Failed to get answer — try again.', loading: false })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setQna({ question, answer: data.error ?? 'Failed to get answer — try again.', loading: false })
         return
       }
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-      let accumulated = ''
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        accumulated += decoder.decode(value, { stream: true })
-        setQna({ question, answer: accumulated, loading: true })
-      }
-      setQna((prev) => prev ? { ...prev, loading: false } : null)
+      setQna({ question, answer: data.answer ?? 'No answer returned.', loading: false })
     } catch {
       setQna({ question, answer: 'Could not connect — check your network.', loading: false })
     }
