@@ -35,7 +35,6 @@
     "react-activity-calendar": "^3.2.0",
     "react-dom": "19.2.4",
     "react-globe.gl": "^2.38.0",
-    "react-grid-layout": "^2.2.3",
     "react-simple-maps": "^3.0.0",
     "recharts": "^3.9.0",
     "satori": "^0.26.0",

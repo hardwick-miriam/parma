@@ -170,7 +170,6 @@ export function CommandPalette({ onQuickLog, onAskQuestion, onToggleEditMode, on
               {MODULES.map((m) => (
                 <CmdItem key={m.href} icon={m.icon} label={m.label} onSelect={() => runAndClose(() => router.push(m.href))} />
               ))}
-              <CmdItem icon="📊" label="Grid (bento dashboard)" onSelect={() => runAndClose(() => router.push('/grid'))} />
             </Command.Group>
 
             <Command.Group heading="Navigate" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:text-text-muted">

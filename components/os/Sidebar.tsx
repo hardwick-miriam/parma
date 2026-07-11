@@ -18,10 +18,6 @@ export const MODULES: { href: string; label: string; icon: string }[] = [
   { href: '/settings', label: 'Settings', icon: '⚙️' },
 ]
 
-// Kept reachable but deliberately separate from the 9 named modules — this is
-// the pre-existing bento grid, not part of the new module set.
-const GRID_ITEM = { href: '/grid', label: 'Grid', icon: '📊' }
-
 function isActive(pathname: string, href: string): boolean {
   return href === '/' ? pathname === '/' : pathname.startsWith(href)
 }
@@ -65,20 +61,6 @@ export function Sidebar() {
             )
           })}
         </div>
-
-        <div className="pt-3 mt-3 border-t" style={{ borderColor: 'var(--border)' }}>
-          <Link
-            href={GRID_ITEM.href}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors"
-            style={{
-              background: isActive(pathname, GRID_ITEM.href) ? 'var(--accent-dim)' : 'transparent',
-              color: isActive(pathname, GRID_ITEM.href) ? 'var(--accent)' : 'var(--text-subtle)',
-            }}
-          >
-            <span className="text-base w-5 text-center shrink-0" aria-hidden>{GRID_ITEM.icon}</span>
-            {GRID_ITEM.label}
-          </Link>
-        </div>
       </nav>
 
       {/* Bottom tab bar — narrow/mobile widths, icons only, scrollable */}
@@ -96,7 +78,7 @@ export function Sidebar() {
         }}
         aria-label="Module navigation"
       >
-        {[...MODULES, GRID_ITEM].map((m) => {
+        {MODULES.map((m) => {
           const active = isActive(pathname, m.href)
           return (
             <Link

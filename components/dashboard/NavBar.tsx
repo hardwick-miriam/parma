@@ -5,10 +5,10 @@ import { usePathname } from 'next/navigation'
 
 // Food/Wardrobe/Settings moved into the new module shell (see app/(os)/) —
 // this bar now only covers what's still exclusively served by the old
-// top-nav chrome. "Dashboard" points at /grid (the old bento content's new
-// home) since / itself is just a redirect into the new shell's Main page.
+// top-nav chrome. The old "Dashboard" item pointed at /grid, which is
+// retired (redirects to /main); removed rather than repointed since
+// "→ New OS" already goes to the same place.
 const ITEMS = [
-  { href: '/grid', label: 'Dashboard' },
   { href: '/insights', label: 'Insights' },
   { href: '/review', label: 'Review' },
   { href: '/main', label: '→ New OS' },

@@ -1336,3 +1336,40 @@ subscription test proving the exact named flow, cleaned up.
 **Needs your eyes:** the actual no-flash visual behaviour needs your own confirmation, as you said
 — what I've verified is the underlying mechanism (subscriptions genuinely fire, the correct query
 keys get invalidated), not pixels on screen.
+
+---
+
+## Retire the old bento dashboard (2026-07-11, later session)
+
+**All 5 steps done.** Surgical removal, verified before deleting anything.
+
+### What got removed vs kept
+
+**Removed (confirmed grid-only by grepping every importer, not assumed):** the `/grid` route's
+real content, `DashboardGrid.tsx` itself (react-grid-layout, the drag/resize edit-mode, the
+add/remove widget catalog, layout persistence — all lived in one file), the `/api/layout` save
+endpoint, 22 standalone widgets/helpers that had exactly one importer (DashboardGrid), and the
+`react-grid-layout` npm package.
+
+**Kept (genuinely shared, confirmed by the same grep):** every widget a module page actually
+renders (WhoopWidget, BodyWidget, PRTrackerWidget, TrainingLoadWidget, SleepDebtWidget,
+HeatmapWidget, MediaWidget, JournalWidget, RecoveryWidget, InjuryWidget, HealthStatusWidget,
+WeatherWidget), the tap-to-detail sheet system (`WidgetDetailSheets.tsx`, including `GlobeGL.tsx`
+which looked grid-only but is also used by a sheet inside that shared file), `GridItemSizeContext`,
+and the `hidden_widgets` column/reads (genuinely used by Main/Health/Gym to decide what to show —
+only its *write* path, the grid's hide button, went away).
+
+### What still needs a decision from you
+Three grid-only widgets represented features with no home anywhere else once their card was gone:
+**World Clocks + the visited-countries map, viewing progress photos, and browsing Mounjaro dose/
+side-effect history.** None of the underlying data or NLP logging was touched or lost — you can
+still say "add Tokyo to my clocks" or log a Mounjaro dose exactly as before — there's just nowhere
+in the module OS to *look* at that data anymore. Flagged, not fixed, since building new module-OS
+UI wasn't part of "retire the grid."
+
+### Evidence trail
+`npm run build` succeeded on the first attempt after all 25 deletions — the dependency map was
+right. Every module page's imports re-checked post-removal and confirmed to reference only kept
+components. `/grid` now `redirect()`s to `/main` instead of 404ing. CLAUDE.md updated to describe
+the module OS as the single dashboard and to correct two other claims that had gone stale
+(RealtimeSync's table count, hidden_widgets' read-only status).

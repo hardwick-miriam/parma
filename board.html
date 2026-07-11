@@ -96,12 +96,12 @@
 <body>
 <div class="wrap">
   <header>
-    <h1><span class="brand">Parma</span> — Live Data Sync, No Flash</h1>
-    <p class="subtitle">Replacing RealtimeSync's full-route router.refresh() with targeted TanStack Query cache invalidation, and converting server-only pages to invalidatable client queries, so logging anywhere updates every open page/widget instantly with no flicker.</p>
+    <h1><span class="brand">Parma</span> — Retire the Old Bento Grid</h1>
+    <p class="subtitle">Surgically removing /grid and its grid-only machinery (react-grid-layout, drag/resize, the widget catalog, layout persistence) while keeping every shared component the module OS actually uses untouched.</p>
   </header>
 
   <div class="overall-card">
-    <div class="overall-count"><span class="num" id="overall-num">0</span><span class="label">of <span id="overall-total">6</span> done</span></div>
+    <div class="overall-count"><span class="num" id="overall-num">0</span><span class="label">of <span id="overall-total">5</span> done</span></div>
     <div class="progress-track"><div class="progress-fill" id="overall-progress"></div></div>
     <div class="overall-breakdown" id="overall-breakdown"></div>
     <div class="status-banner" id="done-banner">✓ All steps resolved — board is no longer auto-refreshing.</div>
@@ -131,46 +131,39 @@
     <div class="tier-header"><div class="tier-title"><span class="tier-badge">Session steps</span></div></div>
     <div class="bug-list" data-tier="steps">
 
-      <div class="bug-row" data-status="done" data-id="F1" data-time-est="35" data-time-actual="45" data-credit-est="50000" data-credit-actual="60000">
+      <div class="bug-row" data-status="done" data-id="G1" data-time-est="30" data-time-actual="35" data-credit-est="40000" data-credit-actual="48000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">F1 — Rewrite RealtimeSync core: router.refresh() -> queryClient.invalidateQueries(), full table coverage.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">G1 — Map dependencies: grid-only vs shared, verified by grep, not guessed.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">F1 · Confirmed router.refresh() was the actual flash cause -- it re-fetches/re-renders the ENTIRE current route's server payload on every change regardless of which table fired, so unrelated widgets went through a loading cycle together. Replaced with a debounced (500ms, unchanged) handler that collects which tables changed and invalidates the UNION of their mapped TanStack query keys once -- old data stays on screen the whole time, only the actually-affected queries refetch. Built lib/realtimeInvalidation.ts as the single table -> queryKey(s) map. CRITICAL finding: only the original 9 tables were ever added to the supabase_realtime publication -- everything built in the last two sessions (food_log, workout_sets, whoop_metrics, body_measurements, saved_meals, learning_items, all 3 finance tables, mounjaro_doses/effects, wardrobe_items/wears, personal_records, insights, injury_checkins) was silently never firing realtime events at all, with no error. Migration 030 adds all 17 missing tables to the publication, run live+verified (26 tables now published, confirmed via pg_publication_tables).</div>
+        <div class="bug-ref">G1 · For every one of DashboardGrid.tsx's ~35 imports, grepped the whole repo for other importers. Result: 23 widget/helper files have EXACTLY ONE importer (DashboardGrid.tsx itself) -- genuinely grid-only. 15 have 2+ importers (HealthStatusWidget, InjuryWidget, WeatherWidget, MediaWidget, RecoveryWidget, WhoopWidget, JournalWidget, BodyWidget, PRTrackerWidget, TrainingLoadWidget, SleepDebtWidget, HeatmapWidget, GridItemSizeContext, CommandPalette, WidgetDetailSheets.tsx) -- shared, kept untouched. Two subtle findings caught by grepping rather than assuming: (1) GlobeGL.tsx looked grid-only via GlobeWidget.tsx, but WidgetDetailSheets.tsx (shared) also renders it directly for its own GlobeDetail sheet -- kept. (2) hidden_widgets in user_preferences is read by the NEW module pages (Main/Health/Gym gate weather/heatmap/whoop/sleepdebt/trainload/prtracker on it) even though only the grid's edit-mode ever WROTE it -- kept the column/reads, only removed the write path (which lived in the deleted DashboardGrid + /api/layout).</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="F2" data-time-est="40" data-time-actual="35" data-credit-est="60000" data-credit-actual="55000">
+      <div class="bug-row" data-status="done" data-id="G2" data-time-est="40" data-time-actual="35" data-credit-est="55000" data-credit-actual="50000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">F2 — Convert Main to TanStack Query with initialData (calorie ring, rings, vitals, training status).</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">G2 — Remove grid-only code: route, DashboardGrid, 23 grid-only widgets/helpers, /api/layout, react-grid-layout dependency.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">F2 · Extracted Main's entire data computation (unchanged logic) into lib/pageData/main.ts, called from both the server page (first paint) and a new /api/main-summary route (client refetch). MainClient now wraps it in useQuery keyed 'main-summary' with initialData = the server props -- instant first paint, and RealtimeSync invalidating that key triggers a background refetch with the old numbers staying on screen until the new ones resolve. Briefing (cron-cached once/day) deliberately kept OUTSIDE the live-refetch bundle.</div>
+        <div class="bug-ref">G2 · Deleted app/api/layout/route.ts, components/dashboard/DashboardGrid.tsx (react-grid-layout usage, WIDGET_CATALOG, WidgetCatalogPanel, mergeLayouts/DEFAULT_LG/DEFAULT_SM, drag/resize/edit-mode, postLayout/hideWidget/showWidget all lived in this one file), and 22 standalone grid-only files confirmed by grep to have exactly one importer (DashboardGrid.tsx): Nutrition/Steps/Workouts/Mood/Sleep/Hydration/Weight/Supplements/Habits/Timeline/Mounjaro/WorldClocks/Insights/HabitGarden widgets, the bento-only Wardrobe + NetWorth catalog widgets (module pages use their own richer WardrobeClient/FinancesClient), Nudges, SummaryCard, DetailView, ProgressPhotos, GlobeWidget, WeatherFullBackground, MilestoneToast, lib/milestones.ts, lib/comparison.ts. Uninstalled react-grid-layout via npm uninstall (package.json + package-lock.json both confirmed clean of it afterward). npm run build succeeded on the FIRST attempt after all deletions -- no missed reference.</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="F3" data-time-est="50" data-time-actual="55" data-credit-est="75000" data-credit-actual="80000">
+      <div class="bug-row" data-status="done" data-id="G3" data-time-est="25" data-time-actual="20" data-credit-est="30000" data-credit-actual="24000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">F3 — Convert Health, Gym, Body pages to the same live-query pattern.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">G3 — Redirect everything pointing at /grid to Main; add /grid -> / passthrough for old bookmarks.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">F3 · Same extract-shared-function + thin API route + useQuery-with-initialData pattern applied to Health (new HealthClient.tsx, /api/health-summary), Gym (new GymClient.tsx, /api/gym-summary), and Body (new BodyClient.tsx, /api/body-summary) -- no logic forked, each new lib/pageData/*.ts file is the exact same computation the old page.tsx did inline. MoodCorrelationsSection/DoseDueBanner/BodyMeasurementsSection/LiveLogger/RoutineSection were already independently self-fetching via their own query keys, left untouched.</div>
+        <div class="bug-ref">G3 · Removed Sidebar's separate "Grid" nav entry (desktop rail + mobile tab bar -- was rendered outside the MODULES array). Removed CommandPalette's "Grid (bento dashboard)" ⌘K command. Fixed the legacy top-nav NavBar (used only by the still-standalone /insights and /review pages) -- its "Dashboard" item pointed at /grid; removed it since "→ New OS" already goes to /main. Rewrote app/(os)/grid/page.tsx as a one-line redirect() to /main instead of deleting the route, so an old bookmark/shared link lands on Main instead of 404ing. Updated two now-stale comments (root page.tsx, grid/page.tsx) that referenced the removed DashboardGrid. Final repo-wide grep for '/grid' string literals: zero remaining hits anywhere in app/components/lib.</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="F4" data-time-est="20" data-time-actual="20" data-credit-est="25000" data-credit-actual="25000">
+      <div class="bug-row" data-status="done" data-id="G4" data-time-est="20" data-time-actual="18" data-credit-est="25000" data-credit-actual="20000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">F4 — Convert MediaWidget + PRTrackerWidget from fetch-in-useEffect to useQuery.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">G4 — Clean up dead imports, verify no unused-column removal was unsafe, update CLAUDE.md.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">F4 · Both were the only remaining plain useState/useEffect/fetch widgets on the new module pages -- neither was invalidatable by any cache mechanism before. Converted to useQuery(['media']) / useQuery(['personal-records']) with useMutation for delete/save, invalidating on success. PRTrackerWidget now also updates live when a PR is auto-detected by the live workout logger (same 'personal-records' key), not just on a manual add.</div>
+        <div class="bug-ref">G4 · Verified BEFORE touching either: hidden_widgets is genuinely read by lib/pageData/main.ts, health.ts, gym.ts (module OS gates weather/heatmap/whoop/sleepdebt/trainload/prtracker on it) -- kept the column, its type in lib/db/preferences.ts, and all 3 reads untouched; only its one write path (grid's edit-mode "hide" button, inside the deleted DashboardGrid + /api/layout) is gone. layouts (react-grid-layout position data) is read only by the now-redirect grid page (removed) and diagnostically by app/api/whoop/debug/route.ts, which was NOT touched. Post-deletion repo-wide grep found only harmless residue: 3 comment-only mentions of "DashboardGrid" (historical), a "StepsWidget" mention inside a WeatherWidget.tsx comment, "ProgressPhotos"/"getProgressPhotos" in lib/db/photos.ts + its API route (a genuinely different, still-functional data feature, not the deleted widget component), and an "InsightsWidget.tsx" mention inside a WidgetDetailSheets.tsx comment -- none are broken imports. Rewrote CLAUDE.md's architecture section to describe the module OS as the single dashboard, corrected two other stale claims found in passing (RealtimeSync's sharp-edge note still said "9 tables, not whoop_metrics" -- wrong since last session's fix; documented the hidden_widgets/layouts read-only status).</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="F5" data-time-est="20" data-time-actual="20" data-credit-est="25000" data-credit-actual="22000">
+      <div class="bug-row" data-status="done" data-id="G5" data-time-est="30" data-time-actual="30" data-credit-est="35000" data-credit-actual="32000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">F5 — Wire Journal to the same live-query pattern.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">G5 — Sanity check every module page still renders its widgets; build clean; verify production.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">F5 · Converted the notes fetch to useQuery(['journal-notes']), merged with local in-progress edits so an external invalidation can never clobber a note the user is actively mid-typing (guarded by the existing per-date debounce-timer map). stats/workouts/history remain page-rendered props, refreshed on navigation -- documented honestly as the one remaining manual-refresh case, since Journal's core interaction (typing a note) doesn't need sub-second cross-device sync the way food/workout logging does.</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="F6" data-time-est="20" data-time-actual="25" data-credit-est="25000" data-credit-actual="30000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">F6 — QueryProvider defaults, build clean, trace + verify the food-log -> Main-ring flow, commit/push/verify production.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">F6 · Flipped refetchOnWindowFocus to true globally (was false) as the gentle fallback the brief explicitly allowed -- background-only refetch, never clears existing data, so it can't introduce a flash of its own. REAL end-to-end proof of the exact named flow: subscribed to the identical postgres_changes pattern RealtimeSync uses, wrote a real food_log row + upserted daily_stats (exactly what logging food does), confirmed BOTH events were genuinely received, then ran them through the real TABLE_QUERY_KEYS map and confirmed the union includes 'main-summary' (Main's ring query), 'food-today', and 'food-timeline' -- the precise chain from a food log to Main's calorie ring updating. Fully cleaned up and independently re-verified.</div>
+        <div class="bug-ref">G5 · Grepped every module page's + its Client component's imports (Main/Health/Gym/Body/Media/Journal/Finances -- Food/Wardrobe/Settings have their own dedicated Client components with no dashboard/widgets imports at all) and confirmed every single widget import resolves to a component on the KEPT/shared list, zero references to anything deleted. Final clean build. Flagged (not fixed, out of scope for a grid-removal task): World Clocks + visited-countries map, progress-photo viewing, and Mounjaro dose/effects history browsing now have no UI anywhere -- their only home was the bento grid's widget cards; the underlying data/NLP logging for all three still works fine, only the "view it as a card" UI is gone. Worth a future session if wanted.</div>
       </div>
 
     </div>
