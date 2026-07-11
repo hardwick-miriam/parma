@@ -314,11 +314,11 @@
         <div class="bug-ref">D5 · Found 2 of the tour's 3 target elements already existed unchanged in the new shell (data-tour="log-input" is on LogInput.tsx's wrapper div, reused as-is by ContextualLogBar; data-tour="command-palette" is on CommandPalette.tsx, still mounted via PaletteWrapper in app/(os)/layout.tsx) -- only "dashboard-grid" was missing, since that attribute only ever existed on the old DashboardGrid.tsx. Added it to Main's rings section in MainClient.tsx and updated that step's copy (was "Drag widgets to rearrange them", stale for the new non-drag-and-drop Main) to describe the actual new layout. Mounted <OnboardingTour /> in MainClient -- confirmed via grep this is now the only mount site, and confirmed / redirects to /main (app/(dashboard)/page.tsx), so a fresh user's very first page load has all 3 target elements present together. driver.js dependency confirmed still in package.json (never removed despite the component going unused). No browser available to click through the actual popovers -- flagged as a caveat.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="D6" data-time-est="15" data-credit-est="20000">
+      <div class="bug-row" data-status="done" data-id="D6" data-time-est="15" data-time-actual="12" data-credit-est="20000" data-credit-actual="15000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">MAJOR — gate WhoopWidget behind whoopConnected on the Health page.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">D6</div>
+        <div class="bug-ref">D6 · One-line fix: changed the condition from !hiddenWidgets.has('whoop') to whoopConnected && !hiddenWidgets.has('whoop'), matching the old DashboardGrid's gate exactly. REAL evidence this wasn't a hypothetical: queried the actual test account's whoop_connections table directly -- 0 rows, meaning this account has never connected WHOOP and was concretely hitting this exact bug (a permanent placeholder card full of "-") before this fix. The "connected" branch is unchanged behavior (WhoopWidget still renders correctly for any account that has connected, provable since only the new whoopConnected && prefix was added, nothing else in that render path changed).</div>
       </div>
 
       <div class="bug-row" data-status="waiting" data-id="D7" data-time-est="20" data-credit-est="25000">

@@ -41,7 +41,7 @@ export default async function HealthPage() {
 
       <RecoveryWidget stats={stats} health={health} whoop={whoopToday} />
 
-      {!hiddenWidgets.has('whoop') && (
+      {whoopConnected && !hiddenWidgets.has('whoop') && (
         <TappableWidget widgetId="whoop" whoopHistory={whoopHistory}>
           <ModulePageClient w={8} h={5}>
             <WhoopWidget today={whoopToday} history={whoopHistory} />
