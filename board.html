@@ -96,12 +96,12 @@
 <body>
 <div class="wrap">
   <header>
-    <h1><span class="brand">Parma</span> — Body Figure, Chat Bar, Foods, Saved Meals, Main Upgrade + Consistency Pass + Bugfix Round</h1>
-    <p class="subtitle">Real body artwork + overlay, contextual chat bar per module, editable food items, saved meals, a full Main command-centre rebuild with an AI daily briefing, a follow-up consistency/tap-to-detail/settings pass, a fresh bug audit, and now fixing the 2 critical + 4 major bugs it found.</p>
+    <h1><span class="brand">Parma</span> — Seven New Features</h1>
+    <p class="subtitle">Body measurements, reading tracker, mood correlations, Mounjaro timing intelligence, natural-language search, a new Finances module, and the live workout logger — verified and gap-filled where it already existed.</p>
   </header>
 
   <div class="overall-card">
-    <div class="overall-count"><span class="num" id="overall-num">0</span><span class="label">of <span id="overall-total">29</span> done</span></div>
+    <div class="overall-count"><span class="num" id="overall-num">0</span><span class="label">of <span id="overall-total">8</span> done</span></div>
     <div class="progress-track"><div class="progress-fill" id="overall-progress"></div></div>
     <div class="overall-breakdown" id="overall-breakdown"></div>
     <div class="status-banner" id="done-banner">✓ All steps resolved — board is no longer auto-refreshing.</div>
@@ -131,209 +131,62 @@
     <div class="tier-header"><div class="tier-title"><span class="tier-badge">Session steps</span></div></div>
     <div class="bug-list" data-tier="steps">
 
-      <div class="bug-row" data-status="done" data-id="S1" data-time-est="40" data-time-actual="45" data-credit-est="70000" data-credit-actual="85000">
+      <div class="bug-row" data-status="waiting" data-id="E1" data-time-est="60" data-credit-est="90000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">TASK 1a — Body figure: locate the real PNGs, copy into public/, calibrate muscle-zone coordinates against the actual artwork (not eyeballed).</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 1 — Body measurements: migration + NLP (cm/inches) + Body module trend graphs.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S1 · found + recon</div>
+        <div class="bug-ref">E1</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S2" data-time-est="35" data-time-actual="30" data-credit-est="55000" data-credit-actual="48000">
+      <div class="bug-row" data-status="waiting" data-id="E2" data-time-est="60" data-credit-est="90000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">TASK 1b — Rebuild BodyWidget entirely on the real images + SVG overlay, delete the old hand-coded outline/lines, verify glow alignment for real.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 2 — Reading/learning tracker: migration + NLP + Media module sections.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S2 · new BodyWidget</div>
+        <div class="bug-ref">E2</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S3" data-time-est="15" data-time-actual="12" data-credit-est="20000" data-credit-actual="16000">
+      <div class="bug-row" data-status="waiting" data-id="E3" data-time-est="50" data-credit-est="70000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">TASK 2 — Weather restored to Main, live conditions confirmed.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 3 — Mood correlations via the existing insights engine (no new AI calls).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S3 · WeatherWidget (unmodified, existing component) added to MainClient.tsx. Confirmed the underlying Open-Meteo API returns genuine live current conditions (23.6°C, 22:45 today, correctly night) — the browser geolocation half can't be exercised without a browser, but the data source is verified live.</div>
+        <div class="bug-ref">E3</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S4" data-time-est="40" data-time-actual="35" data-credit-est="60000" data-credit-actual="55000">
+      <div class="bug-row" data-status="waiting" data-id="E4" data-time-est="55" data-credit-est="80000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">TASK 3a — Shared contextual chat/log bar component (voice + barcode affordances preserved), restored to Main.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 4 — Mounjaro timing intelligence: due reminders + correlations.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S4 · ContextualLogBar reuses the existing LogFlow/LogInput (voice, barcode, offline queue, Q&A all preserved unmodified) in a fixed bottom bar mounted once in app/(os)/layout.tsx — covers Main + every module. Build clean.</div>
+        <div class="bug-ref">E4</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S5" data-time-est="30" data-time-actual="28" data-credit-est="45000" data-credit-actual="41000">
+      <div class="bug-row" data-status="waiting" data-id="E5" data-time-est="55" data-credit-est="85000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">TASK 3b — Chat bar on every module with a soft context bias (Food/Health/Media/Wardrobe/Journal/Gym), parse pipeline accepts the bias without hard-restricting.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 5 — Natural-language search: real intent-parse -> query -> summary pipeline.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S5 · lib/moduleContext.ts single source of truth, threaded through ParseLogPayloadSchema -> /api/parse-log -> ClaudeProvider system prompt as a soft nudge line. REAL test: "ate a chicken wrap for lunch" submitted with moduleContext=health still correctly extracted a full foods[] array — bias does not suppress genuine signal, the one property that mattered most.</div>
+        <div class="bug-ref">E5</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S6" data-time-est="35" data-time-actual="32" data-credit-est="50000" data-credit-actual="46000">
+      <div class="bug-row" data-status="waiting" data-id="E6" data-time-est="75" data-credit-est="110000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">TASK 4 — Edit/delete individual food items with correct day-total recompute (no zeroing, no silent failure).</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 6 — Finances module: accounts/holdings + debts, net worth, allocation, payoff projections, NLP.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S6 · recomputeDailyFoodMacros (sums all food_log rows for the date, only touches the 7 macro columns, aborts on read failure per the C6/C7 precedent) + PATCH/DELETE /api/food-log/[id] + inline edit/delete UI on every food row. REAL test against prod: logged 3 foods, edited the wrap (400->450kcal), deleted the curry, porridge untouched (150kcal/5g confirmed), daily_stats recomputed to exactly 600kcal/35g protein (MATCH). Full cleanup verified.</div>
+        <div class="bug-ref">E6</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S7" data-time-est="40" data-time-actual="42" data-credit-est="60000" data-credit-actual="58000">
+      <div class="bug-row" data-status="waiting" data-id="E7" data-time-est="45" data-credit-est="60000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">TASK 5 — saved_meals table (migration live+verified), save/quick-add UI, NLP quick-add via the food chat bar.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">TASK 7 — Live workout logger: verify existing build + fill genuine gaps only.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S7 · migration 025 run live + verified. "Save as meal" from a day's logged group, quick-add cards on Food page, zero-AI-cost NLP match (lib/savedMealMatch.ts) wired into /api/parse-log for moduleContext=food, deliberately narrow trigger (log/add + my/the only, not "had") to avoid hijacking genuine food logs. REAL test: saved a 3-item meal, matched "log my usual breakfast" correctly, confirmed "had a chicken wrap for lunch" does NOT match (safety check), quick-added on a different day (2 days back) -- all 3 items + macros landed exactly, daily_stats totaled correctly (260kcal/6.6g). Full cleanup verified.</div>
+        <div class="bug-ref">E7 · Recon already shows this is substantially built (LiveLogger.tsx + workout_sets migration 024 exist with exercise picker, tap rep selector, log/edit/delete, recommendation, stats row, trend, history, PR confetti) — treating this as verify+gap-fill, not build-from-scratch.</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S8" data-time-est="45" data-time-actual="55" data-credit-est="70000" data-credit-actual="88000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">TASK 6a — AI daily briefing: briefings table (migration live+verified), one cached call/day, cron after WHOOP sync, graceful fallback.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">S8 · migration 026 run live + verified. New daily cron (0 7 * * *, still daily -- Hobby-plan compliant) calls lib/dailyBriefing.ts once/day, Main only ever reads the cache via GET /api/briefing (zero-cost). REAL test: with the account's genuine (empty) "yesterday" data, correctly returned null (graceful fallback, no wasted AI call) -- then with a realistic inserted test "yesterday" row, produced a genuinely sharp, specific 2-sentence briefing using real numbers ("ran a calorie deficit of roughly 350-400 kcal on a heavy leg day..."), persisted and re-read correctly, then fully cleaned up.</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="S9" data-time-est="15" data-time-actual="18" data-credit-est="20000" data-credit-actual="24000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">TASK 6b — "What should I train today" line: pure computation, freshest/most-due muscle groups + routine.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">S9 · lib/trainToday.ts, zero AI cost, reuses the existing computeMuscleRecovery. REAL test against the account's actual (currently empty) workout data correctly produced the honest fallback line rather than a fabricated one.</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="S10" data-time-est="20" data-time-actual="15" data-credit-est="30000" data-credit-actual="22000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">TASK 6c — Today's rings (recovery/calories/training status), tappable into their modules.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">S10 · all 3 rings + the training-status card now wrapped in Link (recovery/food->/health,/food; training status->/gym). Build clean.</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="S11" data-time-est="45" data-time-actual="50" data-credit-est="70000" data-credit-actual="76000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">TASK 6d — Trend graphs: weight, recovery+strain, sleep, calories vs target, HRV/steps if they fit. Server-side pre-aggregated.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">S11 · all 6 graphs (weight 90d, recovery+strain 14d composed chart, sleep vs 8h target colour-coded, calories vs target colour-coded, HRV 14d, steps 7d) built with recharts, each pre-aggregated server-side in page.tsx into small {date,value} arrays -- never ships raw daily_stats/whoop rows to the client. Caught + fixed a real recharts mistake before shipping: per-bar colouring needs <Cell> children, not nested <Bar> elements.</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="S12" data-time-est="25" data-time-actual="20" data-credit-est="35000" data-credit-actual="28000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">TASK 6e — Year heatmap strip + streak counter + quick-nav tiles.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">S12 · HeatmapWidget reused unmodified (same history/workouts props every other consumer passes), StreakBadge reused for the logging streak, quick-nav tiles unchanged from the OS-restructure session. Build clean.</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="S13" data-time-est="25" data-time-actual="22" data-credit-est="35000" data-credit-actual="30000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">FINAL: build clean, verify production serves latest commit, board.html + PROGRESS.md true final state, evidence per task.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">S13 · commit b7bbbea confirmed Ready/Production via vercel ls (2m old); every route curled live (/, /main, /gym, /body, /food, /health, /media, /wardrobe, /journal, /settings, /grid) -- all correct 307 auth-gating, no 500s; body-front.png/body-back.png confirmed serving on production (200, exact byte match). node_modules restored to lockfile via npm ci, final build clean.</div>
-      </div>
-
-
-      <div class="bug-row" data-status="done" data-id="C1" data-time-est="30" data-time-actual="25" data-credit-est="45000" data-credit-actual="52000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">CONSISTENCY PASS — theming across Main + every module, chat bar coverage, mobile breakpoints.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">C1 · Recon confirmed all 7 themes are genuine CSS-var/[data-theme] driven (app/globals.css), all 9 module pages use theme-reactive classes almost everywhere, ContextualLogBar mounted once in app/(os)/layout.tsx covering every route with no opt-outs. Found + fixed one real theming bug: InjuryWidget's recharts tooltip had hardcoded dark colours (#1e1e21 etc) that didn't adapt on light themes (brutalism) -- switched to var(--surface-elevated)/var(--border-strong)/var(--text-faint). BodyWidget's fixed dark card background was reviewed and left as-is: it's a deliberate choice since the real artwork is shot on black, not a theming bug.</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="C2" data-time-est="35" data-time-actual="40" data-credit-est="55000" data-credit-actual="62000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">TAP-TO-DETAIL — re-verify every readout/card/graph opens a richer view; fix dead ends.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">C2 · Recon found the old DashboardGrid's TappableWrapper->WidgetDetailRouter drill-down (real detail sheets: WeatherDetail, WhoopDetail, SleepDebtDetail, TrainingLoadDetail, PRTrackerDetail, HeatmapDetail) was lost for 6 widgets when they moved into the new module pages (ModulePageClient only provides sizing context, no onOpen). Built components/os/TappableWidget.tsx, a thin wrapper reusing WidgetDetailRouter unmodified, and wired it onto Main's WeatherWidget + HeatmapWidget, Health's WhoopWidget + SleepDebtWidget, Gym's TrainingLoadWidget + PRTrackerWidget. Also wrapped Main's "Key vitals" card (previously a dead tile) in a Link to /health. All Main/quick-nav Links independently confirmed to resolve to real routes.</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="C3" data-time-est="30" data-time-actual="35" data-credit-est="45000" data-credit-actual="50000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">FOOD PAGE DEPTH — most-eaten quick-relog grid, per-food notes memory, day-quality ring, verified with a real multi-food log.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">C3 · Found these were already built (getMostEatenFoods, food_notes table + upsertFoodNote, computeDayQuality) -- verified for real rather than assuming: inserted 3 real food_log rows + a repeat of one from yesterday against the live DB, confirmed most-eaten aggregation counted the repeat correctly (2), today's totals summed exactly (1450 kcal / 84g protein / 160g carbs), the day-quality ring computed a real score (75/100) from those totals, and a per-food note round-tripped correctly by normalised key -- then fully cleaned up (0 rows remaining). Also fixed a real bug while verifying: FoodClient.tsx's most-eaten/notes/saved-meals/today/timeline queries never checked res.ok, so a non-2xx API response would be treated as success and could crash on an unguarded data.meals.length -- added res.ok checks to all 5.</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="C4" data-time-est="20" data-time-actual="18" data-credit-est="30000" data-credit-actual="26000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">BODY FIGURE POLISH — recheck zone alignment front+back at multiple sizes.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">C4 · Re-ran the same composite-onto-real-artwork verification technique as the original build: parsed all 33 MUSCLE_DEFS coordinates straight out of BodyWidget.tsx, rendered them onto the real body-front.png/body-back.png at both native size (1024px) and a small render (340px, simulating a compact widget) to confirm the SVG viewBox lock scales zones correctly. Visually inspected all 4 renders: every zone (chest, delts, biceps/triceps, forearms, abs, obliques, quads, adductors, calves, tibialis on front; traps, rear-delts, lats, rhomboids, lower-back, glutes, hamstrings, calves on back) sits correctly on its real muscle at both sizes -- no misplacement found. No code changes needed.</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="C5" data-time-est="15" data-time-actual="10" data-credit-est="20000" data-credit-actual="14000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">GYM MODULE TIDY — surface PR tracker, training load, routine, body-map link, exercise history; no placeholders.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">C5 · Reviewed app/(os)/gym/page.tsx: already cleanly surfaces LiveLogger, TrainingLoadWidget (now tappable per C2), a real "days since rest" stat, PRTrackerWidget (now tappable), RoutineSection, ExerciseHistory, and a real Link to /body -- grepped for TODO/placeholder/fake/dummy markers, none found. No fixes needed beyond the C2 tap-to-detail wiring.</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="C6" data-time-est="20" data-time-actual="15" data-credit-est="30000" data-credit-actual="22000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">SETTINGS PERSISTENCE AUDIT — confirm theme, macro targets, notification categories, mobile-effects toggle round-trip.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">C6 · All 4 confirmed round-tripping correctly, verified by reading the actual write+read code paths (not just trusting the recon): theme (POST /api/theme -> cookie + user_preferences, read back in app/layout.tsx with a DB fallback), macro targets (settings page loads getUserPreferences into initial state, save action upserts), notification categories (app/api/push/subscribe/route.ts has both a GET that reads categories back and a POST that writes them -- spot-checked this file directly), bgEffectsMobile (synced to user_preferences.bg_effects_mobile, not just localStorage). No write-only settings found, no fixes needed.</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="C7" data-time-est="40" data-time-actual="45" data-credit-est="60000" data-credit-actual="70000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">FULL BUG AUDIT (report only) — fresh pass focused on the restructure, written to BUGS.md.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">C7 · BUGS.md overwritten (dated 2026-07-11): 2 critical (saved-meal items never validated before storage -> NaN risk in daily_stats; /api/briefing swallows real DB errors as "no briefing yet"), 4 major (RealtimeSync not mounted anywhere in the new app/(os) shell -- confirmed via grep it's only on /grid; widget-hide/layout prefs split between /grid and the new pages; OnboardingTour fully built but orphaned, imported nowhere -- confirmed via repo-wide grep; WhoopWidget renders unconditionally on the new Health page even when WHOOP isn't connected, confirmed against the old dashboard's whoopConnected gate), 2 minor (cron/daily-briefing's 30-day cutoff uses new Date().toISOString() instead of getLocalDate; ContextualLogBar's mobile offset is an unlinked magic number). Grouped by severity with a suggested fix order. No code changed for this task, as instructed.</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="C8" data-time-est="20" data-time-actual="20" data-credit-est="30000" data-credit-actual="30000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">FINAL — clean build, verify production serves the latest commit, board.html + PROGRESS.md true final state.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">C8 · rm -rf .next && npm run build clean. Commit 7a97c90 confirmed success on GitHub checks; newest Vercel deployment (2m old) confirmed Ready/Production. Found and noted (not a code bug -- a Vercel domain-settings config): parma.ink now 308-redirects to www.parma.ink, the opposite direction CLAUDE.md documents as canonical -- flagged for the user rather than silently "fixed" by editing code. Followed the redirect and confirmed all 11 routes (/, /main, /health, /gym, /food, /body, /media, /wardrobe, /journal, /settings, /grid) return 200, both body-front.png/body-back.png confirmed serving live with exact byte match to source (1274936 / 1271085 bytes).</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="D1" data-time-est="25" data-time-actual="22" data-credit-est="35000" data-credit-actual="38000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">CRITICAL 1 — validate saved-meal items before storage; reject invalid, never coerce.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">D1 · Added SavedMealItemSchema (lib/schemas.ts) requiring all 7 macros as required nonnegative numbers (not optional like ParsedFoodItemSchema, since quickAddSavedMeal's reduce has no downstream default-to-0 step). Wired z.array(SavedMealItemSchema).safeParse into both POST /api/saved-meals and PATCH /api/saved-meals/[id] before any DB write, returning 400 with the exact zod issues on failure -- never coerced. REAL test: valid item passes; item missing 5 macro fields rejected with a precise per-field message; string-typed macro rejected (no silent coercion); explicit NaN macro rejected; simulated the route's exact check-then-write order and confirmed the bad payload never reaches the DB (0 matching rows).</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="D2" data-time-est="20" data-time-actual="25" data-credit-est="30000" data-credit-actual="34000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">CRITICAL 2 — /api/briefing must distinguish a real DB error from "no briefing yet".</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">D2 · Found the real bug was one level deeper than BUGS.md's file reference: app/api/briefing/route.ts is never actually called by the app (dead code, fixed anyway for correctness) -- Main's page.tsx calls getBriefing directly with the same blanket .catch(() => null). getBriefing itself was already correct (maybeSingle returns null with no throw for a genuine "no row" case; only a real error throws). Fixed both: the API route now only try/catches to log+500 on a real error; Main's page.tsx got a named getBriefingSafe() wrapper that logs the real error server-side instead of discarding it, while still falling back gracefully so the page stays up. REAL test against the live DB: a genuine no-row date correctly returned null with no throw; a malformed-UUID request (a real Postgres error, not a "no rows" result) correctly threw instead of returning null -- confirms the two cases are now distinguishable.</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="D3" data-time-est="25" data-time-actual="30" data-credit-est="35000" data-credit-actual="40000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">MAJOR — mount RealtimeSync in the new module shell so Main/Food/Health/Gym auto-refresh.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">D3 · Mounted the existing RealtimeSync component (unmodified) once in app/(os)/layout.tsx alongside ContextualLogBar, passing the already-available user.id -- now covers every page in the new shell (Main/Food/Health/Gym/Media/Wardrobe/Journal/Settings/Body), not just the legacy /grid. REAL test: confirmed all 9 watched tables (daily_stats, workout_sessions, log_entries, health_status, injuries, journal_notes, media_log, progress_photos, user_preferences) are genuinely present in the supabase_realtime publication (a common silent-failure point if missed); then ran the exact subscription this component sets up, wrote a real daily_stats row via direct SQL, and confirmed the postgres_changes event was actually received end-to-end (had to authenticate the test subscriber like a real logged-in browser session would -- an anon-only subscriber correctly gets nothing, which is RLS working as intended, not a bug).</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="D4" data-time-est="30" data-time-actual="35" data-credit-est="40000" data-credit-actual="45000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">MAJOR — sync widget hide/show between /grid and the new module pages.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">D4 · Scoped to the widgets with an unambiguous 1:1 match between /grid's catalog and a new module page (weather + heatmap on Main, whoop + sleepdebt on Health, trainload + prtracker on Gym) -- read user_preferences.hidden_widgets (same field /grid's postLayout already writes) server-side in each page and skip rendering the widget (and its TappableWidget wrapper) when hidden, exactly matching /grid's own gating logic. Deliberately did not force a mapping for /body (BodyWidget) -- it's a single-purpose destination page reached by explicit navigation, not one card among several, so "hiding" it would just leave a blank page, a worse UX than the bug being fixed. REAL test: wrote hidden_widgets=[weather,trainload] directly (same effect as /grid's own persistHidden call), confirmed the exact query+defaulting logic getUserPreferences uses returns them correctly, confirmed Main would skip weather and Gym would skip trainload while Health's untouched widgets (whoop/sleepdebt) remained visible, then restored the original (empty) hidden_widgets value.</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="D5" data-time-est="25" data-time-actual="20" data-credit-est="35000" data-credit-actual="28000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">MAJOR — reconnect the onboarding tour to the new module shell.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">D5 · Found 2 of the tour's 3 target elements already existed unchanged in the new shell (data-tour="log-input" is on LogInput.tsx's wrapper div, reused as-is by ContextualLogBar; data-tour="command-palette" is on CommandPalette.tsx, still mounted via PaletteWrapper in app/(os)/layout.tsx) -- only "dashboard-grid" was missing, since that attribute only ever existed on the old DashboardGrid.tsx. Added it to Main's rings section in MainClient.tsx and updated that step's copy (was "Drag widgets to rearrange them", stale for the new non-drag-and-drop Main) to describe the actual new layout. Mounted <OnboardingTour /> in MainClient -- confirmed via grep this is now the only mount site, and confirmed / redirects to /main (app/(dashboard)/page.tsx), so a fresh user's very first page load has all 3 target elements present together. driver.js dependency confirmed still in package.json (never removed despite the component going unused). No browser available to click through the actual popovers -- flagged as a caveat.</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="D6" data-time-est="15" data-time-actual="12" data-credit-est="20000" data-credit-actual="15000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">MAJOR — gate WhoopWidget behind whoopConnected on the Health page.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">D6 · One-line fix: changed the condition from !hiddenWidgets.has('whoop') to whoopConnected && !hiddenWidgets.has('whoop'), matching the old DashboardGrid's gate exactly. REAL evidence this wasn't a hypothetical: queried the actual test account's whoop_connections table directly -- 0 rows, meaning this account has never connected WHOOP and was concretely hitting this exact bug (a permanent placeholder card full of "-") before this fix. The "connected" branch is unchanged behavior (WhoopWidget still renders correctly for any account that has connected, provable since only the new whoopConnected && prefix was added, nothing else in that render path changed).</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="D7" data-time-est="20" data-time-actual="28" data-credit-est="25000" data-credit-actual="32000">
-        <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">MINOR — fix cron/daily-briefing's UTC date bypass and ContextualLogBar's magic-number offset.</div><div class="bug-reason"></div></div>
-        <div class="metrics"></div>
-        <div class="bug-ref">D7 · Date fix: added a proper daysAgo(dateStr, days) helper to lib/date.ts (DST-safe noon-anchor, same pattern as the existing subtractDay), replaced cron/daily-briefing's raw new Date().toISOString().split('T')[0] arithmetic with it, and also fixed lib/dailyBriefing.ts's own local thirtyDaysAgo (same underlying pattern, not previously flagged but the identical bug) to use the same shared helper instead of a second bespoke one. REAL test: daysAgo(today, 30) and daysAgo(today, 1) both correct, and verified correctly across an actual DST changeover (Nov 5 minus 30 days lands on Oct 6, correct). Offset fix: added lib/layoutConstants.ts (MOBILE_TAB_BAR_HEIGHT_REM) as the single source of truth, gave Sidebar's mobile tab bar an explicit height derived from it (was organic/content-sized before, now deterministic), and switched ContextualLogBar to a CSS-variable-driven Tailwind class (bottom-[var(--mobile-log-bar-offset)]) set from the same constant, instead of the old independently-guessed bottom-16. Verified in the actual compiled CSS output that both the new arbitrary-value class and the pre-existing sm:bottom-0 media-query override generated correctly, preserving identical desktop/mobile cascade behaviour to before.</div>
-      </div>
-
-      <div class="bug-row" data-status="done" data-id="D8" data-time-est="20" data-time-actual="18" data-credit-est="25000" data-credit-actual="20000">
+      <div class="bug-row" data-status="waiting" data-id="E8" data-time-est="25" data-credit-est="30000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">FINAL — build clean, verify production, board.html + PROGRESS.md true final state.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">D8 · rm -rf .next && npm run build clean. Commit 4623be0 confirmed success on GitHub checks; newest Vercel deployment (2m old) confirmed Ready/Production. All 11 routes curled live via the www redirect, all return 200. BUGS.md updated with a FIXED note + commit hash on all 8 items (2 critical, 4 major, 2 minor) -- nothing left open in that document.</div>
+        <div class="bug-ref">E8</div>
       </div>
+
     </div>
   </section>
 
@@ -344,7 +197,7 @@
 </div>
 
 <script>
-  var SESSION_TOKEN_BUDGET = 1400000;
+  var SESSION_TOKEN_BUDGET = 1800000;
 </script>
 <script>
 (function () {

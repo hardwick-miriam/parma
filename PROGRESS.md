@@ -1140,3 +1140,28 @@ Commits, in order: `6204898` (saved-meal validation) → `6cf30e7` (briefing err
 `14062bf` (WhoopWidget gate) → `4623be0` (2 minors). Final commit confirmed `success` on GitHub
 checks and the newest Vercel deployment `Ready`/`Production`; all 11 routes curled live and
 returned 200. `BUGS.md` updated with a FIXED note and commit hash on every item.
+
+---
+
+## Seven new features (2026-07-11, later same day)
+
+**STARTING.** Standing rules re-affirmed: migrations live via service-role key, no silent
+failures, commit+push per task, verify production per commit, getLocalDate Europe/London, cheap AI
+(plain stats over AI where possible, no vision), verify with evidence. Working strictly in order:
+Task 1 body measurements -> Task 2 reading tracker -> Task 3 mood correlations -> Task 4 Mounjaro
+timing -> Task 5 NL search -> Task 6 Finances -> Task 7 workout logger (last) -> Final.
+
+Pre-work recon found: Task 7's live workout logger already substantially exists
+(`components/os/LiveLogger.tsx` + `supabase/migrations/024_workout_sets.sql`, built in an earlier
+session) — treating Task 7 as verify+gap-fill, not build-from-scratch, to avoid wasted rework.
+Task 5's `/api/query` already exists but dumps raw rows to the model with no intent-parsing step —
+treating this as fix/extend, not net-new. Task 3's `insights` table + daily cron + plain-stats
+engine (`lib/insights/compute.ts`, Pearson correlation already implemented) already exist — mood
+correlation will extend that engine, not build a new one. Tasks 1, 2, 4 (partially), 6 are
+genuinely new.
+
+Resume note for future sessions: if a usage limit is hit mid-task, say "resume from PROGRESS.md" —
+this file's most recent "STARTING task N" / "DONE task N (commit hash)" line is the source of
+truth for what's actually landed; `board.html` mirrors the same state.
+
+**STARTING Task 1 — Body measurements.**
