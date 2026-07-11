@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -50,6 +50,7 @@ export function LiveLogger() {
       return (await res.json()) as { names: string[] }
     },
     enabled: showSearch,
+    placeholderData: keepPreviousData,
   })
 
   const detailQuery = useQuery({
@@ -61,6 +62,7 @@ export function LiveLogger() {
     },
     enabled: !!selectedExercise,
   })
+  const detailReady = !detailQuery.isLoading
 
   const logSetMutation = useMutation({
     mutationFn: async () => {
@@ -168,17 +170,23 @@ export function LiveLogger() {
               className="w-full rounded-lg bg-surface-elevated border border-border text-text text-sm px-3 py-2 focus:outline-none focus:border-accent"
             />
             <div className="flex flex-col max-h-56 overflow-y-auto divide-y divide-border">
-              {(searchQuery.data?.names ?? []).map((name) => (
-                <button
-                  key={name}
-                  onClick={() => pickExercise(name)}
-                  className="text-left py-2 text-sm text-text-muted hover:text-text capitalize"
-                >
-                  {name}
-                </button>
-              ))}
-              {searchQuery.data?.names?.length === 0 && (
-                <p className="text-xs text-text-subtle py-2">No matches</p>
+              {searchQuery.isLoading ? (
+                <p className="text-xs text-text-subtle py-2">Searching…</p>
+              ) : (
+                <>
+                  {(searchQuery.data?.names ?? []).map((name) => (
+                    <button
+                      key={name}
+                      onClick={() => pickExercise(name)}
+                      className="text-left py-2 text-sm text-text-muted hover:text-text capitalize"
+                    >
+                      {name}
+                    </button>
+                  ))}
+                  {searchQuery.data?.names?.length === 0 && (
+                    <p className="text-xs text-text-subtle py-2">No matches</p>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -191,7 +199,9 @@ export function LiveLogger() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="rounded-2xl bg-surface border border-border p-4">
               <p className="text-xs font-semibold text-text-muted uppercase tracking-widest mb-1">Last time</p>
-              {detailQuery.data?.lastTime ? (
+              {!detailReady ? (
+                <div className="h-6 w-24 rounded bg-surface-elevated animate-pulse" />
+              ) : detailQuery.data?.lastTime ? (
                 <p className="text-lg font-bold text-text">
                   {detailQuery.data.lastTime.weight}kg × {detailQuery.data.lastTime.reps}
                 </p>
@@ -202,7 +212,9 @@ export function LiveLogger() {
 
             <div className="rounded-2xl border p-4" style={{ background: 'var(--accent-dim)', borderColor: 'var(--accent)' }}>
               <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--accent)' }}>Next-set suggestion</p>
-              {recommendation ? (
+              {!detailReady ? (
+                <div className="h-6 w-28 rounded bg-black/10 animate-pulse" />
+              ) : recommendation ? (
                 <>
                   <p className="text-lg font-bold text-text">{recommendation.weight}kg × {recommendation.reps}</p>
                   <p className="text-xs text-text-muted mt-0.5">{recommendation.reason}</p>
@@ -305,18 +317,20 @@ export function LiveLogger() {
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-xl bg-surface border border-border p-3 text-center">
               <p className="text-lg font-bold text-text tabular-nums">
-                {detailQuery.data?.stats.estimated1RM ?? '—'}
+                {!detailReady ? <span className="inline-block h-5 w-8 rounded bg-surface-elevated animate-pulse align-middle" /> : (detailQuery.data?.stats.estimated1RM ?? '—')}
               </p>
               <p className="text-[10px] text-text-subtle uppercase tracking-widest">Est. 1RM (kg)</p>
             </div>
             <div className="rounded-xl bg-surface border border-border p-3 text-center">
               <p className="text-lg font-bold text-text tabular-nums">
-                {detailQuery.data?.stats.bestSet ? `${detailQuery.data.stats.bestSet.weight}×${detailQuery.data.stats.bestSet.reps}` : '—'}
+                {!detailReady ? <span className="inline-block h-5 w-8 rounded bg-surface-elevated animate-pulse align-middle" /> : (detailQuery.data?.stats.bestSet ? `${detailQuery.data.stats.bestSet.weight}×${detailQuery.data.stats.bestSet.reps}` : '—')}
               </p>
               <p className="text-[10px] text-text-subtle uppercase tracking-widest">Best set</p>
             </div>
             <div className="rounded-xl bg-surface border border-border p-3 text-center">
-              <p className="text-lg font-bold text-text tabular-nums">{detailQuery.data?.stats.sessionCount ?? 0}</p>
+              <p className="text-lg font-bold text-text tabular-nums">
+                {!detailReady ? <span className="inline-block h-5 w-8 rounded bg-surface-elevated animate-pulse align-middle" /> : (detailQuery.data?.stats.sessionCount ?? 0)}
+              </p>
               <p className="text-[10px] text-text-subtle uppercase tracking-widest">Sessions</p>
             </div>
           </div>

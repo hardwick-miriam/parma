@@ -550,18 +550,27 @@ export function FoodClient({ targets }: { targets: MacroTargets }) {
     <div className="flex flex-col gap-6 pb-24">
       <h1 className="text-xl font-bold text-text">Food</h1>
 
-      <div className="rounded-2xl bg-surface border border-border p-5 flex flex-col sm:flex-row gap-5 items-center">
-        <CircularProgress value={quality} max={100} size={110} unit="quality" showTargetGlow />
-        <div className="flex-1 grid grid-cols-2 gap-3 w-full">
-          <MacroBar label="Calories" value={totals.calories} target={targets.calorie_target} unit="kcal" />
-          <MacroBar label="Protein" value={totals.protein_g} target={targets.protein_target_g} />
-          <MacroBar label="Carbs" value={totals.carbs_g} target={targets.carbs_target_g} />
-          <MacroBar label="Fat" value={totals.fat_g} target={targets.fat_target_g} />
-          <MacroBar label="Fibre" value={totals.fibre_g} target={targets.fibre_target_g} />
-          <MacroBar label="Sugar" value={totals.sugar_g} target={targets.sugar_target_g} />
-          <MacroBar label="Salt" value={totals.salt_g} target={targets.salt_target_g} />
+      {todayStats.isLoading ? (
+        <div className="rounded-2xl bg-surface border border-border p-5 flex flex-col sm:flex-row gap-5 items-center animate-pulse">
+          <div className="w-[110px] h-[110px] rounded-full bg-surface-elevated shrink-0" />
+          <div className="flex-1 grid grid-cols-2 gap-3 w-full">
+            {Array.from({ length: 7 }).map((_, i) => <div key={i} className="h-6 rounded bg-surface-elevated" />)}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="rounded-2xl bg-surface border border-border p-5 flex flex-col sm:flex-row gap-5 items-center">
+          <CircularProgress value={quality} max={100} size={110} unit="quality" showTargetGlow />
+          <div className="flex-1 grid grid-cols-2 gap-3 w-full">
+            <MacroBar label="Calories" value={totals.calories} target={targets.calorie_target} unit="kcal" />
+            <MacroBar label="Protein" value={totals.protein_g} target={targets.protein_target_g} />
+            <MacroBar label="Carbs" value={totals.carbs_g} target={targets.carbs_target_g} />
+            <MacroBar label="Fat" value={totals.fat_g} target={targets.fat_target_g} />
+            <MacroBar label="Fibre" value={totals.fibre_g} target={targets.fibre_target_g} />
+            <MacroBar label="Sugar" value={totals.sugar_g} target={targets.sugar_target_g} />
+            <MacroBar label="Salt" value={totals.salt_g} target={targets.salt_target_g} />
+          </div>
+        </div>
+      )}
 
       {mostEaten.data && mostEaten.data.foods.length > 0 && (
         <div className="flex flex-col gap-2">

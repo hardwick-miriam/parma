@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { AddItemFlow } from './AddItemFlow'
 import { currentSeason, type Season, type WardrobeItemWithStats, type WardrobeType } from '@/lib/wardrobeTypes'
@@ -77,6 +77,7 @@ export function WardrobeClient() {
   const { data: items, isLoading, isError } = useQuery({
     queryKey: ['wardrobe', params.toString()],
     queryFn: () => fetchItems(params),
+    placeholderData: keepPreviousData,
   })
 
   async function submitWear(e: React.FormEvent) {
