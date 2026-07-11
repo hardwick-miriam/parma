@@ -24,6 +24,13 @@ export function subtractDay(dateStr: string, tz: string = DEFAULT_TZ): string {
   return getLocalDate(tz, d)
 }
 
+/** N calendar days before a YYYY-MM-DD string (Europe/London terms, DST-safe via noon anchor) */
+export function daysAgo(dateStr: string, days: number, tz: string = DEFAULT_TZ): string {
+  const d = new Date(dateStr + 'T12:00:00Z')
+  d.setUTCDate(d.getUTCDate() - days)
+  return getLocalDate(tz, d)
+}
+
 /** Format a date for display — e.g. "Friday 4 July 2025" */
 export function formatDisplayDate(tz: string = DEFAULT_TZ, now: Date = new Date()): string {
   return format(toZonedTime(now, tz), 'EEEE d MMMM yyyy', { timeZone: tz })

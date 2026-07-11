@@ -1,16 +1,10 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { getLocalDate, subtractDay, getWeekdayName } from '@/lib/date'
+import { getLocalDate, subtractDay, daysAgo, getWeekdayName } from '@/lib/date'
 import { calculateStreaks } from '@/lib/streaks'
 import { getActiveInjuries } from '@/lib/db/queries'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
-function thirtyDaysAgo(dateStr: string): string {
-  const d = new Date(dateStr + 'T12:00:00Z')
-  d.setUTCDate(d.getUTCDate() - 30)
-  return d.toISOString().split('T')[0]
-}
 
 /**
  * Gathers a compact context and makes exactly ONE cheap AI call to produce
@@ -34,7 +28,7 @@ export async function generateDailyBriefing(userId: string, supabase: SupabaseCl
     supabase.from('whoop_metrics').select('*').eq('user_id', userId).order('date', { ascending: false }).limit(1).maybeSingle(),
     supabase.from('daily_stats').select('*').eq('user_id', userId).eq('date', yesterday).maybeSingle(),
     supabase.from('workout_sessions').select('*').eq('user_id', userId).eq('date', yesterday),
-    supabase.from('daily_stats').select('*').eq('user_id', userId).gte('date', thirtyDaysAgo(today)).order('date', { ascending: false }).limit(30),
+    supabase.from('daily_stats').select('*').eq('user_id', userId).gte('date', daysAgo(today, 30)).order('date', { ascending: false }).limit(30),
     getActiveInjuries(userId, supabase).catch(() => []),
     supabase.from('routines').select('*').eq('user_id', userId).eq('is_active', true).maybeSingle(),
   ])

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { generateDailyBriefing } from '@/lib/dailyBriefing'
 import { upsertBriefing } from '@/lib/db/briefings'
-import { getLocalDate } from '@/lib/date'
+import { getLocalDate, daysAgo } from '@/lib/date'
 
 export const maxDuration = 60
 
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
   // Anyone who's logged at least one day of data in the last 30 days —
   // matches the insights-refresh cron's "active user" definition.
-  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const since = daysAgo(today, 30)
   const { data: activeUsers, error: activeUsersErr } = await supabase
     .from('daily_stats')
     .select('user_id')

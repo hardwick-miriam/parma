@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
+import { MOBILE_TAB_BAR_HEIGHT_REM } from '@/lib/layoutConstants'
 
 export const MODULES: { href: string; label: string; icon: string }[] = [
   { href: '/main', label: 'Main', icon: '🏠' },
@@ -85,8 +86,11 @@ export function Sidebar() {
         style={{
           background: 'var(--surface)',
           borderTop: '1px solid var(--border)',
-          paddingTop: '0.4rem',
-          paddingBottom: 'calc(0.4rem + env(safe-area-inset-bottom))',
+          // Explicit height (not left to organic content sizing) so
+          // ContextualLogBar's mobile offset — derived from this exact
+          // constant — can never silently drift out of sync with it.
+          height: `calc(${MOBILE_TAB_BAR_HEIGHT_REM}rem + env(safe-area-inset-bottom))`,
+          paddingBottom: 'env(safe-area-inset-bottom)',
           scrollbarWidth: 'none',
         }}
         aria-label="Module navigation"

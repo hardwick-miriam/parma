@@ -321,11 +321,11 @@
         <div class="bug-ref">D6 · One-line fix: changed the condition from !hiddenWidgets.has('whoop') to whoopConnected && !hiddenWidgets.has('whoop'), matching the old DashboardGrid's gate exactly. REAL evidence this wasn't a hypothetical: queried the actual test account's whoop_connections table directly -- 0 rows, meaning this account has never connected WHOOP and was concretely hitting this exact bug (a permanent placeholder card full of "-") before this fix. The "connected" branch is unchanged behavior (WhoopWidget still renders correctly for any account that has connected, provable since only the new whoopConnected && prefix was added, nothing else in that render path changed).</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="D7" data-time-est="20" data-credit-est="25000">
+      <div class="bug-row" data-status="done" data-id="D7" data-time-est="20" data-time-actual="28" data-credit-est="25000" data-credit-actual="32000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">MINOR — fix cron/daily-briefing's UTC date bypass and ContextualLogBar's magic-number offset.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">D7</div>
+        <div class="bug-ref">D7 · Date fix: added a proper daysAgo(dateStr, days) helper to lib/date.ts (DST-safe noon-anchor, same pattern as the existing subtractDay), replaced cron/daily-briefing's raw new Date().toISOString().split('T')[0] arithmetic with it, and also fixed lib/dailyBriefing.ts's own local thirtyDaysAgo (same underlying pattern, not previously flagged but the identical bug) to use the same shared helper instead of a second bespoke one. REAL test: daysAgo(today, 30) and daysAgo(today, 1) both correct, and verified correctly across an actual DST changeover (Nov 5 minus 30 days lands on Oct 6, correct). Offset fix: added lib/layoutConstants.ts (MOBILE_TAB_BAR_HEIGHT_REM) as the single source of truth, gave Sidebar's mobile tab bar an explicit height derived from it (was organic/content-sized before, now deterministic), and switched ContextualLogBar to a CSS-variable-driven Tailwind class (bottom-[var(--mobile-log-bar-offset)]) set from the same constant, instead of the old independently-guessed bottom-16. Verified in the actual compiled CSS output that both the new arbitrary-value class and the pre-existing sm:bottom-0 media-query override generated correctly, preserving identical desktop/mobile cascade behaviour to before.</div>
       </div>
 
       <div class="bug-row" data-status="waiting" data-id="D8" data-time-est="20" data-credit-est="25000">
