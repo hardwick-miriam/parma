@@ -69,6 +69,16 @@ export const ParsedLearningItemSchema = z.object({
   notes: z.string().optional(),
 })
 
+// Feature 3: Finances module NLP updates. Either an absolute new balance
+// ("Monzo balance 1240") or a relative change ("paid £200 off the loan" ->
+// delta -200). At least one of the two must be present — enforced in
+// lib/logApply.ts, not here, since zod can't express "at least one of".
+export const FinanceUpdateSchema = z.object({
+  account_name: z.string().min(1),
+  balance: z.number().optional(),
+  delta: z.number().optional(),
+})
+
 export const ParsedInjuryCheckinSchema = z.object({
   body_part: z.string().optional(),
   feeling_pct: z.number().min(0).max(100),
@@ -156,6 +166,7 @@ export const ParsedLogSchema = z.object({
   muscle_soreness: z.array(MuscleSorenessEntrySchema).optional(),
   body_measurements: z.array(BodyMeasurementEntrySchema).optional(),
   learning_items: z.array(ParsedLearningItemSchema).optional(),
+  finance_updates: z.array(FinanceUpdateSchema).optional(),
 })
 
 export type ParsedLog = z.infer<typeof ParsedLogSchema>

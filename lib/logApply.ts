@@ -15,6 +15,7 @@ import { insertMediaEntry } from '@/lib/db/media'
 import { insertFoodItems } from '@/lib/db/food'
 import { insertBodyMeasurement, toCm } from '@/lib/db/bodyMeasurements'
 import { upsertLearningItem } from '@/lib/db/learningItems'
+import { findAccountOrDebtByName, createFinanceAccount, updateFinanceAccount, updateFinanceDebt } from '@/lib/db/finances'
 import type { ParsedLog } from '@/lib/ai/types'
 import type { Injury } from '@/lib/db/queries'
 
@@ -207,6 +208,26 @@ export async function applyParsedLog(
     if (parsed.learning_items?.length) {
       for (const item of parsed.learning_items) {
         await upsertLearningItem(userId, item, supabase)
+      }
+    }
+
+    if (parsed.finance_updates?.length) {
+      for (const upd of parsed.finance_updates) {
+        if (upd.balance == null && upd.delta == null) continue // nothing actionable
+        const match = await findAccountOrDebtByName(userId, upd.account_name, supabase)
+        if (match) {
+          const newBalance = upd.balance != null ? upd.balance : Number(match.row.balance) + (upd.delta ?? 0)
+          if (match.kind === 'account') {
+            await updateFinanceAccount(userId, match.row.id, { balance: newBalance }, supabase)
+          } else {
+            await updateFinanceDebt(userId, match.row.id, { balance: Math.max(0, newBalance) }, supabase)
+          }
+        } else if (upd.balance != null) {
+          // No existing account/debt matches — a delta with nothing to apply
+          // it to is meaningless, but a stated absolute balance is enough to
+          // create a new cash account for it.
+          await createFinanceAccount(userId, upd.account_name, 'cash', upd.balance, supabase)
+        }
       }
     }
 

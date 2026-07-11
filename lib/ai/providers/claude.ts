@@ -187,6 +187,20 @@ const PARSE_TOOL: Anthropic.Tool = {
           additionalProperties: false,
         },
       },
+      finance_updates: {
+        type: 'array',
+        description: 'Bank/investment/pension/crypto account balance updates, or debt/loan/credit-card balance changes. Use "balance" for an absolute new value the user states, "delta" for a relative change (negative = paid down/decreased, positive = increased). E.g. "Monzo balance 1240" -> {account_name:"Monzo",balance:1240}. "paid £200 off the loan" -> {account_name:"loan",delta:-200}. "put £500 into savings" -> {account_name:"savings",delta:500}.',
+        items: {
+          type: 'object',
+          properties: {
+            account_name: { type: 'string', description: 'Name of the account/debt as the user refers to it, e.g. "Monzo", "the loan", "savings", "credit card".' },
+            balance: { type: 'number', description: 'The absolute new balance, if the user stated one directly.' },
+            delta: { type: 'number', description: 'The relative change, if the user described a payment/deposit/withdrawal rather than stating a new total.' },
+          },
+          required: ['account_name'],
+          additionalProperties: false,
+        },
+      },
       body_measurements: {
         type: 'array',
         description: 'Body-part circumference measurements. Use when the user states a measurement for chest, an arm, waist, hips, a thigh, a calf, neck, or shoulders. Extract the RAW stated value and unit — do not convert yourself. Assume unit "cm" unless inches/" is explicitly mentioned. E.g. "chest 42 inches" -> {site:"chest",value:42,unit:"inch"}, "left arm 15" (no unit stated) -> {site:"left_arm",value:15,unit:"cm"}, "waist 34\\"" -> {site:"waist",value:34,unit:"inch"}.',

@@ -1191,3 +1191,11 @@ and fixed the existing chat-bar Q&A entry point (used across every module) rathe
 new surface; added a dedicated Ask mode to CommandPalette. Verified with the 3 example questions
 plus a 4th against real (sparse) account data, honestly reported "no data" where true, then proved
 the pipeline with cleaned-up synthetic data. See board.html E5 for full evidence.
+
+**DONE Task 6 — Finances module.** 3 new tables (accounts, debts, snapshots) + RLS live+verified.
+Net worth trend via snapshot-on-change, APR-aware payoff projections, new sidebar module, NLP for
+both absolute and relative balance updates, compact net-worth widget added to the old grid's
+catalog. Verified end-to-end: 2 real accounts + 1 real debt created, net worth/snapshot/payoff
+projection all confirmed correct, both NLP update styles (absolute + delta) verified via real
+Claude calls landing the exact right balances, then fully cleaned up. See board.html E6 for full
+evidence.

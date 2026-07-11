@@ -14,6 +14,7 @@ export const MODULES: { href: string; label: string; icon: string }[] = [
   { href: '/wardrobe', label: 'Wardrobe', icon: '👕' },
   { href: '/journal', label: 'Journal', icon: '📓' },
   { href: '/health', label: 'Health', icon: '❤️' },
+  { href: '/finances', label: 'Finances', icon: '💰' },
   { href: '/settings', label: 'Settings', icon: '⚙️' },
 ]
 
