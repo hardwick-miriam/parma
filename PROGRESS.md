@@ -1207,3 +1207,73 @@ map/training-load feed via workout_sessions.exercises[]). The one genuine gap �
 insertSet() function the tap-first UI uses. Verified end-to-end with 3 real sets (persisted, PR
 fired correctly, stats/trend/history/muscle-map all reflected them) plus a real NLP-logged set,
 then fully cleaned up. See board.html E7 for full evidence.
+
+---
+
+## FINAL — Seven new features, session complete (2026-07-11)
+
+**All 7 tasks + final verification done (8/8 on board.html).** Build clean, every route live on
+production, every commit individually verified as it landed.
+
+### What got done, in plain English
+
+1. **Body measurements** — log chest/arms/waist/hips/thighs/calves/neck/shoulders in cm or
+   inches (via typing or free text — "chest 42 inches" correctly converts to 106.7cm), with a
+   trend graph and 30/90-day change per body part on the Body page. Real test with a mixed
+   cm/inches log and real 30d/90d change math, both confirmed correct.
+2. **Reading & learning tracker** — track books, courses, audiobooks, and papers through
+   want-to/in-progress/finished, with a progress bar and star rating, on the Media page. "Started
+   reading X" then later "finished X" updates the same entry rather than creating duplicates —
+   verified with real Claude calls and a real database check.
+3. **Mood correlations** — Health now surfaces things like "your mood is higher on days you
+   train" or a recovery/mood link, computed with the same free plain-statistics engine the app
+   already had (no new AI calls). Your account currently has too little logged data for any
+   pattern to show yet — it says so honestly rather than making something up — but I proved the
+   underlying maths genuinely works with test data.
+4. **Mounjaro timing** — if you use the Mounjaro tracking, Main/Health will now tell you when a
+   dose is due today or tomorrow based on your own logged pattern, and (once there's enough
+   history) surface things like "your recovery tends to peak a few days after a dose." Your
+   account has Mounjaro tracking switched on but no doses logged yet, so there's nothing to show
+   right now — that's expected, not a bug.
+5. **Ask your data questions** — you can now type a real question like "when did I last squat
+   100kg" or "how many rest days in March" into any module's chat bar or the ⌘K search, and get a
+   genuine, calculated answer — not a guess from an AI reading a data dump. Tested with your exact
+   example questions.
+6. **Finances** — an entirely new module: add your bank/investment/pension/crypto accounts and
+   any debts by hand, see your net worth with a trend line, a breakdown of where your money sits,
+   and (for debts) how many months at your current payment until it's cleared, properly
+   accounting for interest. You can also just tell it "Monzo balance 1240" or "paid £200 off the
+   loan" and it updates itself. Verified with real accounts, a real debt, and both styles of
+   spoken update.
+7. **Live workout logger** — turned out this was already built in an earlier session (exercise
+   picker, tap-to-log sets, PR celebrations, trend graphs). I checked it thoroughly rather than
+   redoing it, and found one real gap: saying "benched 80kg for 5" out loud didn't actually log a
+   set. That now works exactly like tapping it in — same PR detection, same muscle-map update.
+
+### What still needs your own eyes
+
+I have no browser here, so none of this has been visually clicked through — worth checking
+yourself, especially:
+- **Body measurements graphs** — should render as a card per body part you've logged, showing the
+  current value, how much it's changed in 30/90 days (with a small 📈 if it's grown), and a small
+  line graph underneath.
+- **Finances module** — should show a net-worth number at the top with a line graph beneath it, a
+  coloured bar showing how your money splits across account types, then your accounts and debts
+  listed with their balances editable right there in the list.
+- **Live workout logger** — unchanged visually from before, but worth a quick look to confirm the
+  new "say it instead of tapping it" path doesn't feel jarring alongside the tap-first flow.
+
+Your account has very little real day-to-day data logged, so several of these features (mood
+correlations, Mounjaro correlations) will look sparse or show their honest "still learning"
+message until you've actually used the app for a while — that's the correct, expected behaviour,
+not something broken.
+
+### Evidence trail
+Commits, in order: `9da724e` (Task 1, body measurements) → `a333fa2` (Task 2, reading tracker) →
+`ccffa8a` (Task 3, mood correlations) → `523dd39` (Task 4, Mounjaro timing) → `b510c45` (Task 5,
+NL search) → `bf76f07` (Task 6, Finances) → `7238c56` (Task 7, workout logger NLP gap). All 4 new
+migrations (027 body_measurements, 028 learning_items, 029 finances — 3 tables) run live via the
+service-role key and verified (columns, RLS enabled, policies present) before any code shipped
+against them. Every commit polled to `success` on GitHub checks and confirmed `Ready`/`Production`
+on Vercel individually as the session progressed. Final build clean; all 12 routes curled live and
+return 200.
