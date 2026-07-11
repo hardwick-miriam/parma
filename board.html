@@ -293,11 +293,11 @@
         <div class="bug-ref">D2 · Found the real bug was one level deeper than BUGS.md's file reference: app/api/briefing/route.ts is never actually called by the app (dead code, fixed anyway for correctness) -- Main's page.tsx calls getBriefing directly with the same blanket .catch(() => null). getBriefing itself was already correct (maybeSingle returns null with no throw for a genuine "no row" case; only a real error throws). Fixed both: the API route now only try/catches to log+500 on a real error; Main's page.tsx got a named getBriefingSafe() wrapper that logs the real error server-side instead of discarding it, while still falling back gracefully so the page stays up. REAL test against the live DB: a genuine no-row date correctly returned null with no throw; a malformed-UUID request (a real Postgres error, not a "no rows" result) correctly threw instead of returning null -- confirms the two cases are now distinguishable.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="D3" data-time-est="25" data-credit-est="35000">
+      <div class="bug-row" data-status="done" data-id="D3" data-time-est="25" data-time-actual="30" data-credit-est="35000" data-credit-actual="40000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">MAJOR — mount RealtimeSync in the new module shell so Main/Food/Health/Gym auto-refresh.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">D3</div>
+        <div class="bug-ref">D3 · Mounted the existing RealtimeSync component (unmodified) once in app/(os)/layout.tsx alongside ContextualLogBar, passing the already-available user.id -- now covers every page in the new shell (Main/Food/Health/Gym/Media/Wardrobe/Journal/Settings/Body), not just the legacy /grid. REAL test: confirmed all 9 watched tables (daily_stats, workout_sessions, log_entries, health_status, injuries, journal_notes, media_log, progress_photos, user_preferences) are genuinely present in the supabase_realtime publication (a common silent-failure point if missed); then ran the exact subscription this component sets up, wrote a real daily_stats row via direct SQL, and confirmed the postgres_changes event was actually received end-to-end (had to authenticate the test subscriber like a real logged-in browser session would -- an anon-only subscriber correctly gets nothing, which is RLS working as intended, not a bug).</div>
       </div>
 
       <div class="bug-row" data-status="waiting" data-id="D4" data-time-est="30" data-credit-est="40000">

@@ -5,6 +5,7 @@ import { SignOutButton } from '@/components/dashboard/SignOutButton'
 import { PaletteWrapper } from '@/components/dashboard/PaletteWrapper'
 import { OfflineQueue } from '@/components/OfflineQueue'
 import { ContextualLogBar } from '@/components/os/ContextualLogBar'
+import { RealtimeSync } from '@/components/dashboard/RealtimeSync'
 
 export default async function OSLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -39,6 +40,7 @@ export default async function OSLayout({ children }: { children: React.ReactNode
       <OfflineQueue />
       <PaletteWrapper />
       <ContextualLogBar />
+      <RealtimeSync userId={user.id} />
     </div>
   )
 }
