@@ -170,6 +170,21 @@ const PARSE_TOOL: Anthropic.Tool = {
           additionalProperties: false,
         },
       },
+      body_measurements: {
+        type: 'array',
+        description: 'Body-part circumference measurements. Use when the user states a measurement for chest, an arm, waist, hips, a thigh, a calf, neck, or shoulders. Extract the RAW stated value and unit — do not convert yourself. Assume unit "cm" unless inches/" is explicitly mentioned. E.g. "chest 42 inches" -> {site:"chest",value:42,unit:"inch"}, "left arm 15" (no unit stated) -> {site:"left_arm",value:15,unit:"cm"}, "waist 34\\"" -> {site:"waist",value:34,unit:"inch"}.',
+        items: {
+          type: 'object',
+          properties: {
+            site: { type: 'string', enum: ['chest', 'left_arm', 'right_arm', 'waist', 'hips', 'left_thigh', 'right_thigh', 'left_calf', 'neck', 'shoulders'] },
+            value: { type: 'number' },
+            unit: { type: 'string', enum: ['cm', 'inch'], description: 'Only "inch" if the user explicitly said inches or used the " symbol; otherwise "cm".' },
+            note: { type: 'string' },
+          },
+          required: ['site', 'value'],
+          additionalProperties: false,
+        },
+      },
       estimates: {
         type: 'array',
         items: { type: 'string' },

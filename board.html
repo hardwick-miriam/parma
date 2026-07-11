@@ -131,11 +131,11 @@
     <div class="tier-header"><div class="tier-title"><span class="tier-badge">Session steps</span></div></div>
     <div class="bug-list" data-tier="steps">
 
-      <div class="bug-row" data-status="waiting" data-id="E1" data-time-est="60" data-credit-est="90000">
+      <div class="bug-row" data-status="done" data-id="E1" data-time-est="60" data-time-actual="55" data-credit-est="90000" data-credit-actual="95000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">TASK 1 — Body measurements: migration + NLP (cm/inches) + Body module trend graphs.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">E1</div>
+        <div class="bug-ref">E1 · Migration 027 (body_measurements: site enum of 10 sites exactly as specified, value_cm, note, RLS) run live+verified (columns, RLS enabled, policy present). NLP: new body_measurements array on the parse tool, AI extracts raw value+unit (cm assumed unless inches/" stated), converted to cm in code via toCm() -- never trusting the AI's own unit arithmetic. Body module: manual-entry form (site/value/unit/note) + per-site cards (latest value, 30d/90d change, mini trend graph), only showing sites actually logged. Growing sites get a small 📈 badge next to the change figure (the "optionally flag on the figure" ask, done as a simple badge rather than retrofitting BodyWidget's calibrated SVG). REAL test: real Claude call on "chest 42 inches, left arm 15, waist 34cm" correctly extracted inch/cm/cm respectively; chest converted to exactly 106.7cm (42*2.54); inserted real rows at today/45d/100d-ago, confirmed 30d change (+1.2cm) and 90d change (+2.7cm) computed correctly by the same summariseBySite function the API route uses; full cleanup verified (0 rows remaining).</div>
       </div>
 
       <div class="bug-row" data-status="waiting" data-id="E2" data-time-est="60" data-credit-est="90000">

@@ -43,6 +43,20 @@ export const SavedMealItemSchema = z.object({
   salt_g: z.number().nonnegative(),
 })
 
+// Feature 5: body-part circumference measurements. Value+unit are taken as
+// stated (cm assumed, inches only when explicit) and converted to cm at the
+// application layer (lib/db/bodyMeasurements.ts:toCm) — never trust the AI's
+// own arithmetic for a unit conversion.
+export const BodyMeasurementEntrySchema = z.object({
+  site: z.enum([
+    'chest', 'left_arm', 'right_arm', 'waist', 'hips',
+    'left_thigh', 'right_thigh', 'left_calf', 'neck', 'shoulders',
+  ]),
+  value: z.number().positive(),
+  unit: z.enum(['cm', 'inch']).default('cm'),
+  note: z.string().optional(),
+})
+
 export const ParsedInjuryCheckinSchema = z.object({
   body_part: z.string().optional(),
   feeling_pct: z.number().min(0).max(100),
@@ -128,6 +142,7 @@ export const ParsedLogSchema = z.object({
   log_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   estimates: z.array(z.string()).optional(),
   muscle_soreness: z.array(MuscleSorenessEntrySchema).optional(),
+  body_measurements: z.array(BodyMeasurementEntrySchema).optional(),
 })
 
 export type ParsedLog = z.infer<typeof ParsedLogSchema>

@@ -6,6 +6,7 @@ import { getWhoopMetrics } from '@/lib/db/whoop'
 import { computeMuscleRecovery } from '@/lib/muscleRecovery'
 import { BodyWidget } from '@/components/dashboard/widgets/BodyWidget'
 import { ModulePageClient } from '@/components/os/ModulePageClient'
+import { BodyMeasurementsSection } from '@/components/os/BodyMeasurementsSection'
 import type { WorkoutSession } from '@/lib/db/queries'
 
 export default async function BodyPage() {
@@ -33,6 +34,11 @@ export default async function BodyPage() {
       <ModulePageClient w={10} h={9}>
         <BodyWidget recentWorkouts={recentWorkouts} activeInjuries={injuries} recoveryMap={recoveryMap} />
       </ModulePageClient>
+
+      <div>
+        <p className="text-xs font-semibold text-text-muted uppercase tracking-widest mb-2">Measurements</p>
+        <BodyMeasurementsSection />
+      </div>
     </div>
   )
 }

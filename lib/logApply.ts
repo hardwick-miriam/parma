@@ -13,6 +13,7 @@ import {
 import { insertMounjaroDose, upsertMounjaroEffects } from '@/lib/db/mounjaro'
 import { insertMediaEntry } from '@/lib/db/media'
 import { insertFoodItems } from '@/lib/db/food'
+import { insertBodyMeasurement, toCm } from '@/lib/db/bodyMeasurements'
 import type { ParsedLog } from '@/lib/ai/types'
 import type { Injury } from '@/lib/db/queries'
 
@@ -194,6 +195,12 @@ export async function applyParsedLog(
 
     if (parsed.mounjaro_side_effects) {
       await upsertMounjaroEffects(userId, parsed.mounjaro_side_effects, undefined, logDate, supabase)
+    }
+
+    if (parsed.body_measurements?.length) {
+      for (const m of parsed.body_measurements) {
+        await insertBodyMeasurement(userId, logDate ?? getLocalDate(), m.site, toCm(m.value, m.unit), m.note, supabase)
+      }
     }
 
     if (parsed.muscle_soreness?.length) {

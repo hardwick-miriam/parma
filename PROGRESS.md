@@ -1165,3 +1165,6 @@ this file's most recent "STARTING task N" / "DONE task N (commit hash)" line is 
 truth for what's actually landed; `board.html` mirrors the same state.
 
 **STARTING Task 1 — Body measurements.**
+
+**DONE Task 1 — Body measurements.** Migration 027 live+verified. Real NLP test (inches+cm
+mixed) + real DB trend/change computation verified. See board.html E1 for full evidence.
