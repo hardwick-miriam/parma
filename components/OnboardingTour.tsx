@@ -47,8 +47,8 @@ export function OnboardingTour() {
           {
             element: '[data-tour="dashboard-grid"]',
             popover: {
-              title: 'Your dashboard',
-              description: 'Drag widgets to rearrange them. Each widget updates in real time as you log.',
+              title: 'Your command centre',
+              description: "This is Main — your daily briefing, today's rings, and trends update automatically as you log. Tap any card to see the fuller picture.",
               side: 'top',
               align: 'start',
             },
