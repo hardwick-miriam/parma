@@ -9,6 +9,7 @@ import { TrainingLoadWidget } from '@/components/dashboard/widgets/TrainingLoadW
 import { RoutineSection } from '@/components/settings/RoutineSection'
 import { ExerciseHistory } from '@/components/os/ExerciseHistory'
 import { ModulePageClient } from '@/components/os/ModulePageClient'
+import { TappableWidget } from '@/components/os/TappableWidget'
 import { LiveLogger } from '@/components/os/LiveLogger'
 
 function daysSinceRest(recentWorkouts: { date: string }[]): number {
@@ -43,9 +44,11 @@ export default async function GymPage() {
       <div className="flex flex-col gap-3">
         <p className="text-xs font-semibold text-text-muted uppercase tracking-widest">Training status</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ModulePageClient w={8} h={5}>
-            <TrainingLoadWidget recentWorkouts={recentWorkouts} />
-          </ModulePageClient>
+          <TappableWidget widgetId="trainload" recentWorkouts={recentWorkouts}>
+            <ModulePageClient w={8} h={5}>
+              <TrainingLoadWidget recentWorkouts={recentWorkouts} />
+            </ModulePageClient>
+          </TappableWidget>
 
           <div className="rounded-2xl bg-surface border border-border p-5 flex flex-col justify-center gap-1">
             <p className="text-xs font-semibold text-text-muted uppercase tracking-widest">Days since rest</p>
@@ -57,9 +60,11 @@ export default async function GymPage() {
 
       <div className="flex flex-col gap-3">
         <p className="text-xs font-semibold text-text-muted uppercase tracking-widest">Personal records</p>
-        <ModulePageClient w={8} h={6}>
-          <PRTrackerWidget />
-        </ModulePageClient>
+        <TappableWidget widgetId="prtracker">
+          <ModulePageClient w={8} h={6}>
+            <PRTrackerWidget />
+          </ModulePageClient>
+        </TappableWidget>
       </div>
 
       <div className="rounded-2xl bg-surface border border-border p-5">

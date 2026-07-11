@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import {
   LineChart, Line, BarChart, Bar, Cell, ComposedChart, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
@@ -8,9 +9,10 @@ import { CircularProgress } from '@/components/ui/CircularProgress'
 import { StreakBadge } from '@/components/ui/StreakBadge'
 import { computeRecovery } from '@/lib/recovery'
 import { MODULES } from '@/components/os/Sidebar'
-import { WeatherWidget } from '@/components/dashboard/widgets/WeatherWidget'
+import { WeatherWidget, type WeatherData } from '@/components/dashboard/widgets/WeatherWidget'
 import { HeatmapWidget } from '@/components/dashboard/widgets/HeatmapWidget'
 import { ModulePageClient } from '@/components/os/ModulePageClient'
+import { TappableWidget } from '@/components/os/TappableWidget'
 import type { DailyStats, HealthStatus, WorkoutSession, Injury } from '@/lib/db/queries'
 import type { WhoopMetrics } from '@/lib/db/whoop'
 
@@ -80,6 +82,7 @@ export function MainClient({
   stats, health, whoop, recentWorkouts, briefing, activeInjuries, trainToday, history, loggingStreak,
   weightTrend, sleepTrend, caloriesTrend, stepsTrend, recoveryStrainTrend, hrvTrend, targets,
 }: MainClientProps) {
+  const [weather, setWeather] = useState<WeatherData | null>(null)
   const recovery = computeRecovery(stats, health, whoop)
   const recoveryColor = {
     poor: 'var(--negative)', fair: 'var(--warning)', good: 'var(--positive)', great: 'var(--accent)',
@@ -117,9 +120,11 @@ export function MainClient({
         )}
       </div>
 
-      <ModulePageClient w={8} h={5}>
-        <WeatherWidget />
-      </ModulePageClient>
+      <TappableWidget widgetId="weather" weather={weather}>
+        <ModulePageClient w={8} h={5}>
+          <WeatherWidget onData={setWeather} />
+        </ModulePageClient>
+      </TappableWidget>
 
       {/* 3. Today's rings — tappable into their modules */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -156,7 +161,7 @@ export function MainClient({
           <p className="text-xs text-text-faint mt-1">{last7Load} session{last7Load === 1 ? '' : 's'} in the last 7 days</p>
         </Link>
 
-        <div className="rounded-2xl bg-surface border border-border p-5 flex flex-col gap-3">
+        <Link href="/health" className="rounded-2xl bg-surface border border-border p-5 flex flex-col gap-3 hover:border-border-strong transition-colors">
           <p className="text-xs font-semibold text-text-muted uppercase tracking-widest">Key vitals</p>
           <div className="grid grid-cols-3 gap-3">
             <div>
@@ -172,7 +177,7 @@ export function MainClient({
               <p className="text-[11px] text-text-subtle">Sleep hrs</p>
             </div>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* 4. Trend graphs — tappable into the relevant module */}
@@ -285,9 +290,11 @@ export function MainClient({
       {/* 5. Year heatmap strip — reused, not forked */}
       <div>
         <p className="text-xs font-semibold text-text-muted uppercase tracking-widest mb-2">Activity</p>
-        <ModulePageClient w={12} h={5}>
-          <HeatmapWidget history={history} workouts={recentWorkouts} calorieTarget={targets.calorie_target} />
-        </ModulePageClient>
+        <TappableWidget widgetId="heatmap" history={history}>
+          <ModulePageClient w={12} h={5}>
+            <HeatmapWidget history={history} workouts={recentWorkouts} calorieTarget={targets.calorie_target} />
+          </ModulePageClient>
+        </TappableWidget>
       </div>
 
       {/* 6. Streak / consistency counter */}

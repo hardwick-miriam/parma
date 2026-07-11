@@ -71,16 +71,16 @@ function InjuryTooltip({
   return (
     <div
       style={{
-        background: '#1e1e21',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: 'var(--surface-elevated)',
+        border: '1px solid var(--border-strong)',
         borderRadius: 8,
         padding: '6px 10px',
         fontSize: 12,
       }}
     >
-      <p style={{ color: 'rgba(240,240,242,0.45)', marginBottom: 2 }}>{label}</p>
+      <p style={{ color: 'var(--text-faint)', marginBottom: 2 }}>{label}</p>
       <p style={{ color: 'var(--accent)', fontWeight: 600 }}>{feeling}%</p>
-      <p style={{ color: 'rgba(240,240,242,0.45)' }}>{activity}</p>
+      <p style={{ color: 'var(--text-faint)' }}>{activity}</p>
     </div>
   )
 }

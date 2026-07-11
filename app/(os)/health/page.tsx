@@ -12,6 +12,7 @@ import { HealthStatusWidget } from '@/components/dashboard/widgets/HealthStatusW
 import { InjuryWidget } from '@/components/dashboard/widgets/InjuryWidget'
 import { SleepDebtWidget } from '@/components/dashboard/widgets/SleepDebtWidget'
 import { ModulePageClient } from '@/components/os/ModulePageClient'
+import { TappableWidget } from '@/components/os/TappableWidget'
 
 export default async function HealthPage() {
   const supabase = await createClient()
@@ -37,13 +38,17 @@ export default async function HealthPage() {
 
       <RecoveryWidget stats={stats} health={health} whoop={whoopToday} />
 
-      <ModulePageClient w={8} h={5}>
-        <WhoopWidget today={whoopToday} history={whoopHistory} />
-      </ModulePageClient>
+      <TappableWidget widgetId="whoop" whoopHistory={whoopHistory}>
+        <ModulePageClient w={8} h={5}>
+          <WhoopWidget today={whoopToday} history={whoopHistory} />
+        </ModulePageClient>
+      </TappableWidget>
 
-      <ModulePageClient w={8} h={5}>
-        <SleepDebtWidget history={history} />
-      </ModulePageClient>
+      <TappableWidget widgetId="sleepdebt" history={history}>
+        <ModulePageClient w={8} h={5}>
+          <SleepDebtWidget history={history} />
+        </ModulePageClient>
+      </TappableWidget>
 
       <HealthStatusWidget status={health} />
 
