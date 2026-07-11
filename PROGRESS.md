@@ -1038,3 +1038,60 @@ the actual production images — see `board.html`'s `bug-ref` text per row for t
 version. Final commit confirmed `Ready`/`Production` via `vercel ls`; every route curled live with
 correct auth-gating and no 500s; both body-figure images confirmed serving on production with an
 exact byte match to source.
+
+---
+
+## Follow-up — consistency pass, tap-to-detail, food depth, body polish, gym tidy, settings audit, bug audit (2026-07-11)
+
+**All 8 additional steps done (21/21 on board.html).**
+
+### What got done, in plain English
+
+1. **Consistency pass** — checked every module page against all 7 themes. Found and fixed one
+   real theming bug: the injury chart's hover tooltip was hardcoded dark and didn't adapt on
+   light themes. Confirmed the chat bar genuinely covers every module with no gaps.
+2. **Tap-to-detail restored** — six widgets (weather and the activity heatmap on Main; the WHOOP
+   and sleep-debt cards on Health; training load and the PR tracker on Gym) quietly lost their
+   "tap for more detail" popups when they moved into the new module pages during the restructure.
+   Rebuilt that wiring so tapping any of them opens the same rich detail view they used to. Also
+   fixed one genuinely dead tile on Main (the "key vitals" card did nothing when tapped — now
+   links to Health).
+3. **Food page depth** — the most-eaten quick-relog grid, per-food notes memory, and day-quality
+   ring were already built. Rather than assume they worked, I proved it: logged three real foods
+   plus a repeat of one from yesterday against your live account, confirmed the most-eaten count,
+   the day's totals, and the quality score all came out exactly right, then removed the test data.
+   Found and fixed a real bug in the process — several Food page queries would treat a failed API
+   call as a success and could crash instead of showing an error.
+4. **Body figure polish** — re-checked every muscle zone against the real artwork at both full
+   size and a small (compact-widget) size, front and back. Everything lines up correctly; nothing
+   needed fixing.
+5. **Gym module** — already cleanly built (PR tracker, training load, routine, exercise history,
+   body-map link, no placeholders); just confirmed it and added the tap-to-detail fix above.
+6. **Settings persistence** — checked theme, macro targets, notification categories, and the
+   mobile-effects toggle all actually save and reload correctly. All four do; nothing was silently
+   write-only.
+7. **Bug audit** (report only, nothing fixed as part of this step) — written fresh to `BUGS.md`.
+   Two critical findings (a saved-meal could theoretically save with bad data and corrupt a day's
+   nutrition totals; a real database error on the Main briefing could be mistaken for "no briefing
+   yet"), four moderate ones (the restructure left live auto-refresh only working on the old page,
+   not the new one; hiding a widget in the old view doesn't hide it in the new one; the new-user
+   walkthrough got disconnected during the restructure and nobody currently sees it; the WHOOP
+   card shows even for accounts that never connected WHOOP), and two minor ones. Full detail and a
+   suggested fix order are in `BUGS.md`.
+
+### What's still open / needs you
+
+1. Same as before: no browser here, so nothing in this pass was clicked through visually — worth
+   your own look, especially the restored tap-to-detail popups.
+2. **Your production domain is currently redirecting `parma.ink` → `www.parma.ink`** — the
+   opposite direction the project's own notes say is canonical. This is a Vercel domain-settings
+   question, not something in the code, so I didn't touch it — worth checking that's what you
+   intend.
+3. `BUGS.md` has a full list ready to work through next session — nothing in it was fixed this
+   pass, by design (you asked for report-only).
+
+### Evidence trail
+Commits: `d7d74a4` (tap-to-detail + theming fix) → `7154068` (Food page query fix) →
+`7a97c90` (BUGS.md). Final commit confirmed `success` on GitHub checks and the newest Vercel
+deployment `Ready`/`Production`; all 11 routes curled live and returned 200 (via the `www`
+redirect), both body-figure images confirmed serving with an exact byte match to source.

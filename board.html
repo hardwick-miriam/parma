@@ -96,12 +96,12 @@
 <body>
 <div class="wrap">
   <header>
-    <h1><span class="brand">Parma</span> — Body Figure, Chat Bar, Foods, Saved Meals, Main Upgrade</h1>
-    <p class="subtitle">Real body artwork + overlay, contextual chat bar per module, editable food items, saved meals, and a full Main command-centre rebuild with an AI daily briefing.</p>
+    <h1><span class="brand">Parma</span> — Body Figure, Chat Bar, Foods, Saved Meals, Main Upgrade + Consistency Pass</h1>
+    <p class="subtitle">Real body artwork + overlay, contextual chat bar per module, editable food items, saved meals, a full Main command-centre rebuild with an AI daily briefing, plus a follow-up consistency/tap-to-detail/settings pass and a fresh bug audit.</p>
   </header>
 
   <div class="overall-card">
-    <div class="overall-count"><span class="num" id="overall-num">0</span><span class="label">of <span id="overall-total">13</span> done</span></div>
+    <div class="overall-count"><span class="num" id="overall-num">0</span><span class="label">of <span id="overall-total">21</span> done</span></div>
     <div class="progress-track"><div class="progress-fill" id="overall-progress"></div></div>
     <div class="overall-breakdown" id="overall-breakdown"></div>
     <div class="status-banner" id="done-banner">✓ All steps resolved — board is no longer auto-refreshing.</div>
@@ -222,6 +222,62 @@
         <div class="bug-ref">S13 · commit b7bbbea confirmed Ready/Production via vercel ls (2m old); every route curled live (/, /main, /gym, /body, /food, /health, /media, /wardrobe, /journal, /settings, /grid) -- all correct 307 auth-gating, no 500s; body-front.png/body-back.png confirmed serving on production (200, exact byte match). node_modules restored to lockfile via npm ci, final build clean.</div>
       </div>
 
+
+      <div class="bug-row" data-status="done" data-id="C1" data-time-est="30" data-time-actual="25" data-credit-est="45000" data-credit-actual="52000">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">CONSISTENCY PASS — theming across Main + every module, chat bar coverage, mobile breakpoints.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref">C1 · Recon confirmed all 7 themes are genuine CSS-var/[data-theme] driven (app/globals.css), all 9 module pages use theme-reactive classes almost everywhere, ContextualLogBar mounted once in app/(os)/layout.tsx covering every route with no opt-outs. Found + fixed one real theming bug: InjuryWidget's recharts tooltip had hardcoded dark colours (#1e1e21 etc) that didn't adapt on light themes (brutalism) -- switched to var(--surface-elevated)/var(--border-strong)/var(--text-faint). BodyWidget's fixed dark card background was reviewed and left as-is: it's a deliberate choice since the real artwork is shot on black, not a theming bug.</div>
+      </div>
+
+      <div class="bug-row" data-status="done" data-id="C2" data-time-est="35" data-time-actual="40" data-credit-est="55000" data-credit-actual="62000">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">TAP-TO-DETAIL — re-verify every readout/card/graph opens a richer view; fix dead ends.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref">C2 · Recon found the old DashboardGrid's TappableWrapper->WidgetDetailRouter drill-down (real detail sheets: WeatherDetail, WhoopDetail, SleepDebtDetail, TrainingLoadDetail, PRTrackerDetail, HeatmapDetail) was lost for 6 widgets when they moved into the new module pages (ModulePageClient only provides sizing context, no onOpen). Built components/os/TappableWidget.tsx, a thin wrapper reusing WidgetDetailRouter unmodified, and wired it onto Main's WeatherWidget + HeatmapWidget, Health's WhoopWidget + SleepDebtWidget, Gym's TrainingLoadWidget + PRTrackerWidget. Also wrapped Main's "Key vitals" card (previously a dead tile) in a Link to /health. All Main/quick-nav Links independently confirmed to resolve to real routes.</div>
+      </div>
+
+      <div class="bug-row" data-status="done" data-id="C3" data-time-est="30" data-time-actual="35" data-credit-est="45000" data-credit-actual="50000">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">FOOD PAGE DEPTH — most-eaten quick-relog grid, per-food notes memory, day-quality ring, verified with a real multi-food log.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref">C3 · Found these were already built (getMostEatenFoods, food_notes table + upsertFoodNote, computeDayQuality) -- verified for real rather than assuming: inserted 3 real food_log rows + a repeat of one from yesterday against the live DB, confirmed most-eaten aggregation counted the repeat correctly (2), today's totals summed exactly (1450 kcal / 84g protein / 160g carbs), the day-quality ring computed a real score (75/100) from those totals, and a per-food note round-tripped correctly by normalised key -- then fully cleaned up (0 rows remaining). Also fixed a real bug while verifying: FoodClient.tsx's most-eaten/notes/saved-meals/today/timeline queries never checked res.ok, so a non-2xx API response would be treated as success and could crash on an unguarded data.meals.length -- added res.ok checks to all 5.</div>
+      </div>
+
+      <div class="bug-row" data-status="done" data-id="C4" data-time-est="20" data-time-actual="18" data-credit-est="30000" data-credit-actual="26000">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">BODY FIGURE POLISH — recheck zone alignment front+back at multiple sizes.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref">C4 · Re-ran the same composite-onto-real-artwork verification technique as the original build: parsed all 33 MUSCLE_DEFS coordinates straight out of BodyWidget.tsx, rendered them onto the real body-front.png/body-back.png at both native size (1024px) and a small render (340px, simulating a compact widget) to confirm the SVG viewBox lock scales zones correctly. Visually inspected all 4 renders: every zone (chest, delts, biceps/triceps, forearms, abs, obliques, quads, adductors, calves, tibialis on front; traps, rear-delts, lats, rhomboids, lower-back, glutes, hamstrings, calves on back) sits correctly on its real muscle at both sizes -- no misplacement found. No code changes needed.</div>
+      </div>
+
+      <div class="bug-row" data-status="done" data-id="C5" data-time-est="15" data-time-actual="10" data-credit-est="20000" data-credit-actual="14000">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">GYM MODULE TIDY — surface PR tracker, training load, routine, body-map link, exercise history; no placeholders.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref">C5 · Reviewed app/(os)/gym/page.tsx: already cleanly surfaces LiveLogger, TrainingLoadWidget (now tappable per C2), a real "days since rest" stat, PRTrackerWidget (now tappable), RoutineSection, ExerciseHistory, and a real Link to /body -- grepped for TODO/placeholder/fake/dummy markers, none found. No fixes needed beyond the C2 tap-to-detail wiring.</div>
+      </div>
+
+      <div class="bug-row" data-status="done" data-id="C6" data-time-est="20" data-time-actual="15" data-credit-est="30000" data-credit-actual="22000">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">SETTINGS PERSISTENCE AUDIT — confirm theme, macro targets, notification categories, mobile-effects toggle round-trip.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref">C6 · All 4 confirmed round-tripping correctly, verified by reading the actual write+read code paths (not just trusting the recon): theme (POST /api/theme -> cookie + user_preferences, read back in app/layout.tsx with a DB fallback), macro targets (settings page loads getUserPreferences into initial state, save action upserts), notification categories (app/api/push/subscribe/route.ts has both a GET that reads categories back and a POST that writes them -- spot-checked this file directly), bgEffectsMobile (synced to user_preferences.bg_effects_mobile, not just localStorage). No write-only settings found, no fixes needed.</div>
+      </div>
+
+      <div class="bug-row" data-status="done" data-id="C7" data-time-est="40" data-time-actual="45" data-credit-est="60000" data-credit-actual="70000">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">FULL BUG AUDIT (report only) — fresh pass focused on the restructure, written to BUGS.md.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref">C7 · BUGS.md overwritten (dated 2026-07-11): 2 critical (saved-meal items never validated before storage -> NaN risk in daily_stats; /api/briefing swallows real DB errors as "no briefing yet"), 4 major (RealtimeSync not mounted anywhere in the new app/(os) shell -- confirmed via grep it's only on /grid; widget-hide/layout prefs split between /grid and the new pages; OnboardingTour fully built but orphaned, imported nowhere -- confirmed via repo-wide grep; WhoopWidget renders unconditionally on the new Health page even when WHOOP isn't connected, confirmed against the old dashboard's whoopConnected gate), 2 minor (cron/daily-briefing's 30-day cutoff uses new Date().toISOString() instead of getLocalDate; ContextualLogBar's mobile offset is an unlinked magic number). Grouped by severity with a suggested fix order. No code changed for this task, as instructed.</div>
+      </div>
+
+      <div class="bug-row" data-status="done" data-id="C8" data-time-est="20" data-time-actual="20" data-credit-est="30000" data-credit-actual="30000">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">FINAL — clean build, verify production serves the latest commit, board.html + PROGRESS.md true final state.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref">C8 · rm -rf .next && npm run build clean. Commit 7a97c90 confirmed success on GitHub checks; newest Vercel deployment (2m old) confirmed Ready/Production. Found and noted (not a code bug -- a Vercel domain-settings config): parma.ink now 308-redirects to www.parma.ink, the opposite direction CLAUDE.md documents as canonical -- flagged for the user rather than silently "fixed" by editing code. Followed the redirect and confirmed all 11 routes (/, /main, /health, /gym, /food, /body, /media, /wardrobe, /journal, /settings, /grid) return 200, both body-front.png/body-back.png confirmed serving live with exact byte match to source (1274936 / 1271085 bytes).</div>
+      </div>
     </div>
   </section>
 
