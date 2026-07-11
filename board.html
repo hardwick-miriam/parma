@@ -286,11 +286,11 @@
         <div class="bug-ref">D1 · Added SavedMealItemSchema (lib/schemas.ts) requiring all 7 macros as required nonnegative numbers (not optional like ParsedFoodItemSchema, since quickAddSavedMeal's reduce has no downstream default-to-0 step). Wired z.array(SavedMealItemSchema).safeParse into both POST /api/saved-meals and PATCH /api/saved-meals/[id] before any DB write, returning 400 with the exact zod issues on failure -- never coerced. REAL test: valid item passes; item missing 5 macro fields rejected with a precise per-field message; string-typed macro rejected (no silent coercion); explicit NaN macro rejected; simulated the route's exact check-then-write order and confirmed the bad payload never reaches the DB (0 matching rows).</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="D2" data-time-est="20" data-credit-est="30000">
+      <div class="bug-row" data-status="done" data-id="D2" data-time-est="20" data-time-actual="25" data-credit-est="30000" data-credit-actual="34000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">CRITICAL 2 — /api/briefing must distinguish a real DB error from "no briefing yet".</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">D2</div>
+        <div class="bug-ref">D2 · Found the real bug was one level deeper than BUGS.md's file reference: app/api/briefing/route.ts is never actually called by the app (dead code, fixed anyway for correctness) -- Main's page.tsx calls getBriefing directly with the same blanket .catch(() => null). getBriefing itself was already correct (maybeSingle returns null with no throw for a genuine "no row" case; only a real error throws). Fixed both: the API route now only try/catches to log+500 on a real error; Main's page.tsx got a named getBriefingSafe() wrapper that logs the real error server-side instead of discarding it, while still falling back gracefully so the page stays up. REAL test against the live DB: a genuine no-row date correctly returned null with no throw; a malformed-UUID request (a real Postgres error, not a "no rows" result) correctly threw instead of returning null -- confirms the two cases are now distinguishable.</div>
       </div>
 
       <div class="bug-row" data-status="waiting" data-id="D3" data-time-est="25" data-credit-est="35000">

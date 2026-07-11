@@ -24,6 +24,19 @@ async function getActiveRoutineRow(supabase: SupabaseClient, userId: string) {
   }
 }
 
+// getBriefing itself already returns null (no throw) for the genuine "no
+// briefing generated yet" case — so anything it does throw is a real
+// failure (RLS, connection, etc) and must be logged, not silently folded
+// into the same "no briefing yet" fallback the UI shows either way.
+async function getBriefingSafe(userId: string, date: string, supabase: SupabaseClient) {
+  try {
+    return await getBriefing(userId, date, supabase)
+  } catch (err) {
+    console.error('[main] getBriefing failed:', err)
+    return null
+  }
+}
+
 export default async function MainPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -37,7 +50,7 @@ export default async function MainPage() {
     getRecentWorkouts(user.id, 90).catch(() => []),
     getUserPreferences(user.id).catch(() => null),
     whoopConn ? getLatestWhoopMetrics(user.id).catch(() => null) : null,
-    getBriefing(user.id, getLocalDate(), supabase).catch(() => null),
+    getBriefingSafe(user.id, getLocalDate(), supabase),
     getActiveInjuries(user.id).catch(() => []),
     whoopConn ? getWhoopMetrics(user.id, 14).catch(() => []) : Promise.resolve([]),
     getActiveRoutineRow(supabase, user.id),
