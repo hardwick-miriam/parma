@@ -1373,3 +1373,46 @@ right. Every module page's imports re-checked post-removal and confirmed to refe
 components. `/grid` now `redirect()`s to `/main` instead of 404ing. CLAUDE.md updated to describe
 the module OS as the single dashboard and to correct two other claims that had gone stale
 (RealtimeSync's table count, hidden_widgets' read-only status).
+
+---
+
+## Meal selection on the Food page (2026-07-11, later session)
+
+**All 5 steps done.** The Food page could previously only "save as meal" the *entire day* — this
+session added real multi-select so a specific handful of logged items can become a named meal, be
+bulk-deleted, or be bulk re-timed, plus meal-time grouping (Breakfast/Lunch/Dinner/Snacks) so
+picking "my lunch" is natural.
+
+### What was built
+- **Backend:** `bulkDeleteFoodItems` and `bulkSetFoodItemsMeal` in `lib/db/food.ts` (delete/re-time
+  exactly the given `food_log` row ids), new `POST /api/food-log/bulk-delete` and
+  `POST /api/food-log/bulk-meal` routes. `lib/foodMealTime.ts` adds a pure, read-only
+  `inferMealTime(created_at)` — Europe/London hour buckets used only to group items that were never
+  explicitly assigned a meal; it never writes to the DB.
+- **FoodClient.tsx:** a global "Select items" toggle puts every row into checkbox mode (tap
+  anywhere on a row to select); a sticky action bar appears once 1+ items are selected, showing the
+  count and three actions — **Save as meal** (prompts for a name, POSTs only the selected items to
+  the existing, unmodified `/api/saved-meals` — zero forked logic), **Delete selected** (confirms,
+  then bulk-deletes and recomputes the day's totals from the remaining rows, never zeroing), and
+  **Set meal-time** (bulk-assigns breakfast/lunch/dinner/snack). Each day now renders as four
+  meal-time sections with per-section calorie+protein subtotals instead of one flat list, and a
+  "Select all" link (visible only in select mode) restores the old whole-day shortcut without
+  needing a separate code path.
+- Saved meals created this way are ordinary rows in `saved_meals` — the existing quick-add
+  scroll strip, edit, and delete UI needed no changes at all.
+
+### Evidence trail (real data, not mocked)
+Ran a throwaway script against the **live** Supabase project (service-role key, self-cleaning)
+exercising the real `lib/db/food.ts` + `lib/db/savedMeals.ts` functions exactly as the UI calls
+them: logged 5 real `food_log` rows (1625 kcal / 110.3g protein combined), selected exactly 3
+(Chicken salad wrap, Greek yoghurt, Salmon+rice), saved them as "Test Lunch" — the stored meal
+contained **exactly those 3 items**, not all 5, with macros (1300 kcal / 98g protein / 122g carbs /
+43g fat / 12g fibre / 27g sugar / 2.6g salt) matching the 3-item sum precisely. Quick-added "Test
+Lunch" onto a different date and confirmed those same 3 items landed and `daily_stats` read back
+1300 kcal / 98g protein on that day. Also bulk-deleted the 2 *un*selected items from the original
+day and confirmed `daily_stats` recomputed to the remaining-3 total rather than zeroing. Cleaned up
+every test row/meal afterward and confirmed the test meal no longer appears in `getSavedMeals`.
+`npm run build` clean.
+
+**Needs your eyes:** the UI itself (checkbox rendering, sticky action bar placement, meal-time
+section headers) — what's verified above is the data layer end to end, not pixels on screen.

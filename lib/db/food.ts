@@ -140,6 +140,41 @@ export async function deleteFoodItem(userId: string, itemId: string, client?: Su
   await recomputeDailyFoodMacros(userId, item.date, supabase)
 }
 
+/** Deletes a specific set of food_log rows (e.g. a multi-select on the timeline) and recomputes every affected date's totals from scratch. */
+export async function bulkDeleteFoodItems(userId: string, itemIds: string[], client?: SupabaseClient): Promise<void> {
+  if (!itemIds.length) return
+  const supabase = client ?? (await createClient())
+
+  const { data: items, error: readError } = await supabase
+    .from('food_log')
+    .select('date')
+    .eq('user_id', userId)
+    .in('id', itemIds)
+  if (readError) throw readError
+  if (!items?.length) return
+
+  const { error: deleteError } = await supabase.from('food_log').delete().eq('user_id', userId).in('id', itemIds)
+  if (deleteError) throw deleteError
+
+  const dates = [...new Set(items.map((i) => i.date))]
+  for (const date of dates) {
+    await recomputeDailyFoodMacros(userId, date, supabase)
+  }
+}
+
+/** Assigns a meal-time to a specific set of food_log rows. Doesn't touch macros/totals, so no recompute is needed. */
+export async function bulkSetFoodItemsMeal(
+  userId: string,
+  itemIds: string[],
+  meal: 'breakfast' | 'lunch' | 'dinner' | 'snack',
+  client?: SupabaseClient
+): Promise<void> {
+  if (!itemIds.length) return
+  const supabase = client ?? (await createClient())
+  const { error } = await supabase.from('food_log').update({ meal }).eq('user_id', userId).in('id', itemIds)
+  if (error) throw error
+}
+
 export interface FoodNote {
   id: string
   user_id: string
