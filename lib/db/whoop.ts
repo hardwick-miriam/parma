@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 export interface WhoopConnection {
   id: string
@@ -90,9 +91,10 @@ export async function upsertWhoopMetrics(
 // should filter with .find(m => m.recovery_score != null).
 export async function getWhoopMetrics(
   userId: string,
-  days = 7
+  days = 7,
+  client?: SupabaseClient
 ): Promise<WhoopMetrics[]> {
-  const supabase = await createClient()
+  const supabase = client ?? (await createClient())
   const since = new Date(Date.now() - days * 86400_000).toISOString().split('T')[0]
   const { data, error } = await supabase
     .from('whoop_metrics')

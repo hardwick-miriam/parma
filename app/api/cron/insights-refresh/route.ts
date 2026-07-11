@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { getDailyStatsHistoryForUser } from '@/lib/db/history'
-import { computeInsights } from '@/lib/insights/compute'
+import { computeInsights, computeMoodCorrelations } from '@/lib/insights/compute'
+import { getWhoopMetrics } from '@/lib/db/whoop'
+import { getRecentWorkouts } from '@/lib/db/queries'
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
@@ -33,7 +35,14 @@ export async function GET(request: NextRequest) {
       const history = await getDailyStatsHistoryForUser(supabase, userId, 90)
       if (history.length < 10) continue
 
-      const computed = computeInsights(history)
+      const [whoopHistory, recentWorkouts] = await Promise.all([
+        getWhoopMetrics(userId, 90, supabase),
+        getRecentWorkouts(userId, 90, supabase).catch(() => []),
+      ])
+      const trainedDates = new Set(recentWorkouts.map((w) => w.date))
+      const moodCorrelations = computeMoodCorrelations(history, whoopHistory, trainedDates)
+
+      const computed = [...computeInsights(history), ...moodCorrelations]
       if (computed.length === 0) continue
 
       const { error: deleteErr } = await supabase.from('insights').delete().eq('user_id', userId)

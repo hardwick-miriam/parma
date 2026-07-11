@@ -14,6 +14,7 @@ import { InjuryWidget } from '@/components/dashboard/widgets/InjuryWidget'
 import { SleepDebtWidget } from '@/components/dashboard/widgets/SleepDebtWidget'
 import { ModulePageClient } from '@/components/os/ModulePageClient'
 import { TappableWidget } from '@/components/os/TappableWidget'
+import { MoodCorrelationsSection } from '@/components/os/MoodCorrelationsSection'
 
 export default async function HealthPage() {
   const supabase = await createClient()
@@ -58,6 +59,8 @@ export default async function HealthPage() {
       )}
 
       <HealthStatusWidget status={health} />
+
+      <MoodCorrelationsSection />
 
       <div className="flex flex-col gap-3">
         <InjuryWidget injuries={injuries} pastInjuries={pastInjuries} />

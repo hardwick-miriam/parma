@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getDailyStatsHistory } from '@/lib/db/history'
-import { computeInsights } from '@/lib/insights/compute'
+import { computeInsights, computeMoodCorrelations } from '@/lib/insights/compute'
+import { getWhoopMetrics } from '@/lib/db/whoop'
+import { getRecentWorkouts } from '@/lib/db/queries'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,7 +31,14 @@ export async function GET() {
     return NextResponse.json({ insights: [], insufficient: true })
   }
 
-  const computed = computeInsights(history)
+  const [whoopHistory, recentWorkouts] = await Promise.all([
+    getWhoopMetrics(user.id, 90, supabase).catch(() => []),
+    getRecentWorkouts(user.id, 90, supabase).catch(() => []),
+  ])
+  const trainedDates = new Set(recentWorkouts.map((w) => w.date))
+  const moodCorrelations = computeMoodCorrelations(history, whoopHistory, trainedDates)
+
+  const computed = [...computeInsights(history), ...moodCorrelations]
 
   if (computed.length > 0) {
     // Clear old cache and insert fresh batch

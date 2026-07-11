@@ -22,6 +22,9 @@ const METRIC_LABELS: Record<string, string> = {
   sleep_hours: 'sleep',
   weight_kg: 'weight',
   mood: 'mood',
+  recovery_score: 'recovery',
+  trained: 'training',
+  days_since_dose: 'days since dose',
 }
 
 const MOOD_SCORE: Record<string, number> = {
@@ -189,6 +192,80 @@ export function computeInsights(data: DailyStats[]): Insight[] {
         body: `Your average ${label} is ${sign}${pctChange.toFixed(0)}% vs last week (${formatVal(tw, m)} vs ${formatVal(lw, m)}).`,
         strength: pctChange / 100,
       })
+    }
+  }
+
+  return insights
+}
+
+export interface DailyRecoveryPoint {
+  date: string
+  recovery_score: number | null
+}
+
+/**
+ * Mood correlations feature (22) — extends the same plain-stats engine with
+ * signals that aren't on DailyStats itself (WHOOP recovery, whether the user
+ * trained). Weather is deliberately NOT attempted here: there is no daily
+ * weather-history table anywhere in the schema (app/api/weather is a live
+ * fetch, nothing persisted per-day) — correlating against it would require
+ * a new forward-collecting pipeline, out of scope for a pure-stats feature.
+ */
+export function computeMoodCorrelations(
+  data: DailyStats[],
+  whoopHistory: DailyRecoveryPoint[],
+  trainedDates: Set<string>
+): Insight[] {
+  const insights: Insight[] = []
+  if (data.length < MIN_TREND) return insights
+
+  // mood vs recovery (joined by date — not on DailyStats itself)
+  const whoopByDate = new Map(whoopHistory.map((w) => [w.date, w.recovery_score]))
+  const recoveryPairs: [number, number][] = []
+  for (const row of data) {
+    const moodScore = MOOD_SCORE[row.mood ?? '']
+    const recovery = whoopByDate.get(row.date)
+    if (moodScore != null && moodScore > 0 && recovery != null && recovery > 0) {
+      recoveryPairs.push([recovery, moodScore])
+    }
+  }
+  if (recoveryPairs.length >= MIN_PAIRS) {
+    const r = pearson(recoveryPairs.map((p) => p[0]), recoveryPairs.map((p) => p[1]))
+    if (Math.abs(r) >= 0.3) insights.push(correlationInsight(r, 'recovery_score', 'mood'))
+  }
+
+  // mood vs protein/calories — same PAIRS mechanism, just not in the default list
+  for (const key of ['protein_g', 'calories'] as const) {
+    const pairs = pairSeries(data, key, 'mood')
+    if (pairs.length < MIN_PAIRS) continue
+    const r = pearson(pairs.map((p) => p[0]), pairs.map((p) => p[1]))
+    if (Math.abs(r) >= 0.3) insights.push(correlationInsight(r, key, 'mood'))
+  }
+
+  // mood vs did/didn't train (point-biserial — same Pearson formula with a 0/1 series)
+  const trainPairs: [number, number][] = []
+  for (const row of data) {
+    const moodScore = MOOD_SCORE[row.mood ?? '']
+    if (moodScore == null || moodScore <= 0) continue
+    trainPairs.push([trainedDates.has(row.date) ? 1 : 0, moodScore])
+  }
+  if (trainPairs.length >= MIN_PAIRS) {
+    const xs = trainPairs.map((p) => p[0])
+    const hasVariance = xs.some((x) => x !== xs[0])
+    if (hasVariance) {
+      const r = pearson(xs, trainPairs.map((p) => p[1]))
+      if (Math.abs(r) >= 0.3) {
+        const abs = Math.abs(r)
+        const strength = abs >= 0.6 ? 'strongly' : abs >= 0.4 ? 'moderately' : 'weakly'
+        insights.push({
+          type: 'correlation',
+          metric_a: 'trained',
+          metric_b: 'mood',
+          title: r > 0 ? 'Mood higher on training days' : 'Mood lower on training days',
+          body: `Your mood is ${strength} ${r > 0 ? 'higher' : 'lower'} on days you train (r=${r.toFixed(2)}).`,
+          strength: r,
+        })
+      }
     }
   }
 

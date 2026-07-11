@@ -1172,3 +1172,9 @@ mixed) + real DB trend/change computation verified. See board.html E1 for full e
 **DONE Task 2 — Reading/learning tracker.** Migration 028 live+verified. Real NLP test (3
 questions, confirmed no leakage into the media table) + real upsert-in-place test verified. See
 board.html E2 for full evidence.
+
+**DONE Task 3 — Mood correlations.** Extended the existing insights engine (no new AI calls) with
+recovery/protein/calories/training-vs-mood correlations; weather honestly skipped (no historical
+data exists to correlate against). Real account currently has too little data to surface any
+finding (honestly reported "still learning"); separately proved the correlation logic itself works
+with clearly-labeled synthetic data, fully cleaned up. See board.html E3 for full evidence.

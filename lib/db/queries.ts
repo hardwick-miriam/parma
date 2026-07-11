@@ -90,8 +90,8 @@ export async function getTodayWorkouts(userId: string): Promise<WorkoutSession[]
   return data ?? []
 }
 
-export async function getRecentWorkouts(userId: string, days = 30): Promise<WorkoutSession[]> {
-  const supabase = await createClient()
+export async function getRecentWorkouts(userId: string, days = 30, client?: SupabaseClient): Promise<WorkoutSession[]> {
+  const supabase = client ?? (await createClient())
   const since = new Date()
   since.setDate(since.getDate() - days)
 
