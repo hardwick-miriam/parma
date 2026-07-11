@@ -96,12 +96,12 @@
 <body>
 <div class="wrap">
   <header>
-    <h1><span class="brand">Parma</span> — Body Figure, Chat Bar, Foods, Saved Meals, Main Upgrade + Consistency Pass</h1>
-    <p class="subtitle">Real body artwork + overlay, contextual chat bar per module, editable food items, saved meals, a full Main command-centre rebuild with an AI daily briefing, plus a follow-up consistency/tap-to-detail/settings pass and a fresh bug audit.</p>
+    <h1><span class="brand">Parma</span> — Body Figure, Chat Bar, Foods, Saved Meals, Main Upgrade + Consistency Pass + Bugfix Round</h1>
+    <p class="subtitle">Real body artwork + overlay, contextual chat bar per module, editable food items, saved meals, a full Main command-centre rebuild with an AI daily briefing, a follow-up consistency/tap-to-detail/settings pass, a fresh bug audit, and now fixing the 2 critical + 4 major bugs it found.</p>
   </header>
 
   <div class="overall-card">
-    <div class="overall-count"><span class="num" id="overall-num">0</span><span class="label">of <span id="overall-total">21</span> done</span></div>
+    <div class="overall-count"><span class="num" id="overall-num">0</span><span class="label">of <span id="overall-total">29</span> done</span></div>
     <div class="progress-track"><div class="progress-fill" id="overall-progress"></div></div>
     <div class="overall-breakdown" id="overall-breakdown"></div>
     <div class="status-banner" id="done-banner">✓ All steps resolved — board is no longer auto-refreshing.</div>
@@ -277,6 +277,62 @@
         <div class="bug-main"><div class="bug-text">FINAL — clean build, verify production serves the latest commit, board.html + PROGRESS.md true final state.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
         <div class="bug-ref">C8 · rm -rf .next && npm run build clean. Commit 7a97c90 confirmed success on GitHub checks; newest Vercel deployment (2m old) confirmed Ready/Production. Found and noted (not a code bug -- a Vercel domain-settings config): parma.ink now 308-redirects to www.parma.ink, the opposite direction CLAUDE.md documents as canonical -- flagged for the user rather than silently "fixed" by editing code. Followed the redirect and confirmed all 11 routes (/, /main, /health, /gym, /food, /body, /media, /wardrobe, /journal, /settings, /grid) return 200, both body-front.png/body-back.png confirmed serving live with exact byte match to source (1274936 / 1271085 bytes).</div>
+      </div>
+
+      <div class="bug-row" data-status="done" data-id="D1" data-time-est="25" data-time-actual="22" data-credit-est="35000" data-credit-actual="38000">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">CRITICAL 1 — validate saved-meal items before storage; reject invalid, never coerce.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref">D1 · Added SavedMealItemSchema (lib/schemas.ts) requiring all 7 macros as required nonnegative numbers (not optional like ParsedFoodItemSchema, since quickAddSavedMeal's reduce has no downstream default-to-0 step). Wired z.array(SavedMealItemSchema).safeParse into both POST /api/saved-meals and PATCH /api/saved-meals/[id] before any DB write, returning 400 with the exact zod issues on failure -- never coerced. REAL test: valid item passes; item missing 5 macro fields rejected with a precise per-field message; string-typed macro rejected (no silent coercion); explicit NaN macro rejected; simulated the route's exact check-then-write order and confirmed the bad payload never reaches the DB (0 matching rows).</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="D2" data-time-est="20" data-credit-est="30000">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">CRITICAL 2 — /api/briefing must distinguish a real DB error from "no briefing yet".</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref">D2</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="D3" data-time-est="25" data-credit-est="35000">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">MAJOR — mount RealtimeSync in the new module shell so Main/Food/Health/Gym auto-refresh.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref">D3</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="D4" data-time-est="30" data-credit-est="40000">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">MAJOR — sync widget hide/show between /grid and the new module pages.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref">D4</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="D5" data-time-est="25" data-credit-est="35000">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">MAJOR — reconnect the onboarding tour to the new module shell.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref">D5</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="D6" data-time-est="15" data-credit-est="20000">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">MAJOR — gate WhoopWidget behind whoopConnected on the Health page.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref">D6</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="D7" data-time-est="20" data-credit-est="25000">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">MINOR — fix cron/daily-briefing's UTC date bypass and ContextualLogBar's magic-number offset.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref">D7</div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="D8" data-time-est="20" data-credit-est="25000">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">FINAL — build clean, verify production, board.html + PROGRESS.md true final state.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref">D8</div>
       </div>
     </div>
   </section>

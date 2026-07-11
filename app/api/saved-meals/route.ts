@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getSavedMeals, createSavedMeal } from '@/lib/db/savedMeals'
+import { SavedMealItemSchema } from '@/lib/schemas'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,8 +25,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'name and a non-empty items array are required' }, { status: 400 })
   }
 
+  const parsedItems = z.array(SavedMealItemSchema).safeParse(body.items)
+  if (!parsedItems.success) {
+    return NextResponse.json(
+      { error: 'Invalid meal items', details: parsedItems.error.flatten() },
+      { status: 400 }
+    )
+  }
+
   try {
-    const meal = await createSavedMeal(user.id, body.name, body.items, supabase)
+    const meal = await createSavedMeal(user.id, body.name, parsedItems.data, supabase)
     return NextResponse.json({ meal })
   } catch (err) {
     console.error('[saved-meals] create error:', err)

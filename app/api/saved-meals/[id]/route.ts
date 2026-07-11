@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { updateSavedMeal, deleteSavedMeal } from '@/lib/db/savedMeals'
+import { SavedMealItemSchema } from '@/lib/schemas'
+import { z } from 'zod'
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -10,6 +12,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const updates = await request.json().catch(() => null)
   if (!updates) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+
+  if (updates.items !== undefined) {
+    const parsedItems = z.array(SavedMealItemSchema).safeParse(updates.items)
+    if (!parsedItems.success) {
+      return NextResponse.json(
+        { error: 'Invalid meal items', details: parsedItems.error.flatten() },
+        { status: 400 }
+      )
+    }
+    updates.items = parsedItems.data
+  }
 
   try {
     const meal = await updateSavedMeal(user.id, id, updates, supabase)

@@ -27,6 +27,22 @@ export const ParsedFoodItemSchema = z.object({
   salt_g: z.number().nonnegative().optional(),
 })
 
+// Saved-meal items are re-summed later (quickAddSavedMeal's totals reduce) with
+// no downstream default-to-0 step, unlike ParsedFoodItemSchema's optional macros —
+// so every macro here is required, not optional, or a missing field becomes NaN
+// and silently corrupts that day's daily_stats.
+export const SavedMealItemSchema = z.object({
+  description: z.string().min(1),
+  meal: z.enum(['breakfast', 'lunch', 'dinner', 'snack']).optional(),
+  calories: z.number().nonnegative().int(),
+  protein_g: z.number().nonnegative(),
+  carbs_g: z.number().nonnegative(),
+  fat_g: z.number().nonnegative(),
+  fibre_g: z.number().nonnegative(),
+  sugar_g: z.number().nonnegative(),
+  salt_g: z.number().nonnegative(),
+})
+
 export const ParsedInjuryCheckinSchema = z.object({
   body_part: z.string().optional(),
   feeling_pct: z.number().min(0).max(100),
