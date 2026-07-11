@@ -256,17 +256,21 @@ export function LogInput({ onParsed, onQuestion, onVoiceTranscript, moduleContex
 
     // Queue when offline
     if (!navigator.onLine) {
-      const { enqueueLog } = await import('@/lib/offlineQueue')
-      await enqueueLog({
-        text,
-        date: new Date().toLocaleDateString('en-CA'),
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        createdAt: Date.now(),
-      })
-      window.dispatchEvent(new CustomEvent('parma:queued'))
-      setText('')
-      if (textareaRef.current) textareaRef.current.style.height = 'auto'
-      setError(null)
+      try {
+        const { enqueueLog } = await import('@/lib/offlineQueue')
+        await enqueueLog({
+          text,
+          date: new Date().toLocaleDateString('en-CA'),
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          createdAt: Date.now(),
+        })
+        window.dispatchEvent(new CustomEvent('parma:queued'))
+        setText('')
+        if (textareaRef.current) textareaRef.current.style.height = 'auto'
+        setError(null)
+      } catch {
+        setError('Failed to queue for later — your text is still here, try again')
+      }
       return
     }
 

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { ACCOUNT_TYPES, DEBT_TYPES, type AccountType, type DebtType } from '@/lib/financeTypes'
 
@@ -69,6 +70,7 @@ export function FinancesClient() {
       if (!res.ok) throw new Error('Failed to add account')
     },
     onSuccess: () => { invalidate(); setShowAddAccount(false); setNewAccount({ name: '', type: 'cash', balance: '' }) },
+    onError: () => toast.error('Failed to add account'),
   })
 
   const addDebtMutation = useMutation({
@@ -84,6 +86,7 @@ export function FinancesClient() {
       if (!res.ok) throw new Error('Failed to add debt')
     },
     onSuccess: () => { invalidate(); setShowAddDebt(false); setNewDebt({ name: '', type: 'loan', balance: '', apr: '', min_payment: '' }) },
+    onError: () => toast.error('Failed to add debt'),
   })
 
   const updateAccountMutation = useMutation({
@@ -94,6 +97,7 @@ export function FinancesClient() {
       if (!res.ok) throw new Error('Failed to update')
     },
     onSuccess: invalidate,
+    onError: () => toast.error('Failed to update account balance'),
   })
 
   const updateDebtMutation = useMutation({
@@ -104,6 +108,7 @@ export function FinancesClient() {
       if (!res.ok) throw new Error('Failed to update')
     },
     onSuccess: invalidate,
+    onError: () => toast.error('Failed to update debt balance'),
   })
 
   const deleteAccountMutation = useMutation({
@@ -112,6 +117,7 @@ export function FinancesClient() {
       if (!res.ok) throw new Error('Failed to delete')
     },
     onSuccess: invalidate,
+    onError: () => toast.error('Failed to delete account'),
   })
 
   const deleteDebtMutation = useMutation({
@@ -120,6 +126,7 @@ export function FinancesClient() {
       if (!res.ok) throw new Error('Failed to delete')
     },
     onSuccess: invalidate,
+    onError: () => toast.error('Failed to delete debt'),
   })
 
   if (summary.isLoading) return <p className="text-sm text-text-subtle">Loading…</p>
@@ -193,7 +200,13 @@ export function FinancesClient() {
             <div className="flex items-center gap-2">
               <input
                 type="number" defaultValue={a.balance}
-                onBlur={(e) => { const v = Number(e.target.value); if (v !== a.balance) updateAccountMutation.mutate({ id: a.id, balance: v }) }}
+                onBlur={(e) => {
+                  const target = e.target
+                  const v = Number(target.value)
+                  if (v !== a.balance) {
+                    updateAccountMutation.mutate({ id: a.id, balance: v }, { onError: () => { target.value = String(a.balance) } })
+                  }
+                }}
                 className="w-24 text-right rounded-lg bg-surface-elevated border border-border text-text text-sm px-2 py-1"
               />
               <button onClick={() => deleteAccountMutation.mutate(a.id)} className="text-xs text-red-400">Delete</button>
@@ -232,7 +245,13 @@ export function FinancesClient() {
               <div className="flex items-center gap-2">
                 <input
                   type="number" defaultValue={d.balance}
-                  onBlur={(e) => { const v = Number(e.target.value); if (v !== d.balance) updateDebtMutation.mutate({ id: d.id, balance: v }) }}
+                  onBlur={(e) => {
+                    const target = e.target
+                    const v = Number(target.value)
+                    if (v !== d.balance) {
+                      updateDebtMutation.mutate({ id: d.id, balance: v }, { onError: () => { target.value = String(d.balance) } })
+                    }
+                  }}
                   className="w-24 text-right rounded-lg bg-surface-elevated border border-border text-text text-sm px-2 py-1"
                 />
                 <button onClick={() => deleteDebtMutation.mutate(d.id)} className="text-xs text-red-400">Delete</button>

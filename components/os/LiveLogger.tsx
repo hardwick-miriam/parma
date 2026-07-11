@@ -90,6 +90,7 @@ export function LiveLogger() {
         toast.success('Set logged')
       }
     },
+    onError: () => toast.error('Failed to log set'),
   })
 
   const deleteSetMutation = useMutation({
@@ -101,6 +102,7 @@ export function LiveLogger() {
       queryClient.invalidateQueries({ queryKey: ['gym-session'] })
       queryClient.invalidateQueries({ queryKey: ['gym-exercise-detail'] })
     },
+    onError: () => toast.error('Failed to delete set'),
   })
 
   const editSetMutation = useMutation({
@@ -116,6 +118,7 @@ export function LiveLogger() {
       queryClient.invalidateQueries({ queryKey: ['gym-session'] })
       queryClient.invalidateQueries({ queryKey: ['gym-exercise-detail'] })
     },
+    onError: () => toast.error('Failed to update set'),
   })
 
   const sessionSetsForExercise = useMemo(

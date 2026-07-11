@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { toast } from 'sonner'
 import { LogInput } from './LogInput'
 import { ConfirmationDrawer } from './ConfirmationDrawer'
 import { QnAResult } from './QnAResult'
@@ -92,9 +93,13 @@ export function LogFlow({ moduleContext, placeholder }: { moduleContext?: string
           }),
         })
         const data = await res.json()
-        if (res.ok) setPending({ text: transcript, parsed: data.parsed })
+        if (res.ok) {
+          setPending({ text: transcript, parsed: data.parsed })
+        } else {
+          toast.error(`Couldn't log "${transcript}" — try typing it instead`)
+        }
       } catch {
-        // ignore
+        toast.error(`Couldn't log "${transcript}" — try typing it instead`)
       }
     } finally {
       setVoiceParsing(false)
@@ -105,8 +110,12 @@ export function LogFlow({ moduleContext, placeholder }: { moduleContext?: string
     if (!voiceToast) return
     setVoiceToast(null)
     if (voiceToast.entryId) {
-      await deleteLogEntry(voiceToast.entryId).catch(() => {})
-      window.dispatchEvent(new CustomEvent('parma:saved'))
+      try {
+        await deleteLogEntry(voiceToast.entryId)
+        window.dispatchEvent(new CustomEvent('parma:saved'))
+      } catch {
+        toast.error('Failed to undo — the entry is still logged')
+      }
     }
   }
 

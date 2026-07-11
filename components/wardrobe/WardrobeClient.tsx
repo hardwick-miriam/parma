@@ -84,25 +84,29 @@ export function WardrobeClient() {
     e.preventDefault()
     if (!wearText.trim()) return
     setWearResult(null)
-    const res = await fetch('/api/wardrobe/log-wear', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: wearText }),
-    })
-    if (res.ok) {
-      const { date, matches } = await res.json()
-      const matched = matches.filter((m: { item: unknown }) => m.item)
-      const unmatched = matches.filter((m: { item: unknown }) => !m.item)
-      setWearResult(
-        matched.length
-          ? `Logged ${matched.map((m: { item: { name: string } }) => m.item.name).join(', ')} for ${date}` +
-            (unmatched.length ? ` — couldn't match "${unmatched.map((m: { fragment: string }) => m.fragment).join('", "')}"` : '')
-          : `Couldn't match any items in "${wearText}"`
-      )
-      setWearText('')
-      queryClient.invalidateQueries({ queryKey: ['wardrobe'] })
-    } else {
-      setWearResult('Failed to log wear')
+    try {
+      const res = await fetch('/api/wardrobe/log-wear', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: wearText }),
+      })
+      if (res.ok) {
+        const { date, matches } = await res.json()
+        const matched = matches.filter((m: { item: unknown }) => m.item)
+        const unmatched = matches.filter((m: { item: unknown }) => !m.item)
+        setWearResult(
+          matched.length
+            ? `Logged ${matched.map((m: { item: { name: string } }) => m.item.name).join(', ')} for ${date}` +
+              (unmatched.length ? ` — couldn't match "${unmatched.map((m: { fragment: string }) => m.fragment).join('", "')}"` : '')
+            : `Couldn't match any items in "${wearText}"`
+        )
+        setWearText('')
+        queryClient.invalidateQueries({ queryKey: ['wardrobe'] })
+      } else {
+        setWearResult('Failed to log wear')
+      }
+    } catch {
+      setWearResult('Failed to log wear — check your connection')
     }
   }
 

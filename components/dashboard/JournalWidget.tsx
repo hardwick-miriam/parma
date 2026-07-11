@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import type { DailyStats, WorkoutSession } from '@/lib/db/queries'
 
 // Local-timezone YYYY-MM-DD
@@ -236,15 +237,17 @@ export function JournalWidget({ stats, workouts, history }: JournalWidgetProps) 
     timers.current[date] = setTimeout(async () => {
       setSaveStatus((prev) => ({ ...prev, [date]: 'saving' }))
       try {
-        await fetch('/api/journal', {
+        const res = await fetch('/api/journal', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ date, note: val }),
         })
+        if (!res.ok) throw new Error('Failed to save note')
         setSaveStatus((prev) => ({ ...prev, [date]: 'saved' }))
         setTimeout(() => setSaveStatus((prev) => ({ ...prev, [date]: null })), 2000)
       } catch {
         setSaveStatus((prev) => ({ ...prev, [date]: null }))
+        toast.error('Failed to save journal note')
       } finally {
         delete timers.current[date]
         queryClient.invalidateQueries({ queryKey: ['journal-notes'] })

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { LEARNING_TYPES, LEARNING_STATUSES, type LearningType, type LearningStatus } from '@/lib/learningTypes'
 
 interface LearningItem {
@@ -103,6 +104,7 @@ export function LearningTrackerSection() {
       if (!res.ok) throw new Error('Failed to add')
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['learning-items'] }); setTitle('') },
+    onError: () => toast.error('Failed to add item'),
   })
 
   const updateMutation = useMutation({
@@ -113,6 +115,7 @@ export function LearningTrackerSection() {
       if (!res.ok) throw new Error('Failed to update')
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['learning-items'] }),
+    onError: () => toast.error('Failed to update item'),
   })
 
   const deleteMutation = useMutation({
@@ -121,6 +124,7 @@ export function LearningTrackerSection() {
       if (!res.ok) throw new Error('Failed to delete')
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['learning-items'] }),
+    onError: () => toast.error('Failed to delete item'),
   })
 
   const items = itemsQuery.data?.items ?? []

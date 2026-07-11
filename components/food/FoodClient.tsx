@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
+import { toast } from 'sonner'
 import { CircularProgress } from '@/components/ui/CircularProgress'
 import { computeDayQuality, type MacroTargets, type MacroTotals } from '@/lib/foodQuality'
 import { getLocalDate } from '@/lib/date'
@@ -102,6 +103,7 @@ function FoodItemRow({
       if (!res.ok) throw new Error('Failed to save')
     },
     onSuccess: () => { invalidate(); setEditing(false) },
+    onError: () => toast.error('Failed to save changes'),
   })
 
   const deleteMutation = useMutation({
@@ -110,6 +112,7 @@ function FoodItemRow({
       if (!res.ok) throw new Error('Failed to delete')
     },
     onSuccess: invalidate,
+    onError: () => toast.error('Failed to delete item'),
   })
 
   if (editing) {
@@ -417,6 +420,7 @@ export function FoodClient({ targets }: { targets: MacroTargets }) {
       queryClient.invalidateQueries({ queryKey: ['food-today'] })
       queryClient.invalidateQueries({ queryKey: ['food-timeline'] })
     },
+    onError: () => toast.error('Failed to re-log that food'),
   })
 
   const savedMeals = useQuery({
@@ -442,7 +446,7 @@ export function FoodClient({ targets }: { targets: MacroTargets }) {
       if (!res.ok) throw new Error('Failed to save meal')
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['saved-meals'] }); exitSelectMode() },
-    onError: (e) => { if (e instanceof Error && e.message !== 'cancelled') alert(e.message) },
+    onError: (e) => { if (e instanceof Error && e.message !== 'cancelled') toast.error(e.message) },
   })
 
   const bulkDeleteMutation = useMutation({
@@ -457,7 +461,7 @@ export function FoodClient({ targets }: { targets: MacroTargets }) {
       queryClient.invalidateQueries({ queryKey: ['food-today'] })
       exitSelectMode()
     },
-    onError: (e) => { if (e instanceof Error) alert(e.message) },
+    onError: (e) => { if (e instanceof Error) toast.error(e.message) },
   })
 
   const bulkSetMealMutation = useMutation({
@@ -471,7 +475,7 @@ export function FoodClient({ targets }: { targets: MacroTargets }) {
       queryClient.invalidateQueries({ queryKey: ['food-timeline'] })
       exitSelectMode()
     },
-    onError: (e) => { if (e instanceof Error) alert(e.message) },
+    onError: (e) => { if (e instanceof Error) toast.error(e.message) },
   })
 
   const quickAddMealMutation = useMutation({
@@ -483,6 +487,7 @@ export function FoodClient({ targets }: { targets: MacroTargets }) {
       queryClient.invalidateQueries({ queryKey: ['food-today'] })
       queryClient.invalidateQueries({ queryKey: ['food-timeline'] })
     },
+    onError: () => toast.error('Failed to quick-add that meal'),
   })
 
   const deleteMealMutation = useMutation({
@@ -491,6 +496,7 @@ export function FoodClient({ targets }: { targets: MacroTargets }) {
       if (!res.ok) throw new Error('Delete failed')
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['saved-meals'] }),
+    onError: () => toast.error('Failed to delete saved meal'),
   })
 
   async function submitNote(e: React.FormEvent) {

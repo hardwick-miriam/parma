@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { saveSettings, generateToken, addPlace, removePlace, changeEmail, changePassword } from './actions'
 import { useTheme } from '@/components/ThemeProvider'
 import { RoutineSection } from '@/components/settings/RoutineSection'
@@ -119,53 +120,80 @@ export function SettingsClient({ currentEmail, initialPrefs, whoopConnection }: 
 
   async function handleWhoopDisconnect() {
     setWhoopDisconnecting(true)
-    await fetch('/api/whoop/disconnect', { method: 'POST' })
-    setWhoopDisconnecting(false)
-    setWhoop(null)
+    try {
+      const res = await fetch('/api/whoop/disconnect', { method: 'POST' })
+      if (!res.ok) throw new Error('Failed to disconnect WHOOP')
+      setWhoop(null)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to disconnect WHOOP')
+    } finally {
+      setWhoopDisconnecting(false)
+    }
   }
 
   async function handleSave() {
     setSaving(true)
     setSaved(false)
-    await saveSettings({
-      weight_goal_kg: weightGoal ? parseFloat(weightGoal) : null,
-      mounjaro_enabled: mounjaroEnabled,
-      weather_bg_enabled: weatherBgEnabled,
-      ...macroTargets,
-    })
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    try {
+      await saveSettings({
+        weight_goal_kg: weightGoal ? parseFloat(weightGoal) : null,
+        mounjaro_enabled: mounjaroEnabled,
+        weather_bg_enabled: weatherBgEnabled,
+        ...macroTargets,
+      })
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save settings')
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function handleGenerateToken() {
-    const t = await generateToken()
-    setToken(t)
+    try {
+      const t = await generateToken()
+      setToken(t)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to generate token')
+    }
   }
 
   async function copyToken() {
     if (!token) return
-    await navigator.clipboard.writeText(token)
-    setTokenCopied(true)
-    setTimeout(() => setTokenCopied(false), 2000)
+    try {
+      await navigator.clipboard.writeText(token)
+      setTokenCopied(true)
+      setTimeout(() => setTokenCopied(false), 2000)
+    } catch {
+      toast.error('Failed to copy token')
+    }
   }
 
   async function handleAddPlace() {
     if (!newPlaceName || !newPlaceLog) return
-    const place = await addPlace({
-      name: newPlaceName,
-      action: newPlaceAction || 'custom',
-      log_text: newPlaceLog,
-    })
-    setPlaces((prev) => [...prev, place])
-    setNewPlaceName('')
-    setNewPlaceAction('')
-    setNewPlaceLog('')
+    try {
+      const place = await addPlace({
+        name: newPlaceName,
+        action: newPlaceAction || 'custom',
+        log_text: newPlaceLog,
+      })
+      setPlaces((prev) => [...prev, place])
+      setNewPlaceName('')
+      setNewPlaceAction('')
+      setNewPlaceLog('')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to add place')
+    }
   }
 
   async function handleRemovePlace(id: string) {
-    await removePlace(id)
-    setPlaces((prev) => prev.filter((p) => p.id !== id))
+    try {
+      await removePlace(id)
+      setPlaces((prev) => prev.filter((p) => p.id !== id))
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to remove place')
+    }
   }
 
   async function handleChangeEmail() {

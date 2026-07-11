@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { MEASUREMENT_SITES, type MeasurementSite } from '@/lib/bodyMeasurementTypes'
 
@@ -66,6 +67,7 @@ export function BodyMeasurementsSection() {
       setValue('')
       setNote('')
     },
+    onError: () => toast.error('Failed to save measurement'),
   })
 
   const sites = summary.data?.sites ?? []
