@@ -197,6 +197,7 @@ export function FoodClient({ targets }: { targets: MacroTargets }) {
     queryKey: ['food-today'],
     queryFn: async () => {
       const res = await fetch(`/api/food-log?date=${getLocalDate()}`)
+      if (!res.ok) throw new Error('Failed to load today\'s food log')
       const { items } = await res.json() as { items: FoodLogItem[] }
       return dayTotals(items)
     },
@@ -207,6 +208,7 @@ export function FoodClient({ targets }: { targets: MacroTargets }) {
     queryFn: async ({ pageParam }: { pageParam?: string }) => {
       const url = pageParam ? `/api/food-log/timeline?before=${pageParam}&limit=7` : '/api/food-log/timeline?limit=7'
       const res = await fetch(url)
+      if (!res.ok) throw new Error('Failed to load food timeline')
       return res.json() as Promise<{ days: FoodDay[]; hasMore: boolean }>
     },
     initialPageParam: undefined as string | undefined,
@@ -218,12 +220,20 @@ export function FoodClient({ targets }: { targets: MacroTargets }) {
 
   const mostEaten = useQuery({
     queryKey: ['food-most-eaten'],
-    queryFn: async () => (await fetch('/api/food-log/most-eaten')).json() as Promise<{ foods: MostEatenFood[] }>,
+    queryFn: async () => {
+      const res = await fetch('/api/food-log/most-eaten')
+      if (!res.ok) throw new Error('Failed to load most-eaten foods')
+      return res.json() as Promise<{ foods: MostEatenFood[] }>
+    },
   })
 
   const notes = useQuery({
     queryKey: ['food-notes'],
-    queryFn: async () => (await fetch('/api/food-notes')).json() as Promise<{ notes: FoodNote[] }>,
+    queryFn: async () => {
+      const res = await fetch('/api/food-notes')
+      if (!res.ok) throw new Error('Failed to load food notes')
+      return res.json() as Promise<{ notes: FoodNote[] }>
+    },
   })
   const notesByKey = useMemo(() => {
     const map = new Map<string, FoodNote>()
@@ -248,7 +258,11 @@ export function FoodClient({ targets }: { targets: MacroTargets }) {
 
   const savedMeals = useQuery({
     queryKey: ['saved-meals'],
-    queryFn: async () => (await fetch('/api/saved-meals')).json() as Promise<{ meals: SavedMeal[] }>,
+    queryFn: async () => {
+      const res = await fetch('/api/saved-meals')
+      if (!res.ok) throw new Error('Failed to load saved meals')
+      return res.json() as Promise<{ meals: SavedMeal[] }>
+    },
   })
 
   const saveMealMutation = useMutation({
