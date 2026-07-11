@@ -1277,3 +1277,62 @@ service-role key and verified (columns, RLS enabled, policies present) before an
 against them. Every commit polled to `success` on GitHub checks and confirmed `Ready`/`Production`
 on Vercel individually as the session progressed. Final build clean; all 12 routes curled live and
 return 200.
+
+---
+
+## Live data sync, no flash (2026-07-11, later session)
+
+**All 6 steps done.** Diagnosed and fixed the actual root causes rather than papering over symptoms.
+
+### What was actually wrong
+
+1. **RealtimeSync called `router.refresh()`** on every DB change — this re-fetches and re-renders
+   the ENTIRE current route's server-rendered payload regardless of which table changed, so every
+   widget on the page (even ones unrelated to what you just logged) went through a loading cycle
+   together. That was the flash.
+2. **Only 9 of 26 tables were actually in the Supabase realtime publication.** Everything built in
+   the last two sessions — food itemisation, the live workout logger, WHOOP metrics, body
+   measurements, saved meals, learning items, all of Finances, Mounjaro, wardrobe, insights,
+   injury check-ins — was silently never triggering realtime at all. No error, just nothing
+   happening. This alone meant most of the app couldn't have been live-syncing regardless of the
+   router.refresh() problem.
+3. **Main, Health, Gym, and Body were pure server-rendered pages** with no client-side cache at
+   all — there was nothing for `invalidateQueries` to act on even once the other two problems were
+   fixed.
+
+### What changed
+- `RealtimeSync` now invalidates only the TanStack Query keys that actually depend on the changed
+  table (a new `lib/realtimeInvalidation.ts` table→key map), instead of refreshing the whole route.
+- Migration 030 adds the missing 17 tables to the realtime publication, run live and verified.
+- Main, Health, Gym, and Body are now backed by TanStack Query with server-rendered `initialData`
+  (instant first paint, no loading flash) via new thin API routes reusing the exact same data
+  functions the pages always used — nothing forked.
+- MediaWidget and PRTrackerWidget converted from plain fetch to `useQuery` so they're invalidatable
+  too; Journal's notes likewise, with a guard so an external update can't clobber a note you're
+  mid-typing.
+- `refetchOnWindowFocus` turned on globally as the gentle fallback for anything realtime can't
+  reach — background-only, never blanks existing data.
+
+### What's still a manual-refresh case
+Journal's daily stats/workouts summary (not the notes themselves) stays page-rendered — a
+reasonable, honestly-stated scope limit, since a note-taking widget doesn't need sub-second sync
+the way food/workout logging does. The old `/grid` bento dashboard also loses its previous
+router.refresh()-based auto-update, since it's explicitly not part of the new module OS and
+converting its whole widget catalog to TanStack Query would be a much larger, separate effort.
+
+### Verified flow: log food on Food page → Main's calorie ring updates
+Traced and proved with a real test, not just code reading: wrote a real `food_log` row +
+`daily_stats` upsert (the exact two-table write a food log makes), subscribed with the identical
+`postgres_changes` pattern RealtimeSync uses, confirmed both events genuinely arrive, then ran them
+through the real `TABLE_QUERY_KEYS` map and confirmed the result includes `main-summary` (the query
+backing Main's rings), `food-today`, and `food-timeline` — the precise chain from the DB write to
+every affected screen. Fully cleaned up and independently re-verified afterward.
+
+### Evidence trail
+Commit (this fix): see below. Migration 030 run live+verified (26/26 tables in
+`supabase_realtime`, confirmed via `pg_publication_tables`). Build clean. Real end-to-end
+subscription test proving the exact named flow, cleaned up.
+
+**Needs your eyes:** the actual no-flash visual behaviour needs your own confirmation, as you said
+— what I've verified is the underlying mechanism (subscriptions genuinely fire, the correct query
+keys get invalidated), not pixels on screen.

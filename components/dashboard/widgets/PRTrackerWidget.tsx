@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ShareButton } from '@/components/ui/ShareButton'
 import { useGridItemSize } from '@/components/dashboard/GridItemSizeContext'
 
@@ -26,24 +27,29 @@ const UNITS = ['kg', 'lbs', 'reps', 'km', 'm', 'seconds']
 export function PRTrackerWidget() {
   const { w, h } = useGridItemSize()
   const compact = w <= 2 || h <= 3
-  const [prs, setPrs] = useState<PR[]>([])
-  const [loading, setLoading] = useState(true)
+  const queryClient = useQueryClient()
   const [adding, setAdding] = useState(false)
-  const [saving, setSaving] = useState(false)
   const [form, setForm] = useState<NewPR>({ exercise: '', value: '', unit: 'kg', reps: '' })
 
-  useEffect(() => {
-    fetch('/api/personal-records')
-      .then((r) => r.json())
-      .then((d) => setPrs(d.records ?? []))
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [])
+  // Was a plain useState/useEffect/fetch — not invalidatable by RealtimeSync,
+  // so a new PR set on the live logger never showed up here without a full
+  // page reload. useQuery makes it a real cache entry: 'personal-records' is
+  // invalidated on any workout_sets/personal_records change (manual add here,
+  // OR an auto-detected PR from the live logger), refetching in the
+  // background with the old list still shown until the new one resolves.
+  const prsQuery = useQuery({
+    queryKey: ['personal-records'],
+    queryFn: async () => {
+      const res = await fetch('/api/personal-records')
+      if (!res.ok) throw new Error('Failed to load personal records')
+      return (await res.json()) as { records: PR[] }
+    },
+  })
+  const prs = prsQuery.data?.records ?? []
+  const loading = prsQuery.isLoading
 
-  async function handleSave() {
-    if (!form.exercise.trim() || !form.value) return
-    setSaving(true)
-    try {
+  const saveMutation = useMutation({
+    mutationFn: async () => {
       const res = await fetch('/api/personal-records', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -54,16 +60,19 @@ export function PRTrackerWidget() {
           reps: form.reps ? parseInt(form.reps) : null,
         }),
       })
-      const d = await res.json()
-      if (res.ok && d.record) {
-        setPrs((prev) => {
-          const filtered = prev.filter((p) => !(p.exercise.toLowerCase() === d.record.exercise.toLowerCase() && p.unit === d.record.unit))
-          return [d.record, ...filtered].sort((a, b) => a.exercise.localeCompare(b.exercise))
-        })
-        setAdding(false)
-        setForm({ exercise: '', value: '', unit: 'kg', reps: '' })
-      }
-    } catch { /* ignore */ } finally { setSaving(false) }
+      if (!res.ok) throw new Error('Failed to save PR')
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['personal-records'] })
+      setAdding(false)
+      setForm({ exercise: '', value: '', unit: 'kg', reps: '' })
+    },
+  })
+  const saving = saveMutation.isPending
+
+  function handleSave() {
+    if (!form.exercise.trim() || !form.value) return
+    saveMutation.mutate()
   }
 
   function formatPR(pr: PR): string {

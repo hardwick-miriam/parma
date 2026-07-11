@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { LottieEmpty } from '@/components/ui/LottieEmpty'
 import { useGridItemSize } from '@/components/dashboard/GridItemSizeContext'
 import type { MediaEntry, MediaCategory, MediaCounts, MediaStatus } from '@/lib/db/media'
@@ -282,44 +283,49 @@ interface MediaWidgetProps {
   initialCounts?: MediaCounts
 }
 
+function countByCategory(entries: MediaEntry[]): MediaCounts {
+  return {
+    book: entries.filter((x) => x.category === 'book').length,
+    film: entries.filter((x) => x.category === 'film').length,
+    show: entries.filter((x) => x.category === 'show').length,
+    song: entries.filter((x) => x.category === 'song').length,
+  }
+}
+
 export function MediaWidget({ initialEntries, initialCounts }: MediaWidgetProps) {
   const { w, h } = useGridItemSize()
   const compact = w <= 2 || h <= 4
-  const [entries, setEntries] = useState<MediaEntry[]>(initialEntries ?? [])
-  const [counts, setCounts] = useState<MediaCounts>(
-    initialCounts ?? { book: 0, film: 0, show: 0, song: 0 }
-  )
+  const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
-  const [loading, setLoading] = useState(!initialEntries)
 
-  useEffect(() => {
-    if (initialEntries) return
-    fetch('/api/media')
-      .then((r) => r.json())
-      .then((d) => {
-        const e: MediaEntry[] = d.entries ?? []
-        setEntries(e)
-        setCounts({
-          book: e.filter((x) => x.category === 'book').length,
-          film: e.filter((x) => x.category === 'film').length,
-          show: e.filter((x) => x.category === 'show').length,
-          song: e.filter((x) => x.category === 'song').length,
-        })
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [initialEntries])
+  // Was a plain useState/useEffect/fetch — not invalidatable by RealtimeSync,
+  // so a media log from another tab/device never showed up here without a
+  // full page reload. useQuery makes it a real cache entry: 'media' is
+  // invalidated on any media_log change, refetching in the background with
+  // the old entries still shown until the new list resolves.
+  const mediaQuery = useQuery({
+    queryKey: ['media'],
+    queryFn: async () => {
+      const res = await fetch('/api/media')
+      if (!res.ok) throw new Error('Failed to load media')
+      return (await res.json()) as { entries: MediaEntry[] }
+    },
+    initialData: initialEntries ? { entries: initialEntries } : undefined,
+  })
+  const entries = mediaQuery.data?.entries ?? []
+  const counts = mediaQuery.data ? countByCategory(entries) : (initialCounts ?? { book: 0, film: 0, show: 0, song: 0 })
+  const loading = mediaQuery.isLoading
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/media?id=${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Failed to delete')
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['media'] }),
+  })
 
   function handleDelete(id: string) {
-    fetch(`/api/media?id=${id}`, { method: 'DELETE' }).catch(() => {})
-    setEntries((prev) => {
-      const next = prev.filter((e) => e.id !== id)
-      const deleted = prev.find((e) => e.id === id)
-      if (deleted) {
-        setCounts((c) => ({ ...c, [deleted.category]: Math.max(0, c[deleted.category] - 1) }))
-      }
-      return next
-    })
+    deleteMutation.mutate(id)
   }
 
   const mostRecent = entries[0]

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useQuery } from '@tanstack/react-query'
 import {
   LineChart, Line, BarChart, Bar, Cell, ComposedChart, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts'
@@ -15,33 +16,11 @@ import { ModulePageClient } from '@/components/os/ModulePageClient'
 import { TappableWidget } from '@/components/os/TappableWidget'
 import { OnboardingTour } from '@/components/OnboardingTour'
 import { DoseDueBanner } from '@/components/os/DoseDueBanner'
-import type { DailyStats, HealthStatus, WorkoutSession, Injury } from '@/lib/db/queries'
-import type { WhoopMetrics } from '@/lib/db/whoop'
+import type { MainPageData } from '@/lib/pageData/main'
 
 interface MainClientProps {
-  stats: DailyStats | null
-  health: HealthStatus | null
-  whoop: WhoopMetrics | null
-  recentWorkouts: WorkoutSession[]
+  initialData: MainPageData
   briefing: string | null
-  activeInjuries: Injury[]
-  trainToday: string
-  history: DailyStats[]
-  loggingStreak: number
-  weightTrend: { date: string; value: number }[]
-  sleepTrend: { date: string; hours: number }[]
-  caloriesTrend: { date: string; calories: number }[]
-  stepsTrend: { date: string; steps: number }[]
-  recoveryStrainTrend: { date: string; recovery: number; strain: number }[]
-  hrvTrend: { date: string; hrv: number }[]
-  hiddenWidgets?: Set<string>
-  mounjaroEnabled?: boolean
-  targets: {
-    calorie_target: number
-    protein_target_g: number
-    carbs_target_g: number
-    fat_target_g: number
-  }
 }
 
 function MacroBar({ label, value, target }: { label: string; value: number; target: number }) {
@@ -82,11 +61,27 @@ function TrendCard({ title, href, children }: { title: string; href: string; chi
 const tooltipStyle = { background: 'var(--surface-elevated)', border: '1px solid var(--border-strong)', borderRadius: 8, fontSize: 12 }
 const axisTick = { fontSize: 10, fill: 'var(--text-faint)' }
 
-export function MainClient({
-  stats, health, whoop, recentWorkouts, briefing, activeInjuries, trainToday, history, loggingStreak,
-  weightTrend, sleepTrend, caloriesTrend, stepsTrend, recoveryStrainTrend, hrvTrend, hiddenWidgets, mounjaroEnabled, targets,
-}: MainClientProps) {
-  const hidden = hiddenWidgets ?? new Set<string>()
+export function MainClient({ initialData, briefing }: MainClientProps) {
+  // initialData (server-rendered, instant first paint) doubles as the
+  // TanStack `initialData` — RealtimeSync invalidates ['main-summary'] on
+  // any relevant DB change, which triggers a background refetch of this
+  // exact query; the old data stays on screen until the new data resolves,
+  // so numbers update in place with no remount/spinner/flash.
+  const { data } = useQuery({
+    queryKey: ['main-summary'],
+    queryFn: async () => {
+      const res = await fetch('/api/main-summary')
+      if (!res.ok) throw new Error('Failed to load Main summary')
+      return res.json() as Promise<MainPageData>
+    },
+    initialData,
+  })
+  const {
+    stats, health, whoop, recentWorkouts, activeInjuries, trainToday, history, loggingStreak,
+    weightTrend, sleepTrend, caloriesTrend, stepsTrend, recoveryStrainTrend, hrvTrend,
+    hiddenWidgets, mounjaroEnabled, targets,
+  } = data
+  const hidden = new Set(hiddenWidgets)
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const recovery = computeRecovery(stats, health, whoop)
   const recoveryColor = {

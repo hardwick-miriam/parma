@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { DailyStats, WorkoutSession } from '@/lib/db/queries'
 
 // Local-timezone YYYY-MM-DD
@@ -192,21 +193,41 @@ interface JournalWidgetProps {
 
 export function JournalWidget({ stats, workouts, history }: JournalWidgetProps) {
   const todayISO = localDate()
+  const queryClient = useQueryClient()
   const [notes, setNotes] = useState<Record<string, string>>({})
   const [saveStatus, setSaveStatus] = useState<Record<string, 'saving' | 'saved' | null>>({})
   const [open, setOpen] = useState(false)
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
+  // Was a plain useState/useEffect/fetch — not invalidatable by RealtimeSync,
+  // so a note added from another device never appeared here without a full
+  // reload. useQuery makes it a real cache entry: 'journal-notes' is
+  // invalidated on any journal_notes change and refetches in the background.
+  const notesQuery = useQuery({
+    queryKey: ['journal-notes'],
+    queryFn: async () => {
+      const res = await fetch('/api/journal')
+      if (!res.ok) throw new Error('Failed to load journal notes')
+      const d = await res.json()
+      const map: Record<string, string> = {}
+      for (const n of d.notes ?? []) map[n.note_date] = n.note
+      return map
+    },
+  })
+
+  // Merge incoming data in, but never clobber a day with an in-flight local
+  // edit (a debounced save timer still pending) — otherwise an unrelated
+  // realtime invalidation could overwrite what the user is mid-typing.
   useEffect(() => {
-    fetch('/api/journal')
-      .then((r) => r.json())
-      .then((d) => {
-        const map: Record<string, string> = {}
-        for (const n of d.notes ?? []) map[n.note_date] = n.note
-        setNotes(map)
-      })
-      .catch(() => {})
-  }, [])
+    if (!notesQuery.data) return
+    setNotes((prev) => {
+      const merged = { ...notesQuery.data }
+      for (const date of Object.keys(prev)) {
+        if (timers.current[date]) merged[date] = prev[date]
+      }
+      return merged
+    })
+  }, [notesQuery.data])
 
   const handleNoteChange = useCallback((date: string, val: string) => {
     setNotes((prev) => ({ ...prev, [date]: val }))
@@ -224,6 +245,9 @@ export function JournalWidget({ stats, workouts, history }: JournalWidgetProps) 
         setTimeout(() => setSaveStatus((prev) => ({ ...prev, [date]: null })), 2000)
       } catch {
         setSaveStatus((prev) => ({ ...prev, [date]: null }))
+      } finally {
+        delete timers.current[date]
+        queryClient.invalidateQueries({ queryKey: ['journal-notes'] })
       }
     }, 1200)
   }, [])
