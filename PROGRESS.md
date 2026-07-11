@@ -1199,3 +1199,11 @@ catalog. Verified end-to-end: 2 real accounts + 1 real debt created, net worth/s
 projection all confirmed correct, both NLP update styles (absolute + delta) verified via real
 Claude calls landing the exact right balances, then fully cleaned up. See board.html E6 for full
 evidence.
+
+**DONE Task 7 — Live workout logger (verify + gap-fill).** Confirmed nearly the entire spec
+already existed from an earlier session (exercise picker, tap rep selector, PR confetti, muscle-
+map/training-load feed via workout_sessions.exercises[]). The one genuine gap — NLP set logging
+("benched 80 for 5") had no path to workout_sets — is now fixed, routed through the exact same
+insertSet() function the tap-first UI uses. Verified end-to-end with 3 real sets (persisted, PR
+fired correctly, stats/trend/history/muscle-map all reflected them) plus a real NLP-logged set,
+then fully cleaned up. See board.html E7 for full evidence.

@@ -79,6 +79,19 @@ export const FinanceUpdateSchema = z.object({
   delta: z.number().optional(),
 })
 
+// Feature 1 (live workout logger): individual weighted sets stated in free
+// text, e.g. "benched 80kg for 5" — distinct from the general `workouts`
+// field (whole-session description, no weight/reps). Routed to the exact
+// same insertSet() the tap-first LiveLogger UI uses (lib/db/workoutSets.ts),
+// so PR detection / muscle-map / training-load feed identically regardless
+// of entry path.
+export const ParsedSetLogSchema = z.object({
+  exercise: z.string().min(1),
+  weight_kg: z.number().positive(),
+  reps: z.number().int().positive(),
+  is_warmup: z.boolean().optional(),
+})
+
 export const ParsedInjuryCheckinSchema = z.object({
   body_part: z.string().optional(),
   feeling_pct: z.number().min(0).max(100),
@@ -167,6 +180,7 @@ export const ParsedLogSchema = z.object({
   body_measurements: z.array(BodyMeasurementEntrySchema).optional(),
   learning_items: z.array(ParsedLearningItemSchema).optional(),
   finance_updates: z.array(FinanceUpdateSchema).optional(),
+  logged_sets: z.array(ParsedSetLogSchema).optional(),
 })
 
 export type ParsedLog = z.infer<typeof ParsedLogSchema>

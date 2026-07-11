@@ -8,19 +8,22 @@ export type { WorkoutSet } from '@/lib/gymTypes'
 export { estimate1RM } from '@/lib/gymTypes'
 
 /**
- * Get today's live-logger session, creating one if it doesn't exist yet.
- * Reuses workout_sessions (not a new table) — one row per day per user with
- * source='live-logger', same table every other logging path already writes to.
+ * Get the live-logger session for a given date (default today), creating one
+ * if it doesn't exist yet. Reuses workout_sessions (not a new table) — one
+ * row per day per user with source='live-logger', same table every other
+ * logging path already writes to. The optional date param exists for
+ * NLP-logged sets that reference a past day (e.g. "yesterday I benched 80
+ * for 5") — the tap-first UI never passes it, so its behavior is unchanged.
  */
-export async function getOrCreateTodaySession(userId: string, client?: SupabaseClient): Promise<string> {
+export async function getOrCreateTodaySession(userId: string, client?: SupabaseClient, date?: string): Promise<string> {
   const supabase = client ?? (await createClient())
-  const today = getLocalDate()
+  const targetDate = date ?? getLocalDate()
 
   const { data: existing, error: findError } = await supabase
     .from('workout_sessions')
     .select('id')
     .eq('user_id', userId)
-    .eq('date', today)
+    .eq('date', targetDate)
     .eq('source', 'live-logger')
     .maybeSingle()
   if (findError) throw findError
@@ -30,7 +33,7 @@ export async function getOrCreateTodaySession(userId: string, client?: SupabaseC
     .from('workout_sessions')
     .insert({
       user_id: userId,
-      date: today,
+      date: targetDate,
       description: 'Live workout',
       source: 'live-logger',
       started_at: new Date().toISOString(),

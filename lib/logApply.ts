@@ -16,6 +16,7 @@ import { insertFoodItems } from '@/lib/db/food'
 import { insertBodyMeasurement, toCm } from '@/lib/db/bodyMeasurements'
 import { upsertLearningItem } from '@/lib/db/learningItems'
 import { findAccountOrDebtByName, createFinanceAccount, updateFinanceAccount, updateFinanceDebt } from '@/lib/db/finances'
+import { getOrCreateTodaySession, insertSet } from '@/lib/db/workoutSets'
 import type { ParsedLog } from '@/lib/ai/types'
 import type { Injury } from '@/lib/db/queries'
 
@@ -228,6 +229,19 @@ export async function applyParsedLog(
           // create a new cash account for it.
           await createFinanceAccount(userId, upd.account_name, 'cash', upd.balance, supabase)
         }
+      }
+    }
+
+    if (parsed.logged_sets?.length) {
+      // Routed through the exact same insertSet() the tap-first LiveLogger
+      // uses — PR detection, the exercises[] append that feeds the muscle
+      // map/training load, all identical regardless of entry path. PR
+      // confetti itself stays a tap-path UI flourish (there's no natural
+      // client-side moment to fire it from a background NLP save) — the
+      // underlying personal_records data updates correctly either way.
+      const sessionId = await getOrCreateTodaySession(userId, supabase, logDate)
+      for (const s of parsed.logged_sets) {
+        await insertSet(userId, sessionId, s.exercise, s.weight_kg, s.reps, !!s.is_warmup, supabase)
       }
     }
 

@@ -187,6 +187,21 @@ const PARSE_TOOL: Anthropic.Tool = {
           additionalProperties: false,
         },
       },
+      logged_sets: {
+        type: 'array',
+        description: 'Individual weighted sets with a specific weight and rep count for a named exercise. Use whenever the user states a set like this: "benched 80kg for 5" -> {exercise:"bench press",weight_kg:80,reps:5}. "squatted 100 for 3" -> {exercise:"squat",weight_kg:100,reps:3}. "deadlifted 140x5" -> {exercise:"deadlift",weight_kg:140,reps:5}. Convert lbs to kg (divide by 2.205) if stated in lbs. Distinct from `workouts` (whole-session description with no weight/reps, e.g. "did legs today", "45 min run") — use `logged_sets` whenever a SPECIFIC weight+rep combination is stated, in addition to `workouts` if both are present in the same message.',
+        items: {
+          type: 'object',
+          properties: {
+            exercise: { type: 'string', description: 'Exercise name, e.g. "bench press", "squat", "deadlift".' },
+            weight_kg: { type: 'number', description: 'Weight lifted, in kg.' },
+            reps: { type: 'integer', description: 'Number of reps performed.' },
+            is_warmup: { type: 'boolean', description: 'True only if explicitly described as a warm-up set.' },
+          },
+          required: ['exercise', 'weight_kg', 'reps'],
+          additionalProperties: false,
+        },
+      },
       finance_updates: {
         type: 'array',
         description: 'Bank/investment/pension/crypto account balance updates, or debt/loan/credit-card balance changes. Use "balance" for an absolute new value the user states, "delta" for a relative change (negative = paid down/decreased, positive = increased). E.g. "Monzo balance 1240" -> {account_name:"Monzo",balance:1240}. "paid £200 off the loan" -> {account_name:"loan",delta:-200}. "put £500 into savings" -> {account_name:"savings",delta:500}.',
