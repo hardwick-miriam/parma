@@ -328,11 +328,11 @@
         <div class="bug-ref">D7 · Date fix: added a proper daysAgo(dateStr, days) helper to lib/date.ts (DST-safe noon-anchor, same pattern as the existing subtractDay), replaced cron/daily-briefing's raw new Date().toISOString().split('T')[0] arithmetic with it, and also fixed lib/dailyBriefing.ts's own local thirtyDaysAgo (same underlying pattern, not previously flagged but the identical bug) to use the same shared helper instead of a second bespoke one. REAL test: daysAgo(today, 30) and daysAgo(today, 1) both correct, and verified correctly across an actual DST changeover (Nov 5 minus 30 days lands on Oct 6, correct). Offset fix: added lib/layoutConstants.ts (MOBILE_TAB_BAR_HEIGHT_REM) as the single source of truth, gave Sidebar's mobile tab bar an explicit height derived from it (was organic/content-sized before, now deterministic), and switched ContextualLogBar to a CSS-variable-driven Tailwind class (bottom-[var(--mobile-log-bar-offset)]) set from the same constant, instead of the old independently-guessed bottom-16. Verified in the actual compiled CSS output that both the new arbitrary-value class and the pre-existing sm:bottom-0 media-query override generated correctly, preserving identical desktop/mobile cascade behaviour to before.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="D8" data-time-est="20" data-credit-est="25000">
+      <div class="bug-row" data-status="done" data-id="D8" data-time-est="20" data-time-actual="18" data-credit-est="25000" data-credit-actual="20000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">FINAL — build clean, verify production, board.html + PROGRESS.md true final state.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">D8</div>
+        <div class="bug-ref">D8 · rm -rf .next && npm run build clean. Commit 4623be0 confirmed success on GitHub checks; newest Vercel deployment (2m old) confirmed Ready/Production. All 11 routes curled live via the www redirect, all return 200. BUGS.md updated with a FIXED note + commit hash on all 8 items (2 critical, 4 major, 2 minor) -- nothing left open in that document.</div>
       </div>
     </div>
   </section>

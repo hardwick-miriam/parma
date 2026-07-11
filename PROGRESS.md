@@ -1095,3 +1095,48 @@ Commits: `d7d74a4` (tap-to-detail + theming fix) → `7154068` (Food page query 
 `7a97c90` (BUGS.md). Final commit confirmed `success` on GitHub checks and the newest Vercel
 deployment `Ready`/`Production`; all 11 routes curled live and returned 200 (via the `www`
 redirect), both body-figure images confirmed serving with an exact byte match to source.
+
+---
+
+## Bugfix round — all 2 critical + 4 major + 2 minor from BUGS.md (2026-07-11)
+
+**All 8 fixes shipped, verified live, in the requested order. Nothing left open in BUGS.md.**
+
+### What got done, in plain English
+
+1. **Saved meals can no longer corrupt a day's totals** — every item is now checked for a complete,
+   correctly-typed set of macros before it's allowed to save; a bad one is rejected outright
+   instead of silently becoming `NaN` later. Proved this with real missing-field, string-typed, and
+   explicit-NaN inputs — all correctly rejected.
+2. **The daily briefing no longer hides real errors** — the actual bug was one level deeper than
+   originally flagged (the live code path is in Main's page, not the API route the audit named);
+   fixed both so a genuine database problem is now logged and surfaced instead of looking identical
+   to "no briefing yet."
+3. **Live auto-refresh restored everywhere** — Main, Food, Health, Gym and the rest of the new
+   module pages now get the same real-time updates the old single dashboard had. Proved this by
+   writing a real row to your account's data and watching the actual update arrive.
+4. **Hiding a widget now works consistently** — weather/heatmap on Main, WHOOP/sleep-debt on
+   Health, and training-load/PR-tracker on Gym now respect the same "hide this" setting the old
+   view already had, rather than silently ignoring it.
+5. **The new-user tour is reconnected** — it quietly stopped working during the restructure; two of
+   its three steps already worked once reconnected, the third (which used to describe drag-and-drop
+   rearranging) now points at the real new layout with updated wording.
+6. **The WHOOP card only shows if you've actually connected WHOOP** — confirmed your own test
+   account was hitting this exact bug (a permanent placeholder card), now fixed.
+7. **Two small cleanups**: a date calculation in the background job now uses the same
+   timezone-safe method as everywhere else, and the mobile chat bar's position is now tied to the
+   actual tab bar height instead of a hand-guessed number, so a future style tweak can't quietly
+   make them overlap.
+
+### What's still open / needs you
+
+Nothing from BUGS.md — every item is fixed and verified. Same standing caveats as before: no
+browser here to click through any of this visually, and the account still has light real
+day-to-day data for some of these to be exercised under real conditions.
+
+### Evidence trail
+Commits, in order: `6204898` (saved-meal validation) → `6cf30e7` (briefing error surfacing) →
+`cd3d99d` (RealtimeSync) → `4ebb323` (widget hide sync) → `33d2aee` (onboarding tour) →
+`14062bf` (WhoopWidget gate) → `4623be0` (2 minors). Final commit confirmed `success` on GitHub
+checks and the newest Vercel deployment `Ready`/`Production`; all 11 routes curled live and
+returned 200. `BUGS.md` updated with a FIXED note and commit hash on every item.
