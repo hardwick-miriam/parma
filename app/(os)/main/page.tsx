@@ -110,6 +110,7 @@ export default async function MainPage() {
       stepsTrend={stepsTrend}
       recoveryStrainTrend={recoveryStrainTrend}
       hrvTrend={hrvTrend}
+      hiddenWidgets={new Set(prefs?.hidden_widgets ?? [])}
       targets={{
         calorie_target: prefs?.calorie_target ?? 2000,
         protein_target_g: prefs?.protein_target_g ?? 150,

@@ -300,11 +300,11 @@
         <div class="bug-ref">D3 · Mounted the existing RealtimeSync component (unmodified) once in app/(os)/layout.tsx alongside ContextualLogBar, passing the already-available user.id -- now covers every page in the new shell (Main/Food/Health/Gym/Media/Wardrobe/Journal/Settings/Body), not just the legacy /grid. REAL test: confirmed all 9 watched tables (daily_stats, workout_sessions, log_entries, health_status, injuries, journal_notes, media_log, progress_photos, user_preferences) are genuinely present in the supabase_realtime publication (a common silent-failure point if missed); then ran the exact subscription this component sets up, wrote a real daily_stats row via direct SQL, and confirmed the postgres_changes event was actually received end-to-end (had to authenticate the test subscriber like a real logged-in browser session would -- an anon-only subscriber correctly gets nothing, which is RLS working as intended, not a bug).</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="D4" data-time-est="30" data-credit-est="40000">
+      <div class="bug-row" data-status="done" data-id="D4" data-time-est="30" data-time-actual="35" data-credit-est="40000" data-credit-actual="45000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">MAJOR — sync widget hide/show between /grid and the new module pages.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">D4</div>
+        <div class="bug-ref">D4 · Scoped to the widgets with an unambiguous 1:1 match between /grid's catalog and a new module page (weather + heatmap on Main, whoop + sleepdebt on Health, trainload + prtracker on Gym) -- read user_preferences.hidden_widgets (same field /grid's postLayout already writes) server-side in each page and skip rendering the widget (and its TappableWidget wrapper) when hidden, exactly matching /grid's own gating logic. Deliberately did not force a mapping for /body (BodyWidget) -- it's a single-purpose destination page reached by explicit navigation, not one card among several, so "hiding" it would just leave a blank page, a worse UX than the bug being fixed. REAL test: wrote hidden_widgets=[weather,trainload] directly (same effect as /grid's own persistHidden call), confirmed the exact query+defaulting logic getUserPreferences uses returns them correctly, confirmed Main would skip weather and Gym would skip trainload while Health's untouched widgets (whoop/sleepdebt) remained visible, then restored the original (empty) hidden_widgets value.</div>
       </div>
 
       <div class="bug-row" data-status="waiting" data-id="D5" data-time-est="25" data-credit-est="35000">

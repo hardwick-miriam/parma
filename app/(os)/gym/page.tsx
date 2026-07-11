@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getRecentWorkouts } from '@/lib/db/queries'
+import { getUserPreferences } from '@/lib/db/preferences'
 import { getLocalDate } from '@/lib/date'
 import { PRTrackerWidget } from '@/components/dashboard/widgets/PRTrackerWidget'
 import { TrainingLoadWidget } from '@/components/dashboard/widgets/TrainingLoadWidget'
@@ -29,8 +30,12 @@ export default async function GymPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  const recentWorkouts = await getRecentWorkouts(user.id, 90).catch(() => [])
+  const [recentWorkouts, prefs] = await Promise.all([
+    getRecentWorkouts(user.id, 90).catch(() => []),
+    getUserPreferences(user.id).catch(() => null),
+  ])
   const restDays = daysSinceRest(recentWorkouts)
+  const hiddenWidgets = new Set(prefs?.hidden_widgets ?? [])
 
   return (
     <div className="flex flex-col gap-4">
@@ -44,11 +49,13 @@ export default async function GymPage() {
       <div className="flex flex-col gap-3">
         <p className="text-xs font-semibold text-text-muted uppercase tracking-widest">Training status</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <TappableWidget widgetId="trainload" recentWorkouts={recentWorkouts}>
-            <ModulePageClient w={8} h={5}>
-              <TrainingLoadWidget recentWorkouts={recentWorkouts} />
-            </ModulePageClient>
-          </TappableWidget>
+          {!hiddenWidgets.has('trainload') && (
+            <TappableWidget widgetId="trainload" recentWorkouts={recentWorkouts}>
+              <ModulePageClient w={8} h={5}>
+                <TrainingLoadWidget recentWorkouts={recentWorkouts} />
+              </ModulePageClient>
+            </TappableWidget>
+          )}
 
           <div className="rounded-2xl bg-surface border border-border p-5 flex flex-col justify-center gap-1">
             <p className="text-xs font-semibold text-text-muted uppercase tracking-widest">Days since rest</p>
@@ -58,14 +65,16 @@ export default async function GymPage() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <p className="text-xs font-semibold text-text-muted uppercase tracking-widest">Personal records</p>
-        <TappableWidget widgetId="prtracker">
-          <ModulePageClient w={8} h={6}>
-            <PRTrackerWidget />
-          </ModulePageClient>
-        </TappableWidget>
-      </div>
+      {!hiddenWidgets.has('prtracker') && (
+        <div className="flex flex-col gap-3">
+          <p className="text-xs font-semibold text-text-muted uppercase tracking-widest">Personal records</p>
+          <TappableWidget widgetId="prtracker">
+            <ModulePageClient w={8} h={6}>
+              <PRTrackerWidget />
+            </ModulePageClient>
+          </TappableWidget>
+        </div>
+      )}
 
       <div className="rounded-2xl bg-surface border border-border p-5">
         <p className="text-xs font-semibold text-text-muted uppercase tracking-widest mb-3">Routine</p>

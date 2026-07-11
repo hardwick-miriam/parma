@@ -6,6 +6,7 @@ import {
 } from '@/lib/db/queries'
 import { getDailyStatsHistory } from '@/lib/db/history'
 import { getWhoopConnection, getLatestWhoopMetrics, getWhoopMetrics } from '@/lib/db/whoop'
+import { getUserPreferences } from '@/lib/db/preferences'
 import { RecoveryWidget } from '@/components/dashboard/RecoveryWidget'
 import { WhoopWidget } from '@/components/dashboard/widgets/WhoopWidget'
 import { HealthStatusWidget } from '@/components/dashboard/widgets/HealthStatusWidget'
@@ -22,7 +23,7 @@ export default async function HealthPage() {
   const whoopConn = await getWhoopConnection(user.id).catch(() => null)
   const whoopConnected = !!whoopConn
 
-  const [stats, health, injuries, pastInjuries, history, whoopToday, whoopHistory] = await Promise.all([
+  const [stats, health, injuries, pastInjuries, history, whoopToday, whoopHistory, prefs] = await Promise.all([
     getTodayStats(user.id).catch(() => null),
     getHealthStatus(user.id).catch(() => null),
     getInjuriesWithCheckins(user.id).catch(() => []),
@@ -30,7 +31,9 @@ export default async function HealthPage() {
     getDailyStatsHistory(user.id, 60).catch(() => []),
     whoopConnected ? getLatestWhoopMetrics(user.id).catch(() => null) : null,
     whoopConnected ? getWhoopMetrics(user.id, 14).catch(() => []) : [],
+    getUserPreferences(user.id).catch(() => null),
   ])
+  const hiddenWidgets = new Set(prefs?.hidden_widgets ?? [])
 
   return (
     <div className="flex flex-col gap-4">
@@ -38,17 +41,21 @@ export default async function HealthPage() {
 
       <RecoveryWidget stats={stats} health={health} whoop={whoopToday} />
 
-      <TappableWidget widgetId="whoop" whoopHistory={whoopHistory}>
-        <ModulePageClient w={8} h={5}>
-          <WhoopWidget today={whoopToday} history={whoopHistory} />
-        </ModulePageClient>
-      </TappableWidget>
+      {!hiddenWidgets.has('whoop') && (
+        <TappableWidget widgetId="whoop" whoopHistory={whoopHistory}>
+          <ModulePageClient w={8} h={5}>
+            <WhoopWidget today={whoopToday} history={whoopHistory} />
+          </ModulePageClient>
+        </TappableWidget>
+      )}
 
-      <TappableWidget widgetId="sleepdebt" history={history}>
-        <ModulePageClient w={8} h={5}>
-          <SleepDebtWidget history={history} />
-        </ModulePageClient>
-      </TappableWidget>
+      {!hiddenWidgets.has('sleepdebt') && (
+        <TappableWidget widgetId="sleepdebt" history={history}>
+          <ModulePageClient w={8} h={5}>
+            <SleepDebtWidget history={history} />
+          </ModulePageClient>
+        </TappableWidget>
+      )}
 
       <HealthStatusWidget status={health} />
 

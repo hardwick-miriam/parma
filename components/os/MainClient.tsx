@@ -32,6 +32,7 @@ interface MainClientProps {
   stepsTrend: { date: string; steps: number }[]
   recoveryStrainTrend: { date: string; recovery: number; strain: number }[]
   hrvTrend: { date: string; hrv: number }[]
+  hiddenWidgets?: Set<string>
   targets: {
     calorie_target: number
     protein_target_g: number
@@ -80,8 +81,9 @@ const axisTick = { fontSize: 10, fill: 'var(--text-faint)' }
 
 export function MainClient({
   stats, health, whoop, recentWorkouts, briefing, activeInjuries, trainToday, history, loggingStreak,
-  weightTrend, sleepTrend, caloriesTrend, stepsTrend, recoveryStrainTrend, hrvTrend, targets,
+  weightTrend, sleepTrend, caloriesTrend, stepsTrend, recoveryStrainTrend, hrvTrend, hiddenWidgets, targets,
 }: MainClientProps) {
+  const hidden = hiddenWidgets ?? new Set<string>()
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const recovery = computeRecovery(stats, health, whoop)
   const recoveryColor = {
@@ -120,11 +122,13 @@ export function MainClient({
         )}
       </div>
 
-      <TappableWidget widgetId="weather" weather={weather}>
-        <ModulePageClient w={8} h={5}>
-          <WeatherWidget onData={setWeather} />
-        </ModulePageClient>
-      </TappableWidget>
+      {!hidden.has('weather') && (
+        <TappableWidget widgetId="weather" weather={weather}>
+          <ModulePageClient w={8} h={5}>
+            <WeatherWidget onData={setWeather} />
+          </ModulePageClient>
+        </TappableWidget>
+      )}
 
       {/* 3. Today's rings — tappable into their modules */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -288,14 +292,16 @@ export function MainClient({
       </div>
 
       {/* 5. Year heatmap strip — reused, not forked */}
-      <div>
-        <p className="text-xs font-semibold text-text-muted uppercase tracking-widest mb-2">Activity</p>
-        <TappableWidget widgetId="heatmap" history={history}>
-          <ModulePageClient w={12} h={5}>
-            <HeatmapWidget history={history} workouts={recentWorkouts} calorieTarget={targets.calorie_target} />
-          </ModulePageClient>
-        </TappableWidget>
-      </div>
+      {!hidden.has('heatmap') && (
+        <div>
+          <p className="text-xs font-semibold text-text-muted uppercase tracking-widest mb-2">Activity</p>
+          <TappableWidget widgetId="heatmap" history={history}>
+            <ModulePageClient w={12} h={5}>
+              <HeatmapWidget history={history} workouts={recentWorkouts} calorieTarget={targets.calorie_target} />
+            </ModulePageClient>
+          </TappableWidget>
+        </div>
+      )}
 
       {/* 6. Streak / consistency counter */}
       {loggingStreak >= 2 && (
