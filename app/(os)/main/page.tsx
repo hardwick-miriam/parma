@@ -111,6 +111,7 @@ export default async function MainPage() {
       recoveryStrainTrend={recoveryStrainTrend}
       hrvTrend={hrvTrend}
       hiddenWidgets={new Set(prefs?.hidden_widgets ?? [])}
+      mounjaroEnabled={!!prefs?.mounjaro_enabled}
       targets={{
         calorie_target: prefs?.calorie_target ?? 2000,
         protein_target_g: prefs?.protein_target_g ?? 150,

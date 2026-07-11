@@ -7,7 +7,7 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY ?? '',
 )
 
-export type PushCategory = 'streak_risk' | 'session_reminder' | 'recovery_ready' | 'pr_celebration' | 'hydration'
+export type PushCategory = 'streak_risk' | 'session_reminder' | 'recovery_ready' | 'pr_celebration' | 'hydration' | 'dose_due'
 
 export interface PushPayload {
   title: string

@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { getDailyStatsHistoryForUser } from '@/lib/db/history'
 import { computeInsights, computeMoodCorrelations } from '@/lib/insights/compute'
+import { computeMounjaroCorrelations } from '@/lib/insights/mounjaroCompute'
 import { getWhoopMetrics } from '@/lib/db/whoop'
 import { getRecentWorkouts } from '@/lib/db/queries'
+import { getMounjaroDoses, getMounjaroEffects } from '@/lib/db/mounjaro'
+import { getUserPreferences } from '@/lib/db/preferences'
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
@@ -42,7 +45,17 @@ export async function GET(request: NextRequest) {
       const trainedDates = new Set(recentWorkouts.map((w) => w.date))
       const moodCorrelations = computeMoodCorrelations(history, whoopHistory, trainedDates)
 
-      const computed = [...computeInsights(history), ...moodCorrelations]
+      const prefs = await getUserPreferences(userId, supabase).catch(() => null)
+      let mounjaroCorrelations: ReturnType<typeof computeMounjaroCorrelations> = []
+      if (prefs?.mounjaro_enabled) {
+        const [doses, effects] = await Promise.all([
+          getMounjaroDoses(userId, 90, supabase).catch(() => []),
+          getMounjaroEffects(userId, 90, supabase).catch(() => []),
+        ])
+        mounjaroCorrelations = computeMounjaroCorrelations(doses, whoopHistory, effects)
+      }
+
+      const computed = [...computeInsights(history), ...moodCorrelations, ...mounjaroCorrelations]
       if (computed.length === 0) continue
 
       const { error: deleteErr } = await supabase.from('insights').delete().eq('user_id', userId)

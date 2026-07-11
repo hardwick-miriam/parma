@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { randomBytes } from 'crypto'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 export interface SavedPlace {
   id: string
@@ -29,8 +30,8 @@ export interface UserPreferences {
   updated_at: string
 }
 
-export async function getUserPreferences(userId: string): Promise<UserPreferences | null> {
-  const supabase = await createClient()
+export async function getUserPreferences(userId: string, client?: SupabaseClient): Promise<UserPreferences | null> {
+  const supabase = client ?? (await createClient())
   const { data, error } = await supabase
     .from('user_preferences')
     .select('*')

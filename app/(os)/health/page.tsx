@@ -15,6 +15,7 @@ import { SleepDebtWidget } from '@/components/dashboard/widgets/SleepDebtWidget'
 import { ModulePageClient } from '@/components/os/ModulePageClient'
 import { TappableWidget } from '@/components/os/TappableWidget'
 import { MoodCorrelationsSection } from '@/components/os/MoodCorrelationsSection'
+import { DoseDueBanner } from '@/components/os/DoseDueBanner'
 
 export default async function HealthPage() {
   const supabase = await createClient()
@@ -39,6 +40,8 @@ export default async function HealthPage() {
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold text-text">Health</h1>
+
+      {!!prefs?.mounjaro_enabled && <DoseDueBanner mounjaroEnabled={!!prefs?.mounjaro_enabled} />}
 
       <RecoveryWidget stats={stats} health={health} whoop={whoopToday} />
 

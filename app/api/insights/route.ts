@@ -2,8 +2,11 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getDailyStatsHistory } from '@/lib/db/history'
 import { computeInsights, computeMoodCorrelations } from '@/lib/insights/compute'
+import { computeMounjaroCorrelations } from '@/lib/insights/mounjaroCompute'
 import { getWhoopMetrics } from '@/lib/db/whoop'
 import { getRecentWorkouts } from '@/lib/db/queries'
+import { getMounjaroDoses, getMounjaroEffects } from '@/lib/db/mounjaro'
+import { getUserPreferences } from '@/lib/db/preferences'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,7 +41,17 @@ export async function GET() {
   const trainedDates = new Set(recentWorkouts.map((w) => w.date))
   const moodCorrelations = computeMoodCorrelations(history, whoopHistory, trainedDates)
 
-  const computed = [...computeInsights(history), ...moodCorrelations]
+  const prefs = await getUserPreferences(user.id, supabase).catch(() => null)
+  let mounjaroCorrelations: ReturnType<typeof computeMounjaroCorrelations> = []
+  if (prefs?.mounjaro_enabled) {
+    const [doses, effects] = await Promise.all([
+      getMounjaroDoses(user.id, 90, supabase).catch(() => []),
+      getMounjaroEffects(user.id, 90, supabase).catch(() => []),
+    ])
+    mounjaroCorrelations = computeMounjaroCorrelations(doses, whoopHistory, effects)
+  }
+
+  const computed = [...computeInsights(history), ...moodCorrelations, ...mounjaroCorrelations]
 
   if (computed.length > 0) {
     // Clear old cache and insert fresh batch

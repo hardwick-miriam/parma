@@ -1178,3 +1178,9 @@ recovery/protein/calories/training-vs-mood correlations; weather honestly skippe
 data exists to correlate against). Real account currently has too little data to surface any
 finding (honestly reported "still learning"); separately proved the correlation logic itself works
 with clearly-labeled synthetic data, fully cleaned up. See board.html E3 for full evidence.
+
+**DONE Task 4 — Mounjaro timing intelligence.** Cadence detection + due-today/tomorrow banner on
+Main/Health (real push wiring added to the existing daily cron, previously dead code). Recovery/
+side-effect correlations via the same plain-stats engine as mood correlations. Real account
+honestly has mounjaro_enabled=true but 0 doses logged (reported as insufficient data); correlation
+logic separately proven with synthetic data, cleaned up. See board.html E4 for full evidence.

@@ -23,8 +23,8 @@ export interface MounjaroEffect {
   notes: string | null
 }
 
-export async function getMounjaroDoses(userId: string, days = 90): Promise<MounjaroDose[]> {
-  const supabase = await createClient()
+export async function getMounjaroDoses(userId: string, days = 90, client?: SupabaseClient): Promise<MounjaroDose[]> {
+  const supabase = client ?? (await createClient())
   const since = new Date()
   since.setDate(since.getDate() - days)
 
@@ -39,8 +39,8 @@ export async function getMounjaroDoses(userId: string, days = 90): Promise<Mounj
   return data ?? []
 }
 
-export async function getMounjaroEffects(userId: string, days = 90): Promise<MounjaroEffect[]> {
-  const supabase = await createClient()
+export async function getMounjaroEffects(userId: string, days = 90, client?: SupabaseClient): Promise<MounjaroEffect[]> {
+  const supabase = client ?? (await createClient())
   const since = new Date()
   since.setDate(since.getDate() - days)
 
