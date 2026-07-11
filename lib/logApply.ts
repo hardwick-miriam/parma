@@ -14,6 +14,7 @@ import { insertMounjaroDose, upsertMounjaroEffects } from '@/lib/db/mounjaro'
 import { insertMediaEntry } from '@/lib/db/media'
 import { insertFoodItems } from '@/lib/db/food'
 import { insertBodyMeasurement, toCm } from '@/lib/db/bodyMeasurements'
+import { upsertLearningItem } from '@/lib/db/learningItems'
 import type { ParsedLog } from '@/lib/ai/types'
 import type { Injury } from '@/lib/db/queries'
 
@@ -200,6 +201,12 @@ export async function applyParsedLog(
     if (parsed.body_measurements?.length) {
       for (const m of parsed.body_measurements) {
         await insertBodyMeasurement(userId, logDate ?? getLocalDate(), m.site, toCm(m.value, m.unit), m.note, supabase)
+      }
+    }
+
+    if (parsed.learning_items?.length) {
+      for (const item of parsed.learning_items) {
+        await upsertLearningItem(userId, item, supabase)
       }
     }
 

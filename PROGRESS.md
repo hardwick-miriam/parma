@@ -1168,3 +1168,7 @@ truth for what's actually landed; `board.html` mirrors the same state.
 
 **DONE Task 1 — Body measurements.** Migration 027 live+verified. Real NLP test (inches+cm
 mixed) + real DB trend/change computation verified. See board.html E1 for full evidence.
+
+**DONE Task 2 — Reading/learning tracker.** Migration 028 live+verified. Real NLP test (3
+questions, confirmed no leakage into the media table) + real upsert-in-place test verified. See
+board.html E2 for full evidence.

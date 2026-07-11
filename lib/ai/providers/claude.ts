@@ -94,7 +94,7 @@ const PARSE_TOOL: Anthropic.Tool = {
       notes: { type: 'string', description: 'Anything that does not fit another field — unless it fits media, in which case use media' },
       media: {
         type: 'array',
-        description: 'Books read/watching/wanting to read, films/shows watched/watching/to watch, or songs listened to. E.g. "watched Oppenheimer" → [{...,status:"finished"}]. "want to watch Inception" → [{...,status:"want-to"}]. "currently reading Dune" → [{...,status:"in-progress"}]. "finished reading Dune" → [{...,status:"finished"}].',
+        description: 'Films/shows watched/watching/to watch, or songs listened to. Do NOT use for books/courses/audiobooks/papers — those always go in `learning_items` instead, never here. E.g. "watched Oppenheimer" → [{...,status:"finished"}]. "want to watch Inception" → [{...,status:"want-to"}].',
         items: {
           type: 'object',
           properties: {
@@ -167,6 +167,23 @@ const PARSE_TOOL: Anthropic.Tool = {
             },
           },
           required: ['muscle_id', 'intensity'],
+          additionalProperties: false,
+        },
+      },
+      learning_items: {
+        type: 'array',
+        description: 'Books, courses, audiobooks, or papers the user is tracking reading/learning progress on. ALWAYS use this (not `media`) for books/courses/audiobooks/papers — `media` is reserved for films/shows/songs only. Use when the user mentions wanting to read/take, starting, making progress on, or finishing one of these. E.g. "started reading Atomic Habits" -> {title:"Atomic Habits",type:"book",status:"in-progress"}. "finished the ML course 9/10" -> {title:"ML course",type:"course",status:"finished",rating:9}. "halfway through Dune" -> {title:"Dune",type:"book",status:"in-progress",progress_pct:50}. "want to read Sapiens" -> {title:"Sapiens",type:"book",status:"want"}.',
+        items: {
+          type: 'object',
+          properties: {
+            title: { type: 'string' },
+            type: { type: 'string', enum: ['book', 'course', 'audiobook', 'paper'] },
+            status: { type: 'string', enum: ['want', 'in-progress', 'finished'], description: 'Omit if just a progress update on an already-started item.' },
+            progress_pct: { type: 'number', description: '0-100 percent complete, if stated or clearly implied (e.g. "halfway" -> 50, "almost done" -> ~90).' },
+            rating: { type: 'number', description: '1-10 rating if given (e.g. "9/10" -> 9, "loved it" with no number -> omit).' },
+            notes: { type: 'string' },
+          },
+          required: ['title', 'type'],
           additionalProperties: false,
         },
       },

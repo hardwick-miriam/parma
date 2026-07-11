@@ -57,6 +57,18 @@ export const BodyMeasurementEntrySchema = z.object({
   note: z.string().optional(),
 })
 
+// Feature 20: reading/learning tracker — distinct from ParsedMediaItemSchema
+// (films/shows/songs, and a simpler casual book log); this is the typed,
+// progress-tracking version for book/course/audiobook/paper.
+export const ParsedLearningItemSchema = z.object({
+  title: z.string().min(1),
+  type: z.enum(['book', 'course', 'audiobook', 'paper']),
+  status: z.enum(['want', 'in-progress', 'finished']).optional(),
+  progress_pct: z.number().min(0).max(100).optional(),
+  rating: z.number().min(1).max(10).optional(),
+  notes: z.string().optional(),
+})
+
 export const ParsedInjuryCheckinSchema = z.object({
   body_part: z.string().optional(),
   feeling_pct: z.number().min(0).max(100),
@@ -143,6 +155,7 @@ export const ParsedLogSchema = z.object({
   estimates: z.array(z.string()).optional(),
   muscle_soreness: z.array(MuscleSorenessEntrySchema).optional(),
   body_measurements: z.array(BodyMeasurementEntrySchema).optional(),
+  learning_items: z.array(ParsedLearningItemSchema).optional(),
 })
 
 export type ParsedLog = z.infer<typeof ParsedLogSchema>
