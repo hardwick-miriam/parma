@@ -1,10 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { ACCOUNT_TYPES, DEBT_TYPES, type AccountType, type DebtType } from '@/lib/financeTypes'
+
+const FinanceNetWorthChart = dynamic(() => import('./FinanceNetWorthChart'), {
+  ssr: false,
+  loading: () => <div className="h-[120px] w-full rounded bg-surface-elevated animate-pulse" />,
+})
 
 interface FinanceAccount {
   id: string; name: string; type: AccountType; balance: number
@@ -37,11 +42,6 @@ const ALLOCATION_COLORS: Record<string, string> = {
 function fmtMoney(n: number) {
   return n.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })
 }
-function fmtDate(d: string) {
-  return new Date(d + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-}
-
-const tooltipStyle = { background: 'var(--surface-elevated)', border: '1px solid var(--border-strong)', borderRadius: 8, fontSize: 12 }
 
 export function FinancesClient({ initialData }: { initialData?: Summary } = {}) {
   const queryClient = useQueryClient()
@@ -164,18 +164,7 @@ export function FinancesClient({ initialData }: { initialData?: Summary } = {}) 
         <p className="text-xs font-semibold text-text-muted uppercase tracking-widest">Net worth</p>
         <p className="text-3xl font-bold text-text tabular-nums">{fmtMoney(data.netWorth)}</p>
         <p className="text-xs text-text-subtle">{fmtMoney(data.totalAssets)} assets − {fmtMoney(data.totalDebts)} debts</p>
-        {data.trend.length > 1 && (
-          <div style={{ width: '100%', height: 120 }}>
-            <ResponsiveContainer>
-              <LineChart data={data.trend}>
-                <XAxis dataKey="date" tickFormatter={fmtDate} tick={{ fontSize: 10, fill: 'var(--text-faint)' }} minTickGap={30} />
-                <YAxis tick={{ fontSize: 10, fill: 'var(--text-faint)' }} width={40} domain={['dataMin - 100', 'dataMax + 100']} />
-                <Tooltip labelFormatter={(l) => fmtDate(String(l))} formatter={(v) => fmtMoney(Number(v))} contentStyle={tooltipStyle} />
-                <Line type="monotone" dataKey="net_worth" stroke="var(--accent)" strokeWidth={2} dot={{ r: 2 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        )}
+        {data.trend.length > 1 && <FinanceNetWorthChart trend={data.trend} />}
       </div>
 
       {/* Asset allocation */}

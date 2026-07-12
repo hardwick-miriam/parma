@@ -1,10 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { MEASUREMENT_SITES, type MeasurementSite } from '@/lib/bodyMeasurementTypes'
+
+const BodyMeasurementTrendChart = dynamic(() => import('./BodyMeasurementTrendChart'), {
+  ssr: false,
+  loading: () => <div className="h-20 w-full rounded bg-surface-elevated animate-pulse" />,
+})
 
 const SITE_LABELS: Record<MeasurementSite, string> = {
   chest: 'Chest', left_arm: 'Left arm', right_arm: 'Right arm', waist: 'Waist', hips: 'Hips',
@@ -34,8 +39,6 @@ function ChangeBadge({ value }: { value: number | null }) {
     </span>
   )
 }
-
-const tooltipStyle = { background: 'var(--surface-elevated)', border: '1px solid var(--border-strong)', borderRadius: 8, fontSize: 12 }
 
 export function BodyMeasurementsSection() {
   const queryClient = useQueryClient()
@@ -135,18 +138,7 @@ export function BodyMeasurementsSection() {
               <span className="text-text-faint">30d: <ChangeBadge value={s.change30d} /></span>
               <span className="text-text-faint">90d: <ChangeBadge value={s.change90d} /></span>
             </div>
-            {s.trend.length > 1 && (
-              <div style={{ width: '100%', height: 80 }}>
-                <ResponsiveContainer>
-                  <LineChart data={s.trend}>
-                    <XAxis dataKey="date" tickFormatter={fmtDate} tick={{ fontSize: 9, fill: 'var(--text-faint)' }} minTickGap={30} />
-                    <YAxis hide domain={['dataMin - 1', 'dataMax + 1']} />
-                    <Tooltip labelFormatter={(l) => fmtDate(String(l))} contentStyle={tooltipStyle} />
-                    <Line type="monotone" dataKey="value_cm" stroke="var(--accent)" strokeWidth={2} dot={{ r: 2 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            )}
+            {s.trend.length > 1 && <BodyMeasurementTrendChart trend={s.trend} />}
           </div>
         ))}
       </div>
