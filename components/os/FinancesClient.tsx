@@ -43,7 +43,7 @@ function fmtDate(d: string) {
 
 const tooltipStyle = { background: 'var(--surface-elevated)', border: '1px solid var(--border-strong)', borderRadius: 8, fontSize: 12 }
 
-export function FinancesClient() {
+export function FinancesClient({ initialData }: { initialData?: Summary } = {}) {
   const queryClient = useQueryClient()
   const [showAddAccount, setShowAddAccount] = useState(false)
   const [showAddDebt, setShowAddDebt] = useState(false)
@@ -57,6 +57,7 @@ export function FinancesClient() {
       if (!res.ok) throw new Error('Failed to load finances')
       return (await res.json()) as Summary
     },
+    initialData,
   })
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['finances-summary'] })
@@ -129,9 +130,21 @@ export function FinancesClient() {
     onError: () => toast.error('Failed to delete debt'),
   })
 
-  if (summary.isLoading) return <p className="text-sm text-text-subtle">Loading…</p>
+  if (summary.isLoading) {
+    return (
+      <div className="flex flex-col gap-4 animate-pulse">
+        <div className="rounded-2xl bg-surface border border-border p-5 flex flex-col gap-3">
+          <div className="h-3 w-24 rounded bg-surface-elevated" />
+          <div className="h-9 w-40 rounded bg-surface-elevated" />
+          <div className="h-[120px] w-full rounded bg-surface-elevated" />
+        </div>
+        <div className="rounded-2xl bg-surface border border-border p-4 h-24" />
+        <div className="rounded-2xl bg-surface border border-border p-4 h-24" />
+      </div>
+    )
+  }
   const data = summary.data
-  if (!data) return <p className="text-sm text-text-subtle">Couldn&apos;t load your finances.</p>
+  if (!data) return <p className="text-sm text-negative">Couldn&apos;t load your finances — try refreshing.</p>
 
   return (
     <div className="flex flex-col gap-4">

@@ -85,7 +85,7 @@ export function GlobeSection() {
       <div className="flex-1 relative min-h-0">
         {countriesQuery.isLoading || webglOk === null ? (
           <div className="flex items-center justify-center h-full">
-            <span className="text-xs text-text-muted">Loading…</span>
+            <div className="w-32 h-32 rounded-full bg-surface-elevated animate-pulse" />
           </div>
         ) : countriesQuery.isError ? (
           <div className="flex items-center justify-center h-full">
