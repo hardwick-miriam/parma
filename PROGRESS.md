@@ -1683,3 +1683,48 @@ bulk-edit bar) and the favourites shelf/radar/breakdown's visual appearance acro
 what's verified above is that the pipeline and the underlying data computations are correct, not
 pixels. Also worth trying yourself: a real multi-photo batch (2+ images) to see the duplicate-detection
 and bulk-edit-across-selection paths in action, since only one test photo was available this session.
+
+---
+
+## Unattended session: 10 tasks + bug sweep (2026-07-12/13, IN PROGRESS)
+
+**T1-T9 done as of this checkpoint, T10-T11 still to come.** This is a long unattended run — writing
+this mid-session in case a usage limit is hit, so it can resume cleanly from your phone. Board:
+`board.html`. Commits so far: `3f47f95` (T1), `d8def92` (T2), `24f32cc` (T3), `5d5493b` (T4, no code
+change), `a7cbad0` (T5), `abdc5de` (T6), `069b3e7` (T7), `4b98703` (T8), `7f43035` (T9). Every commit
+built clean and was pushed individually; production confirmed reachable after each.
+
+Several of these tasks overlapped with earlier sessions' work — each one started with a real re-check
+against current code rather than assuming it still needed doing:
+
+- **T1 (dead code):** removed 5 zero-caller API routes (`summary`, `history`, `suggest-food`,
+  `briefing`, `body/soreness`) and ~90 lines of dead CSS the original `/grid` removal missed (the old
+  `.bento-grid` named-area system and `.react-grid-layout`/`.rgl-edit-mode` overrides). Confirmed
+  `hidden_widgets`/`layouts` (`user_preferences`) are still genuinely read (not truly dead), left alone.
+- **T2 (loading/empty states):** confirmed everything from the wardrobe/media sessions already had
+  correct skeletons/empty-states. Real gap: **Finances** was the last module never given server
+  `initialData` — fixed via a new `lib/pageData/finances.ts` shared by the page and the API route.
+- **T3 (error resilience):** 3 real bugs in the bulk-import flow — folder-import silently dropped HEIC
+  files with an empty MIME type (defeating the HEIC fix from the wardrobe session), a discarded
+  signed-URL error, and an unlocked item list during a save that could desync the partial-failure
+  index-matching. All fixed.
+- **T4:** pure verification — re-homed Mounjaro/photos/globe features from an earlier session still
+  wired correctly; found genuinely new real data now exists (34 visited countries, 3 world clocks).
+- **T5 (optimistic UI):** made media favourites pin/unpin optimistic. No habit-tracker UI exists to
+  make optimistic (confirmed, not built here).
+- **T6 (consistency):** repo-wide hardcoded-colour re-check came back clean. Fixed a real, safe
+  outlier: Finances/Journal/Media were the only 3 modules with `<h1>` owned by the server page instead
+  of their client component — moved into `FinancesClient`, a new `JournalPageClient` wrapper, and
+  `MediaPageClient`.
+- **T7 (chat bar):** Body was the only module with no scoped bias in `lib/moduleContext.ts` (confirmed
+  this genuinely affects the AI parse pipeline, not just placeholder text) — added one.
+- **T8 (midnight logging):** re-verified the existing after-midnight "yesterday's dinner" heuristic
+  with 3 live Claude calls — all correct, no fix needed. Real gap: a food log item's **date** had no
+  edit path at all — added it, with correct dual-day totals recompute when the date actually changes.
+- **T9 (accessibility):** first full pass ever done. Fixed the shared `WidgetShell` close button
+  (28px, unlabeled, blast radius ~10 detail sheets) plus 5 more modal-close buttons with the same
+  pattern, added `aria-label` to Settings' 3 toggles, bumped ~12 small text-link tap targets.
+
+**Still to do:** T10 (lazy-load Body/Finances charts), T11 (full bug sweep, safe-class fixes +
+`BUGS.md` for anything ambiguous), then final build/production verification and a plain-English
+summary. If resuming this from a fresh session, the next step is T10.
