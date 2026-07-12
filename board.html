@@ -167,18 +167,18 @@
         <div class="bug-ref">S3 · journal/page.tsx already fetched today's stats/workouts/history server-side but JournalWidget's actual notes list (the thing you scroll through) was a pure client fetch to /api/journal on mount. Added getJournalNotes(user.id, 90) to the page's server-side Promise.all, built the same note_date-&gt;note map the client's queryFn builds, passed it as initialNotes into JournalWidget's notesQuery initialData.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S4" data-time-est="20" data-credit-est="20000">
+      <div class="bug-row" data-status="done" data-id="S4" data-time-est="20" data-time-actual="10" data-credit-est="20000" data-credit-actual="12000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">S4 — staleTime/keepPreviousData sweep across module queries so revisits are instant.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref"></div>
+        <div class="bug-ref">S4 · QueryProvider already sets a sensible global default (staleTime 60s, gcTime 5min, refetchOnWindowFocus true) that every query inherits unless it overrides -- confirmed only 2 explicit overrides exist anywhere (gym-session's staleTime:Infinity, correct since a session shouldn't go stale on its own) and grepped every queryKey in the app for dynamic (variable-dependent) keys that change while the user interacts with the SAME page: gym-exercises search and wardrobe's filter key already have placeholderData:keepPreviousData (search from the earlier polish pass, wardrobe added this session alongside its initialData). gym-exercise-detail deliberately does NOT use keepPreviousData -- switching exercises should show a real loading skeleton for the new exercise, not stale data from the previous one, which was an intentional earlier decision, not a gap. No further query needed keepPreviousData; the sweep found nothing else to fix.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S5" data-time-est="20" data-credit-est="20000">
+      <div class="bug-row" data-status="done" data-id="S5" data-time-est="20" data-time-actual="20" data-credit-est="20000" data-credit-actual="22000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">S5 — Skeletons (not spinners/blanks) on genuine first-load, remaining gaps.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref"></div>
+        <div class="bug-ref">S5 · Grepped every plain "Loading…" text string left in the app and replaced the ones inside this session's 8 named modules with pulsing skeletons shaped like the eventual content: Wardrobe's item grid (8 placeholder cards), Food's day-timeline (2 day-card skeletons), Body's measurement cards (2), Gym's PR tracker list (3 bars), Health's mood-correlations block (2 bars), Media's learning-tracker list (3 rows), and Wardrobe's item-detail page (image + text placeholders matching the real layout). Left a few shared/lower-traffic spots as plain text (WidgetDetailSheets' generic sheet loader, Settings' RoutineSection) since they're outside this session's named module list.</div>
       </div>
 
       <div class="bug-row" data-status="waiting" data-id="S6" data-time-est="20" data-credit-est="25000">

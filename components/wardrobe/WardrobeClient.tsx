@@ -209,15 +209,28 @@ export function WardrobeClient({ initialItems, initialSeason }: { initialItems?:
         </button>
       </div>
 
-      {isLoading && <p className="text-sm text-text-subtle">Loading…</p>}
       {isError && <p className="text-sm text-negative">Failed to load wardrobe.</p>}
       {!isLoading && items?.length === 0 && (
         <p className="text-sm text-text-subtle py-10 text-center">No items match these filters yet.</p>
       )}
 
-      <div ref={gridRef} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-        {items?.map((item) => <ItemCard key={item.id} item={item} />)}
-      </div>
+      {isLoading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="rounded-2xl overflow-hidden border border-border bg-surface animate-pulse">
+              <div className="aspect-square bg-surface-elevated" />
+              <div className="p-3 flex flex-col gap-1.5">
+                <div className="h-3.5 w-3/4 rounded bg-surface-elevated" />
+                <div className="h-3 w-1/2 rounded bg-surface-elevated" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div ref={gridRef} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          {items?.map((item) => <ItemCard key={item.id} item={item} />)}
+        </div>
+      )}
 
       <AddItemFlow
         open={addOpen}

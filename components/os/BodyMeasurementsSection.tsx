@@ -112,13 +112,19 @@ export function BodyMeasurementsSection() {
         />
       </div>
 
-      {summary.isLoading && <p className="text-sm text-text-subtle">Loading…</p>}
       {!summary.isLoading && sites.length === 0 && (
         <p className="text-sm text-text-subtle py-6 text-center">No measurements logged yet.</p>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {sites.map((s) => (
+        {summary.isLoading && Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className="rounded-2xl bg-surface border border-border p-4 flex flex-col gap-2 animate-pulse">
+            <div className="h-4 w-20 rounded bg-surface-elevated" />
+            <div className="h-7 w-16 rounded bg-surface-elevated" />
+            <div className="h-16 w-full rounded bg-surface-elevated" />
+          </div>
+        ))}
+        {!summary.isLoading && sites.map((s) => (
           <div key={s.site} className="rounded-2xl bg-surface border border-border p-4 flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-text">{SITE_LABELS[s.site]}</p>

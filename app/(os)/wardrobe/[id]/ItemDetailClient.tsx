@@ -101,7 +101,16 @@ export function ItemDetailClient({ id }: { id: string }) {
     },
   })
 
-  if (isLoading || !item) return <p className="text-sm text-text-subtle p-6">Loading…</p>
+  if (isLoading || !item) {
+    return (
+      <div className="flex flex-col gap-5 pb-24 animate-pulse">
+        <div className="h-3 w-24 rounded bg-surface-elevated" />
+        <div className="rounded-2xl border border-border bg-surface-elevated aspect-square max-w-md" />
+        <div className="h-5 w-2/3 rounded bg-surface-elevated" />
+        <div className="h-4 w-1/3 rounded bg-surface-elevated" />
+      </div>
+    )
+  }
 
   const d = draft ?? item
 

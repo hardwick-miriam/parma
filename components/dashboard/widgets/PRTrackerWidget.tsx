@@ -138,7 +138,11 @@ export function PRTrackerWidget() {
         </div>
       )}
 
-      {loading && <p className="text-text-subtle text-xs text-center py-2">Loading…</p>}
+      {loading && (
+        <div className="flex flex-col gap-1.5 py-1">
+          {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-5 rounded bg-surface-elevated animate-pulse" />)}
+        </div>
+      )}
 
       {!loading && prs.length === 0 && !adding && (
         <p className="text-text-subtle text-xs text-center py-2">No PRs yet — add your first!</p>

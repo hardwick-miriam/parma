@@ -703,7 +703,16 @@ export function FoodClient({ targets }: { targets: MacroTargets }) {
       )}
 
       <div className="flex flex-col gap-3">
-        {timeline.isLoading && <p className="text-sm text-text-subtle">Loading…</p>}
+        {timeline.isLoading && (
+          <div className="flex flex-col gap-3">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="rounded-2xl bg-surface border border-border p-4 flex flex-col gap-3 animate-pulse">
+                <div className="h-4 w-24 rounded bg-surface-elevated" />
+                {Array.from({ length: 3 }).map((_, j) => <div key={j} className="h-8 rounded bg-surface-elevated" />)}
+              </div>
+            ))}
+          </div>
+        )}
         {filteredDays.map((day) => (
           <DayCard
             key={day.date}

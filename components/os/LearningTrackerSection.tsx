@@ -185,7 +185,13 @@ export function LearningTrackerSection() {
         </div>
       </div>
 
-      {itemsQuery.isLoading && <p className="text-sm text-text-subtle">Loading…</p>}
+      {itemsQuery.isLoading && (
+        <div className="flex flex-col gap-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-14 rounded-xl bg-surface border border-border animate-pulse" />
+          ))}
+        </div>
+      )}
 
       {inProgress.length > 0 && (
         <div className="flex flex-col gap-2">

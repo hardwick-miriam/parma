@@ -46,7 +46,11 @@ export function MoodCorrelationsSection() {
     <div className="rounded-2xl bg-surface border border-border p-4 flex flex-col gap-3">
       <p className="text-xs font-semibold text-text-muted uppercase tracking-widest">Mood correlations</p>
 
-      {query.isLoading && <p className="text-sm text-text-subtle">Loading…</p>}
+      {query.isLoading && (
+        <div className="flex flex-col gap-2">
+          {Array.from({ length: 2 }).map((_, i) => <div key={i} className="h-4 rounded bg-surface-elevated animate-pulse" />)}
+        </div>
+      )}
 
       {!query.isLoading && query.data?.insufficient && (
         <p className="text-sm text-text-subtle">Still learning — not enough days logged yet to find patterns.</p>
