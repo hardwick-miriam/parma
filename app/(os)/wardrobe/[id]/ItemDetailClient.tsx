@@ -203,13 +203,13 @@ export function ItemDetailClient({ id }: { id: string }) {
           </div>
 
           {!confirmDelete ? (
-            <button onClick={() => setConfirmDelete(true)} className="text-xs text-red-400 hover:text-red-300 self-start mt-2">
+            <button onClick={() => setConfirmDelete(true)} className="text-xs text-negative hover:text-negative self-start mt-2">
               Delete item
             </button>
           ) : (
             <div className="flex items-center gap-2 mt-2">
               <span className="text-xs text-text-muted">Delete this item permanently?</span>
-              <button onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending} className="text-xs text-red-400 font-medium hover:text-red-300">
+              <button onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending} className="text-xs text-negative font-medium hover:text-negative">
                 Yes, delete
               </button>
               <button onClick={() => setConfirmDelete(false)} className="text-xs text-text-subtle hover:text-text-muted">Cancel</button>

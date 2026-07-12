@@ -354,7 +354,7 @@ export function ConfirmationDrawer({ rawText, parsed, saveError, onConfirm, onDi
         {/* Footer — pinned, always visible */}
         <div className="px-6 py-4 shrink-0 border-t border-border flex flex-col gap-3">
           {saveError && (
-            <p className="text-xs text-red-400 text-center">{saveError}</p>
+            <p className="text-xs text-negative text-center">{saveError}</p>
           )}
           <div className="flex gap-3">
             <button

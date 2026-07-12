@@ -82,7 +82,7 @@ export function BarcodeScanner({ onResult, onClose }: BarcodeScannerProps) {
 
         {status === 'error' ? (
           <div className="p-6 text-center">
-            <p className="text-sm text-red-400">{errorMsg}</p>
+            <p className="text-sm text-negative">{errorMsg}</p>
             <button
               onClick={onClose}
               className="mt-4 px-4 py-2 rounded-lg text-sm font-medium"

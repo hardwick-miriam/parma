@@ -170,11 +170,11 @@ function FoodItemRow({
         {!selectMode && (!confirmDelete ? (
           <div className="flex gap-2 shrink-0">
             <button onClick={() => setEditing(true)} className="text-[11px] text-text-subtle hover:text-text-muted">Edit</button>
-            <button onClick={() => setConfirmDelete(true)} className="text-[11px] text-red-400 hover:text-red-300">Delete</button>
+            <button onClick={() => setConfirmDelete(true)} className="text-[11px] text-negative hover:text-negative">Delete</button>
           </div>
         ) : (
           <div className="flex items-center gap-2 shrink-0">
-            <button onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending} className="text-[11px] font-semibold text-red-400 hover:text-red-300">
+            <button onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending} className="text-[11px] font-semibold text-negative hover:text-negative">
               {deleteMutation.isPending ? 'Deleting…' : 'Confirm'}
             </button>
             <button onClick={() => setConfirmDelete(false)} className="text-[11px] text-text-subtle">Cancel</button>
@@ -320,7 +320,7 @@ function SelectionActionBar({
       <button
         onClick={onDelete}
         disabled={deleting}
-        className="text-xs font-semibold px-3 py-1.5 rounded-lg text-red-400 border border-red-400/40 disabled:opacity-50"
+        className="text-xs font-semibold px-3 py-1.5 rounded-lg text-negative border border-negative/40 disabled:opacity-50"
       >
         {deleting ? 'Deleting…' : 'Delete selected'}
       </button>
@@ -591,7 +591,7 @@ export function FoodClient({ targets }: { targets: MacroTargets }) {
 
   return (
     <div className="flex flex-col gap-6 pb-24">
-      <h1 className="text-xl font-bold text-text">Food</h1>
+      <h1 className="text-2xl font-bold text-text">Food</h1>
 
       {todayStats.isLoading ? (
         <div className="rounded-2xl bg-surface border border-border p-5 flex flex-col sm:flex-row gap-5 items-center animate-pulse">
@@ -654,7 +654,7 @@ export function FoodClient({ targets }: { targets: MacroTargets }) {
                     {meal.items.length} item{meal.items.length === 1 ? '' : 's'} · {meal.items.reduce((s, i) => s + i.calories, 0)} kcal
                   </span>
                 </button>
-                <button onClick={() => deleteMealMutation.mutate(meal.id)} className="text-[10px] text-red-400 hover:text-red-300 self-start">
+                <button onClick={() => deleteMealMutation.mutate(meal.id)} className="text-[10px] text-negative hover:text-negative self-start">
                   Delete
                 </button>
               </div>

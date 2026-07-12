@@ -18,8 +18,8 @@ export function HealthStatusWidget({ status }: { status: HealthStatus | null }) 
   const sickDaysLeft = daysRemaining(status.sick_since, status.sick_estimated_days)
 
   return (
-    <div className="rounded-2xl bg-surface border border-red-500/20 p-6 flex flex-col gap-4 overflow-hidden" style={{ boxShadow: 'var(--shadow-md)' }}>
-      <h2 className="text-sm font-semibold text-red-400 uppercase tracking-widest">Health Status</h2>
+    <div className="rounded-2xl bg-surface border border-negative/20 p-6 flex flex-col gap-4 overflow-hidden" style={{ boxShadow: 'var(--shadow-md)' }}>
+      <h2 className="text-sm font-semibold text-negative uppercase tracking-widest">Health Status</h2>
       <div className="flex items-start gap-3">
         <span className="text-xl">🤒</span>
         <div>

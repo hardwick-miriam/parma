@@ -296,7 +296,7 @@ export function BodyWidget({ recentWorkouts = [], activeInjuries = [], recoveryM
         <div className="flex-1 flex flex-col justify-center gap-1">
           <p className="text-2xl font-bold text-text tabular-nums">{workedCount}</p>
           <p className="text-xs text-text-subtle">muscles worked</p>
-          {injuredCount > 0 && <p className="text-xs text-red-400">{injuredCount} injur{injuredCount !== 1 ? 'ies' : 'y'}</p>}
+          {injuredCount > 0 && <p className="text-xs text-negative">{injuredCount} injur{injuredCount !== 1 ? 'ies' : 'y'}</p>}
         </div>
       </div>
     )
@@ -317,7 +317,7 @@ export function BodyWidget({ recentWorkouts = [], activeInjuries = [], recoveryM
             </span>
           )}
           {injuredCount > 0 && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 font-semibold">
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-negative/20 text-negative font-semibold">
               {injuredCount} injured
             </span>
           )}

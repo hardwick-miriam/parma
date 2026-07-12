@@ -30,8 +30,8 @@ const STATUS_LABEL: Record<MediaStatus, string> = {
 
 const STATUS_COLORS: Record<MediaStatus, string> = {
   'want-to': 'text-accent bg-accent/10',
-  'in-progress': 'text-amber-400 bg-amber-400/10',
-  'finished': 'text-emerald-400 bg-emerald-400/10',
+  'in-progress': 'text-warning bg-warning/10',
+  'finished': 'text-positive bg-positive/10',
 }
 
 const STATUS_CYCLE: Record<MediaStatus, MediaStatus> = {
@@ -60,8 +60,8 @@ function StatsStrip({ entries }: { entries: MediaEntry[] }) {
       <span><span className="font-semibold text-text tabular-nums">{entries.length}</span> total</span>
       {avg && <span>avg <span className="font-semibold text-accent tabular-nums">{avg}</span>/10</span>}
       {byStatus['want-to'] > 0 && <span className="text-accent/70">{byStatus['want-to']} want-to</span>}
-      {byStatus['in-progress'] > 0 && <span className="text-amber-400/70">{byStatus['in-progress']} in-progress</span>}
-      {byStatus['finished'] > 0 && <span className="text-emerald-400/70">{byStatus['finished']} finished</span>}
+      {byStatus['in-progress'] > 0 && <span className="text-warning/70">{byStatus['in-progress']} in-progress</span>}
+      {byStatus['finished'] > 0 && <span className="text-positive/70">{byStatus['finished']} finished</span>}
     </div>
   )
 }
@@ -178,8 +178,8 @@ function CatalogueModal({
                   statusFilter === s
                     ? s === 'all' ? 'bg-surface-elevated text-text'
                       : s === 'want-to' ? 'bg-accent/20 text-accent'
-                      : s === 'in-progress' ? 'bg-amber-400/15 text-amber-400'
-                      : 'bg-emerald-400/15 text-emerald-400'
+                      : s === 'in-progress' ? 'bg-warning/15 text-warning'
+                      : 'bg-positive/15 text-positive'
                     : 'text-text-subtle hover:text-text-muted hover:bg-surface-hover'
                 }`}
               >
@@ -244,7 +244,7 @@ function CatalogueModal({
                           <span className="text-xs text-text-muted">Delete?</span>
                           <button
                             onClick={() => { onDelete(entry.id); setConfirmId(null) }}
-                            className="text-xs text-red-400 font-medium hover:text-red-300"
+                            className="text-xs text-negative font-medium hover:text-negative"
                           >
                             Yes
                           </button>
@@ -258,7 +258,7 @@ function CatalogueModal({
                       ) : (
                         <button
                           onClick={() => setConfirmId(entry.id)}
-                          className="shrink-0 p-1 text-text-subtle opacity-60 group-hover:opacity-100 hover:text-red-400 transition-opacity mt-0.5"
+                          className="shrink-0 p-1 text-text-subtle opacity-60 group-hover:opacity-100 hover:text-negative transition-opacity mt-0.5"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -378,7 +378,7 @@ export function MediaWidget({ initialEntries, initialCounts }: MediaWidgetProps)
                   </span>
                 )}
                 {inProgress > 0 && (
-                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-400/80">
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-warning/10 text-warning/80">
                     {inProgress} in progress
                   </span>
                 )}

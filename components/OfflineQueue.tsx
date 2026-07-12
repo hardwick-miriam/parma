@@ -64,7 +64,7 @@ export function OfflineQueue() {
     >
       {offline ? (
         <>
-          <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+          <span className="w-1.5 h-1.5 rounded-full bg-negative" />
           Offline{queueCount > 0 ? ` · ${queueCount} queued` : ''}
         </>
       ) : (

@@ -113,7 +113,7 @@ export function WardrobeClient() {
   return (
     <div className="flex flex-col gap-5 pb-24">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-xl font-bold text-text">Wardrobe</h1>
+        <h1 className="text-2xl font-bold text-text">Wardrobe</h1>
         <button
           onClick={() => setAddOpen(true)}
           className="px-4 py-2 rounded-xl text-sm font-semibold text-white hover:opacity-90"
@@ -197,7 +197,7 @@ export function WardrobeClient() {
       </div>
 
       {isLoading && <p className="text-sm text-text-subtle">Loading…</p>}
-      {isError && <p className="text-sm text-red-400">Failed to load wardrobe.</p>}
+      {isError && <p className="text-sm text-negative">Failed to load wardrobe.</p>}
       {!isLoading && items?.length === 0 && (
         <p className="text-sm text-text-subtle py-10 text-center">No items match these filters yet.</p>
       )}

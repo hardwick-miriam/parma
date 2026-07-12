@@ -348,7 +348,7 @@ export function LiveLogger() {
                       </button>
                       <button
                         onClick={() => deleteSetMutation.mutate(s.id)}
-                        className="text-xs text-red-400 hover:text-red-300"
+                        className="text-xs text-negative hover:text-negative"
                       >
                         Delete
                       </button>

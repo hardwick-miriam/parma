@@ -76,7 +76,7 @@ function RoutineCard({
           </button>
           <button
             onClick={() => onDelete(routine.id)}
-            className="text-[10px] text-text-subtle hover:text-red-400 transition-colors"
+            className="text-[10px] text-text-subtle hover:text-negative transition-colors"
             aria-label="Delete routine"
           >
             ×
@@ -194,7 +194,7 @@ function UploadForm({ onCreated }: { onCreated: (r: Routine) => void }) {
       </div>
 
       {error && (
-        <p className="text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2">{error}</p>
+        <p className="text-xs text-negative bg-negative/10 rounded-lg px-3 py-2">{error}</p>
       )}
     </div>
   )
@@ -253,7 +253,7 @@ export function RoutineSection() {
       ) : (
         <>
           {loadError && (
-            <p className="text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2">Couldn&apos;t load your routines — try refreshing.</p>
+            <p className="text-xs text-negative bg-negative/10 rounded-lg px-3 py-2">Couldn&apos;t load your routines — try refreshing.</p>
           )}
           {!loadError && routines.length === 0 && !showForm && (
             <p className="text-xs text-text-subtle">No routines saved yet. Add one below to get smart muscle-load predictions and WHOOP workout matching.</p>

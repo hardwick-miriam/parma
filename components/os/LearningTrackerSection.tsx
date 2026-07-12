@@ -34,7 +34,7 @@ function ItemRow({ item, onUpdate, onDelete }: {
         <span className="text-sm text-text flex items-center gap-1.5">
           <span aria-hidden>{TYPE_EMOJI[item.type]}</span> {item.title}
         </span>
-        <button onClick={() => onDelete(item.id)} className="text-xs text-red-400 hover:text-red-300 shrink-0">Delete</button>
+        <button onClick={() => onDelete(item.id)} className="text-xs text-negative hover:text-negative shrink-0">Delete</button>
       </div>
 
       {item.status === 'in-progress' && (

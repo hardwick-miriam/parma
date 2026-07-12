@@ -68,7 +68,7 @@ export default function SignupPage() {
             />
           </label>
 
-          {error && <p className="text-red-400 text-xs">{error}</p>}
+          {error && <p className="text-negative text-xs">{error}</p>}
 
           <button
             type="submit"

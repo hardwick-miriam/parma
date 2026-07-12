@@ -178,7 +178,7 @@ export function AddItemFlow({ open, onOpenChange, onSaved }: {
             <img src={photoPreview} alt="" className="w-full max-h-56 object-cover rounded-xl border border-border" />
           )}
           {aiNote && <p className="text-xs text-accent">{aiNote}</p>}
-          {error && <p className="text-xs text-red-400">{error}</p>}
+          {error && <p className="text-xs text-negative">{error}</p>}
 
           <label className="flex flex-col gap-1 text-xs text-text-muted">
             Name

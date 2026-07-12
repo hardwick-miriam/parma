@@ -119,7 +119,7 @@ export function MainClient({ initialData, briefing }: MainClientProps) {
         <span className="text-lg shrink-0" aria-hidden>🏋️</span>
         <p className="text-sm text-text-muted flex-1">{trainToday}</p>
         {activeInjuries.length > 0 && (
-          <span className="text-[10px] px-2 py-1 rounded-full bg-red-500/15 text-red-400 font-semibold shrink-0">
+          <span className="text-[10px] px-2 py-1 rounded-full bg-negative/15 text-negative font-semibold shrink-0">
             {activeInjuries.length} active injur{activeInjuries.length === 1 ? 'y' : 'ies'}
           </span>
         )}

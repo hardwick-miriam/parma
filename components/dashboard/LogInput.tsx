@@ -318,15 +318,15 @@ export function LogInput({ onParsed, onQuestion, onVoiceTranscript, moduleContex
         <div className="flex items-center gap-2 px-1 min-h-[18px]">
           {recording && (
             <>
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shrink-0" />
-              <span className="text-xs text-red-400">Recording — auto-stops on silence</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-negative animate-pulse shrink-0" />
+              <span className="text-xs text-negative">Recording — auto-stops on silence</span>
             </>
           )}
           {!recording && transcribing && (
             <span className="text-xs text-text-muted">Transcribing…</span>
           )}
           {error && !recording && !transcribing && (
-            <span className="text-xs text-red-400">{error}</span>
+            <span className="text-xs text-negative">{error}</span>
           )}
         </div>
       )}
@@ -361,7 +361,7 @@ export function LogInput({ onParsed, onQuestion, onVoiceTranscript, moduleContex
           className={`shrink-0 rounded-xl transition-colors disabled:opacity-40
             p-3 sm:p-2
             ${recording
-              ? 'text-red-400 bg-red-500/10 hover:bg-red-500/20'
+              ? 'text-negative bg-negative/10 hover:bg-negative/20'
               : 'text-text-muted hover:text-accent'}`}
           title={recording ? 'Stop (or wait for silence)' : 'Record voice note'}
         >

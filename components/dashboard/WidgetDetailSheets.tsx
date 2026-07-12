@@ -208,10 +208,10 @@ export function SleepDebtDetail({ history, target = 8, onClose }: { history: Dai
               <div className="flex items-center gap-3">
                 <span className="text-xs text-text tabular-nums">{hrs != null ? `${hrs.toFixed(1)}h` : '—'}</span>
                 {deficit != null && deficit > 0 && (
-                  <span className="text-[10px] text-red-400">-{deficit.toFixed(1)}h</span>
+                  <span className="text-[10px] text-negative">-{deficit.toFixed(1)}h</span>
                 )}
                 {deficit != null && deficit <= 0 && (
-                  <span className="text-[10px] text-emerald-400">✓</span>
+                  <span className="text-[10px] text-positive">✓</span>
                 )}
               </div>
             </div>

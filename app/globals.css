@@ -54,6 +54,7 @@
   --color-positive-dim: var(--positive-dim);
   --color-negative: var(--negative);
   --color-negative-dim: var(--negative-dim);
+  --color-warning: var(--warning);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 

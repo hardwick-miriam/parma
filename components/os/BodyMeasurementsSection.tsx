@@ -29,7 +29,7 @@ function ChangeBadge({ value }: { value: number | null }) {
   if (value === 0) return <span className="text-text-subtle">no change</span>
   const growing = value > 0
   return (
-    <span className={growing ? 'text-amber-400' : 'text-positive'}>
+    <span className={growing ? 'text-warning' : 'text-positive'}>
       {growing ? '+' : ''}{value}cm {growing && Math.abs(value) >= 1 ? '📈' : ''}
     </span>
   )

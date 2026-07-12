@@ -191,10 +191,10 @@ function InjuryCard({ injury }: { injury: InjuryWithCheckins }) {
   const checkinsSorted = [...injury.checkins].reverse()
 
   return (
-    <div className="rounded-2xl bg-surface border border-orange-500/20 p-6 flex flex-col gap-4" style={{ boxShadow: 'var(--shadow-md)' }}>
+    <div className="rounded-2xl bg-surface border border-warning/20 p-6 flex flex-col gap-4" style={{ boxShadow: 'var(--shadow-md)' }}>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold text-orange-400 uppercase tracking-widest mb-1">
+          <p className="text-xs font-semibold text-warning uppercase tracking-widest mb-1">
             Injury Recovery
           </p>
           <p className="text-sm font-medium text-text">
@@ -249,7 +249,7 @@ function InjuryCard({ injury }: { injury: InjuryWithCheckins }) {
                     <button
                       onClick={() => handleDeleteCheckin(c.id)}
                       disabled={isPending}
-                      className="text-xs text-red-400 font-medium hover:text-red-300 disabled:opacity-50"
+                      className="text-xs text-negative font-medium hover:text-negative disabled:opacity-50"
                     >
                       Delete
                     </button>
@@ -263,7 +263,7 @@ function InjuryCard({ injury }: { injury: InjuryWithCheckins }) {
                 ) : (
                   <button
                     onClick={() => setConfirmCheckinId(c.id)}
-                    className="opacity-60 group-hover:opacity-100 text-text-subtle hover:text-red-400 transition-opacity p-0.5 shrink-0"
+                    className="opacity-60 group-hover:opacity-100 text-text-subtle hover:text-negative transition-opacity p-0.5 shrink-0"
                     title="Delete check-in"
                   >
                     <TrashIcon />
