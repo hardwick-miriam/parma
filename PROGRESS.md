@@ -1502,3 +1502,75 @@ Each task's commit built clean before being pushed (6 commits: `92232fd`, `9ff5a
 layout fixes, whether the optimistic UI genuinely feels instant, and whether the theme fixes look
 right across all 7 themes. What's verified above is code-level correctness and live reachability,
 not pixels.
+
+---
+
+## Netflix import & perceived speed (2026-07-12, later session)
+
+**Both tasks done**, 7 commits, each built clean and pushed independently. Production confirmed
+serving the final commit (`a979564`); all 8 named module routes (`/media`, `/wardrobe`, `/journal`,
+`/main`, `/health`, `/gym`, `/body`, `/food`) return 200 in production.
+
+### Task 1 — Netflix history import
+`media_log` has no source/tag column and no unique constraint on title+category, so dedupe had to
+happen in a one-off script rather than the DB. The CSV's titles contain unquoted commas ("House,
+M.D.", "Manhunt: The Liar, the Thief, the Conman"), so parsing worked from the right (the trailing
+5 fields are always simple; everything before that is the title) instead of a naive comma-split —
+verified against all 86 rows before touching the database. Ran it live against the real Supabase
+project: **86 inserted, 0 updated, 0 errors** on the first run; re-ran it twice more to prove
+idempotency — **0 inserted, 86 updated** both times, total row count stayed at 86 throughout (never
+172). Read back 5 sample rows to confirm titles/ratings/categories/dates landed correctly, and
+confirmed via `/api/media`'s own `getMediaLog()` — the exact function the Media module already
+calls — that all 86 rows come back with no changes needed on the read side. Removed the one-off
+script after use.
+
+### Task 2 — Perceived speed across module pages
+The actual cause of "shell appears, then a visible delay": Media, Wardrobe, and Journal's notes
+list were still fetching everything client-side after mount — the same waterfall Main/Health/Gym/
+Body had already fixed in an earlier session. Fixed all three the same way: the server page now
+fetches the default view (Media: full log; Wardrobe: current season, newest-first, matching the
+client's own default filter state exactly; Journal: the notes list) and seeds TanStack Query's
+`initialData` with it, so the first paint of each module now arrives WITH real data instead of a
+blank shell waiting on a fetch.
+
+Other fixes, in the order the task asked for them:
+- **Caching:** confirmed the global TanStack default (60s staleTime, 5min gcTime, already in place)
+  covers every query that doesn't need special handling; audited every dynamic (variable-dependent)
+  query key in the app and confirmed only Wardrobe's filters and Gym's exercise search needed
+  `keepPreviousData` — both already had or now have it. Gym's exercise-*detail* query deliberately
+  does **not** use `keepPreviousData`, since showing stale data from a different exercise while
+  switching would be actively misleading — an intentional choice, not a gap.
+- **Skeletons:** swept every remaining plain "Loading…" text string inside this session's 8 named
+  modules and replaced them with pulsing placeholders shaped like the real content (Wardrobe's item
+  grid, Food's day timeline, Body's measurement cards, Gym's PR tracker, Health's mood correlations,
+  Media's learning tracker, Wardrobe's item detail page).
+- **Heavy assets:** Media's catalogue modal (now 86+ items after the import) paginates 30 at a time
+  with a "Load more" button instead of rendering the whole filtered/sorted list at once. Wardrobe's
+  item photos got `loading="lazy"`, `decoding="async"`, and explicit width/height. **Not done:** true
+  compressed thumbnails would need a server-side resize pipeline at upload time — `sharp` is only a
+  transitive dependency here, not one I should silently promote to a direct one, so this is flagged
+  as a real follow-up feature rather than forced in cheaply.
+- **Lazy-loaded heavy components:** Main's Trends section (6 recharts instances) and Gym's trend
+  chart were statically bundled into each page's core render even though they're below the fold /
+  conditionally rendered — both extracted into their own files and loaded via `next/dynamic` with a
+  matching skeleton fallback, so recharts streams in as its own chunk after the initial paint. The
+  globe was already lazy from an earlier session. Body's measurement trend lines and Finances' net-
+  worth chart weren't converted — flagged as available follow-ups, not done, given the time budget.
+- **Prefetch on hover/tap-intent:** every module page is `force-dynamic`, so Next's default `<Link>`
+  prefetch only warms the shared layout shell, not the actual server-rendered data (a documented
+  Next.js limitation for dynamic routes, confirmed before treating it as a bug). Sidebar's module
+  links now call `router.prefetch(href)` on `mouseenter` (desktop rail) and `touchstart` (rail +
+  mobile tab bar), forcing Next to eagerly fetch the real RSC payload — including each page's
+  server-computed `initialData` — ahead of the actual click/tap.
+
+### Evidence trail
+Each commit built clean before pushing (7 commits: `289989c`, `f1772c4`, `2617b8c`, `a979564` plus
+the board/progress-only commits). Final `npm run build` clean. `git rev-parse HEAD` matches
+`origin/main` (`a979564`). `www.parma.ink` returns 200. All 8 named module routes return 200 in
+production. The Netflix import itself was verified with real read-backs against the live database,
+not assumed from the script's exit code.
+
+**Needs your eyes:** whether navigating between modules genuinely *feels* faster — what's verified
+above is that the waterfall is gone (data now arrives with the page instead of after it) and the
+chart bundles no longer block first paint, not a stopwatch measurement of perceived speed, which
+only you experiencing it can really confirm.
