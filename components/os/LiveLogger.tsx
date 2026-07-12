@@ -64,6 +64,8 @@ export function LiveLogger() {
   })
   const detailReady = !detailQuery.isLoading
 
+  type GymSession = { sessionId: string; sets: WorkoutSet[] }
+
   const logSetMutation = useMutation({
     mutationFn: async () => {
       const res = await fetch('/api/gym/sets', {
@@ -80,9 +82,23 @@ export function LiveLogger() {
       if (!res.ok) throw new Error('Failed to log set')
       return res.json() as Promise<{ set: WorkoutSet; isNewPR: boolean; prValue: number | null }>
     },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['gym-session'] })
+      const previous = queryClient.getQueryData<GymSession>(['gym-session'])
+      const optimisticSet: WorkoutSet = {
+        id: `optimistic-${Date.now()}`,
+        user_id: '',
+        workout_session_id: previous?.sessionId ?? '',
+        exercise_name: selectedExercise!,
+        weight: Number(weight),
+        reps: reps ?? Number(customReps),
+        is_warmup: isWarmup,
+        logged_at: new Date().toISOString(),
+      }
+      queryClient.setQueryData<GymSession>(['gym-session'], (old) => old ? { ...old, sets: [...old.sets, optimisticSet] } : old)
+      return { previous }
+    },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['gym-session'] })
-      queryClient.invalidateQueries({ queryKey: ['gym-exercise-detail'] })
       if (data.isNewPR) {
         firePR()
         toast.success(`New PR! ${data.prValue}kg on ${selectedExercise}`)
@@ -90,7 +106,14 @@ export function LiveLogger() {
         toast.success('Set logged')
       }
     },
-    onError: () => toast.error('Failed to log set'),
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(['gym-session'], context.previous)
+      toast.error('Failed to log set')
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['gym-session'] })
+      queryClient.invalidateQueries({ queryKey: ['gym-exercise-detail'] })
+    },
   })
 
   const deleteSetMutation = useMutation({
@@ -98,11 +121,20 @@ export function LiveLogger() {
       const res = await fetch(`/api/gym/sets/${setId}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Failed to delete set')
     },
-    onSuccess: () => {
+    onMutate: async (setId) => {
+      await queryClient.cancelQueries({ queryKey: ['gym-session'] })
+      const previous = queryClient.getQueryData<GymSession>(['gym-session'])
+      queryClient.setQueryData<GymSession>(['gym-session'], (old) => old ? { ...old, sets: old.sets.filter((s) => s.id !== setId) } : old)
+      return { previous }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(['gym-session'], context.previous)
+      toast.error('Failed to delete set')
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['gym-session'] })
       queryClient.invalidateQueries({ queryKey: ['gym-exercise-detail'] })
     },
-    onError: () => toast.error('Failed to delete set'),
   })
 
   const editSetMutation = useMutation({
@@ -114,11 +146,22 @@ export function LiveLogger() {
       })
       if (!res.ok) throw new Error('Failed to update set')
     },
-    onSuccess: () => {
+    onMutate: async ({ id, updates }) => {
+      await queryClient.cancelQueries({ queryKey: ['gym-session'] })
+      const previous = queryClient.getQueryData<GymSession>(['gym-session'])
+      queryClient.setQueryData<GymSession>(['gym-session'], (old) =>
+        old ? { ...old, sets: old.sets.map((s) => (s.id === id ? { ...s, ...updates } : s)) } : old
+      )
+      return { previous }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(['gym-session'], context.previous)
+      toast.error('Failed to update set')
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['gym-session'] })
       queryClient.invalidateQueries({ queryKey: ['gym-exercise-detail'] })
     },
-    onError: () => toast.error('Failed to update set'),
   })
 
   const sessionSetsForExercise = useMemo(

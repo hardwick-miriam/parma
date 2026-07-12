@@ -416,11 +416,28 @@ export function FoodClient({ targets }: { targets: MacroTargets }) {
       })
       if (!res.ok) throw new Error('Re-log failed')
     },
-    onSuccess: () => {
+    onMutate: async (food) => {
+      await queryClient.cancelQueries({ queryKey: ['food-today'] })
+      const previous = queryClient.getQueryData<MacroTotals>(['food-today'])
+      queryClient.setQueryData<MacroTotals>(['food-today'], (old) => old ? {
+        calories: old.calories + food.calories,
+        protein_g: old.protein_g + Number(food.protein_g),
+        carbs_g: old.carbs_g + Number(food.carbs_g),
+        fat_g: old.fat_g + Number(food.fat_g),
+        fibre_g: old.fibre_g + Number(food.fibre_g),
+        sugar_g: old.sugar_g + Number(food.sugar_g),
+        salt_g: old.salt_g + Number(food.salt_g),
+      } : old)
+      return { previous }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(['food-today'], context.previous)
+      toast.error('Failed to re-log that food')
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['food-today'] })
       queryClient.invalidateQueries({ queryKey: ['food-timeline'] })
     },
-    onError: () => toast.error('Failed to re-log that food'),
   })
 
   const savedMeals = useQuery({
@@ -483,11 +500,31 @@ export function FoodClient({ targets }: { targets: MacroTargets }) {
       const res = await fetch(`/api/saved-meals/${mealId}/quick-add`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })
       if (!res.ok) throw new Error('Quick-add failed')
     },
-    onSuccess: () => {
+    onMutate: async (mealId) => {
+      await queryClient.cancelQueries({ queryKey: ['food-today'] })
+      const previous = queryClient.getQueryData<MacroTotals>(['food-today'])
+      const meal = savedMeals.data?.meals.find((m) => m.id === mealId)
+      if (meal) {
+        const mealTotals = meal.items.reduce((acc, i) => ({
+          calories: acc.calories + i.calories, protein_g: acc.protein_g + i.protein_g, carbs_g: acc.carbs_g + i.carbs_g,
+          fat_g: acc.fat_g + i.fat_g, fibre_g: acc.fibre_g + i.fibre_g, sugar_g: acc.sugar_g + i.sugar_g, salt_g: acc.salt_g + i.salt_g,
+        }), { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, fibre_g: 0, sugar_g: 0, salt_g: 0 })
+        queryClient.setQueryData<MacroTotals>(['food-today'], (old) => old ? {
+          calories: old.calories + mealTotals.calories, protein_g: old.protein_g + mealTotals.protein_g,
+          carbs_g: old.carbs_g + mealTotals.carbs_g, fat_g: old.fat_g + mealTotals.fat_g,
+          fibre_g: old.fibre_g + mealTotals.fibre_g, sugar_g: old.sugar_g + mealTotals.sugar_g, salt_g: old.salt_g + mealTotals.salt_g,
+        } : old)
+      }
+      return { previous }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(['food-today'], context.previous)
+      toast.error('Failed to quick-add that meal')
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['food-today'] })
       queryClient.invalidateQueries({ queryKey: ['food-timeline'] })
     },
-    onError: () => toast.error('Failed to quick-add that meal'),
   })
 
   const deleteMealMutation = useMutation({

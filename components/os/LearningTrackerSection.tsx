@@ -114,8 +114,19 @@ export function LearningTrackerSection() {
       })
       if (!res.ok) throw new Error('Failed to update')
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['learning-items'] }),
-    onError: () => toast.error('Failed to update item'),
+    onMutate: async ({ id, updates }) => {
+      await queryClient.cancelQueries({ queryKey: ['learning-items'] })
+      const previous = queryClient.getQueryData<{ items: LearningItem[] }>(['learning-items'])
+      queryClient.setQueryData<{ items: LearningItem[] }>(['learning-items'], (old) => ({
+        items: (old?.items ?? []).map((i) => (i.id === id ? { ...i, ...updates } : i)),
+      }))
+      return { previous }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(['learning-items'], context.previous)
+      toast.error('Failed to update item')
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['learning-items'] }),
   })
 
   const deleteMutation = useMutation({
@@ -123,8 +134,19 @@ export function LearningTrackerSection() {
       const res = await fetch(`/api/learning-items/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Failed to delete')
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['learning-items'] }),
-    onError: () => toast.error('Failed to delete item'),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['learning-items'] })
+      const previous = queryClient.getQueryData<{ items: LearningItem[] }>(['learning-items'])
+      queryClient.setQueryData<{ items: LearningItem[] }>(['learning-items'], (old) => ({
+        items: (old?.items ?? []).filter((i) => i.id !== id),
+      }))
+      return { previous }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(['learning-items'], context.previous)
+      toast.error('Failed to delete item')
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['learning-items'] }),
   })
 
   const items = itemsQuery.data?.items ?? []
