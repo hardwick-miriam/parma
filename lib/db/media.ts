@@ -15,6 +15,8 @@ export interface MediaEntry {
   status: MediaStatus
   added_date: string
   created_at: string
+  genres: string[]
+  pinned_slot: 1 | 2 | 3 | null
 }
 
 export interface MediaCounts {
@@ -85,6 +87,41 @@ export async function deleteMediaEntry(userId: string, entryId: string): Promise
   const { error } = await supabase
     .from('media_log')
     .delete()
+    .eq('id', entryId)
+    .eq('user_id', userId)
+  if (error) throw error
+}
+
+/** Pins an item to a favourites-shelf slot (1-3) for its category, clearing whichever other item previously held that slot — the DB's unique (user_id, category, pinned_slot) index means only one item can occupy a slot at a time. */
+export async function setPinnedSlot(
+  userId: string,
+  entryId: string,
+  category: MediaCategory,
+  slot: 1 | 2 | 3,
+  client?: SupabaseClient
+): Promise<void> {
+  const supabase = client ?? (await createClient())
+  const { error: clearError } = await supabase
+    .from('media_log')
+    .update({ pinned_slot: null })
+    .eq('user_id', userId)
+    .eq('category', category)
+    .eq('pinned_slot', slot)
+  if (clearError) throw clearError
+
+  const { error: setError } = await supabase
+    .from('media_log')
+    .update({ pinned_slot: slot })
+    .eq('id', entryId)
+    .eq('user_id', userId)
+  if (setError) throw setError
+}
+
+export async function clearPinnedSlot(userId: string, entryId: string, client?: SupabaseClient): Promise<void> {
+  const supabase = client ?? (await createClient())
+  const { error } = await supabase
+    .from('media_log')
+    .update({ pinned_slot: null })
     .eq('id', entryId)
     .eq('user_id', userId)
   if (error) throw error
