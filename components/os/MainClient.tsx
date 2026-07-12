@@ -2,10 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { useQuery } from '@tanstack/react-query'
-import {
-  LineChart, Line, BarChart, Bar, Cell, ComposedChart, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
-} from 'recharts'
 import { CircularProgress } from '@/components/ui/CircularProgress'
 import { StreakBadge } from '@/components/ui/StreakBadge'
 import { computeRecovery } from '@/lib/recovery'
@@ -47,21 +45,19 @@ function daysSince(dateStr: string | undefined): number | null {
   return Math.floor((now.getTime() - then.getTime()) / (1000 * 60 * 60 * 24))
 }
 
-function fmtDate(d: string) {
-  return new Date(d + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-}
-
-function TrendCard({ title, href, children }: { title: string; href: string; children: React.ReactNode }) {
-  return (
-    <Link href={href} className="rounded-2xl bg-surface border border-border p-4 flex flex-col gap-2 hover:border-border-strong transition-colors block">
-      <p className="text-xs font-semibold text-text-muted uppercase tracking-widest">{title}</p>
-      {children}
-    </Link>
-  )
-}
-
-const tooltipStyle = { background: 'var(--surface-elevated)', border: '1px solid var(--border-strong)', borderRadius: 8, fontSize: 12 }
-const axisTick = { fontSize: 10, fill: 'var(--text-faint)' }
+const MainTrends = dynamic(() => import('./MainTrends'), {
+  ssr: false,
+  loading: () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="rounded-2xl bg-surface border border-border p-4 h-[152px] animate-pulse">
+          <div className="h-3 w-24 rounded bg-surface-elevated mb-3" />
+          <div className="h-24 rounded bg-surface-elevated" />
+        </div>
+      ))}
+    </div>
+  ),
+})
 
 export function MainClient({ initialData, briefing }: MainClientProps) {
   // initialData (server-rendered, instant first paint) doubles as the
@@ -187,112 +183,16 @@ export function MainClient({ initialData, briefing }: MainClientProps) {
         </Link>
       </div>
 
-      {/* 4. Trend graphs — tappable into the relevant module */}
-      <div>
-        <p className="text-xs font-semibold text-text-muted uppercase tracking-widest mb-2">Trends</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {weightTrend.length > 1 && (
-            <TrendCard title="Weight (90d)" href="/health">
-              <div style={{ width: '100%', height: 120 }}>
-                <ResponsiveContainer>
-                  <LineChart data={weightTrend}>
-                    <XAxis dataKey="date" tickFormatter={fmtDate} tick={axisTick} minTickGap={30} />
-                    <YAxis tick={axisTick} width={32} domain={['dataMin - 1', 'dataMax + 1']} />
-                    <Tooltip labelFormatter={(l) => fmtDate(String(l))} contentStyle={tooltipStyle} />
-                    <Line type="monotone" dataKey="value" stroke="var(--accent)" strokeWidth={2} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </TrendCard>
-          )}
-
-          {recoveryStrainTrend.length > 1 && (
-            <TrendCard title="Recovery & strain (14d)" href="/health">
-              <div style={{ width: '100%', height: 120 }}>
-                <ResponsiveContainer>
-                  <ComposedChart data={recoveryStrainTrend}>
-                    <XAxis dataKey="date" tickFormatter={fmtDate} tick={axisTick} minTickGap={30} />
-                    <YAxis tick={axisTick} width={28} />
-                    <Tooltip labelFormatter={(l) => fmtDate(String(l))} contentStyle={tooltipStyle} />
-                    <Bar dataKey="strain" fill="var(--warning)" opacity={0.5} barSize={6} />
-                    <Line type="monotone" dataKey="recovery" stroke="var(--positive)" strokeWidth={2} dot={false} />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </div>
-            </TrendCard>
-          )}
-
-          {sleepTrend.length > 1 && (
-            <TrendCard title="Sleep vs 8h target (7d)" href="/health">
-              <div style={{ width: '100%', height: 120 }}>
-                <ResponsiveContainer>
-                  <BarChart data={sleepTrend}>
-                    <XAxis dataKey="date" tickFormatter={fmtDate} tick={axisTick} />
-                    <YAxis tick={axisTick} width={24} />
-                    <Tooltip labelFormatter={(l) => fmtDate(String(l))} contentStyle={tooltipStyle} />
-                    <ReferenceLine y={8} stroke="var(--text-faint)" strokeDasharray="3 3" />
-                    <Bar dataKey="hours" radius={[4, 4, 0, 0]}>
-                      {sleepTrend.map((d, i) => (
-                        <Cell key={i} fill={d.hours >= 8 ? 'var(--positive)' : 'var(--warning)'} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </TrendCard>
-          )}
-
-          {caloriesTrend.length > 1 && (
-            <TrendCard title="Calories vs target (7d)" href="/food">
-              <div style={{ width: '100%', height: 120 }}>
-                <ResponsiveContainer>
-                  <BarChart data={caloriesTrend}>
-                    <XAxis dataKey="date" tickFormatter={fmtDate} tick={axisTick} />
-                    <YAxis tick={axisTick} width={36} />
-                    <Tooltip labelFormatter={(l) => fmtDate(String(l))} contentStyle={tooltipStyle} />
-                    <ReferenceLine y={targets.calorie_target} stroke="var(--text-faint)" strokeDasharray="3 3" />
-                    <Bar dataKey="calories" radius={[4, 4, 0, 0]}>
-                      {caloriesTrend.map((d, i) => (
-                        <Cell key={i} fill={d.calories <= targets.calorie_target ? 'var(--positive)' : 'var(--negative)'} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </TrendCard>
-          )}
-
-          {hrvTrend.length > 1 && (
-            <TrendCard title="HRV (14d)" href="/health">
-              <div style={{ width: '100%', height: 100 }}>
-                <ResponsiveContainer>
-                  <LineChart data={hrvTrend}>
-                    <XAxis dataKey="date" tickFormatter={fmtDate} tick={axisTick} minTickGap={30} />
-                    <YAxis tick={axisTick} width={28} />
-                    <Tooltip labelFormatter={(l) => fmtDate(String(l))} contentStyle={tooltipStyle} />
-                    <Line type="monotone" dataKey="hrv" stroke="var(--accent)" strokeWidth={2} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </TrendCard>
-          )}
-
-          {stepsTrend.length > 1 && (
-            <TrendCard title="Steps (7d)" href="/health">
-              <div style={{ width: '100%', height: 100 }}>
-                <ResponsiveContainer>
-                  <BarChart data={stepsTrend}>
-                    <XAxis dataKey="date" tickFormatter={fmtDate} tick={axisTick} />
-                    <YAxis tick={axisTick} width={36} />
-                    <Tooltip labelFormatter={(l) => fmtDate(String(l))} contentStyle={tooltipStyle} />
-                    <Bar dataKey="steps" fill="var(--accent)" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </TrendCard>
-          )}
-        </div>
-      </div>
+      {/* 4. Trend graphs — dynamically imported, recharts shouldn't block the initial paint above */}
+      <MainTrends
+        weightTrend={weightTrend}
+        sleepTrend={sleepTrend}
+        caloriesTrend={caloriesTrend}
+        stepsTrend={stepsTrend}
+        recoveryStrainTrend={recoveryStrainTrend}
+        hrvTrend={hrvTrend}
+        calorieTarget={targets.calorie_target}
+      />
 
       {/* 5. Year heatmap strip — reused, not forked */}
       {!hidden.has('heatmap') && (

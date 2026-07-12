@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { MOBILE_TAB_BAR_HEIGHT_REM } from '@/lib/layoutConstants'
 
 export const MODULES: { href: string; label: string; icon: string }[] = [
@@ -24,6 +24,16 @@ function isActive(pathname: string, href: string): boolean {
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+
+  // Every module page is force-dynamic, so Next's default Link prefetch only
+  // warms the shared shell, not the actual server-rendered data — explicitly
+  // forcing a prefetch on hover/touch-intent gets the real RSC payload
+  // (including each page's server-fetched initialData) most of the way there
+  // before the click/tap even lands.
+  function prefetchModule(href: string) {
+    router.prefetch(href)
+  }
 
   return (
     <>
@@ -49,6 +59,8 @@ export function Sidebar() {
               <Link
                 key={m.href}
                 href={m.href}
+                onMouseEnter={() => prefetchModule(m.href)}
+                onTouchStart={() => prefetchModule(m.href)}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors"
                 style={{
                   background: active ? 'var(--accent-dim)' : 'transparent',
@@ -84,6 +96,7 @@ export function Sidebar() {
             <Link
               key={m.href}
               href={m.href}
+              onTouchStart={() => prefetchModule(m.href)}
               className="flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-lg shrink-0 min-w-[52px]"
               style={{ color: active ? 'var(--accent)' : 'var(--text-subtle)' }}
             >

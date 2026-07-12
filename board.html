@@ -181,18 +181,18 @@
         <div class="bug-ref">S5 · Grepped every plain "Loading…" text string left in the app and replaced the ones inside this session's 8 named modules with pulsing skeletons shaped like the eventual content: Wardrobe's item grid (8 placeholder cards), Food's day-timeline (2 day-card skeletons), Body's measurement cards (2), Gym's PR tracker list (3 bars), Health's mood-correlations block (2 bars), Media's learning-tracker list (3 rows), and Wardrobe's item-detail page (image + text placeholders matching the real layout). Left a few shared/lower-traffic spots as plain text (WidgetDetailSheets' generic sheet loader, Settings' RoutineSection) since they're outside this session's named module list.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S6" data-time-est="20" data-credit-est="25000">
+      <div class="bug-row" data-status="done" data-id="S6" data-time-est="20" data-time-actual="25" data-credit-est="25000" data-credit-actual="28000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">S6 — Lazy/dynamic-import heavy components (globe/3D/charts) so they don't block first paint.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref"></div>
+        <div class="bug-ref">S6 · GlobeGL was already lazy() from an earlier session. The bigger unaddressed cost was recharts: statically imported at the top of MainClient.tsx (6 chart instances in the Trends section) and LiveLogger.tsx (1 trend chart), meaning that JS parses/executes as part of the SAME bundle as the above-the-fold content on Main and Gym even though the charts render below the fold / conditionally. Extracted Main's whole Trends block into a new components/os/MainTrends.tsx and Gym's trend chart into components/os/GymTrendChart.tsx, both loaded via next/dynamic({ssr:false}) with a skeleton fallback matching their real layout -- recharts now streams in as its own chunk after the initial paint instead of blocking it. Did not extend this to Body's measurement trend lines or Finances' net-worth chart given time budget -- flagged as an available follow-up, not done.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S7" data-time-est="20" data-credit-est="25000">
+      <div class="bug-row" data-status="done" data-id="S7" data-time-est="20" data-time-actual="15" data-credit-est="25000" data-credit-actual="18000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">S7 — Prefetch a module's data on nav hover/tap-intent (Sidebar).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref"></div>
+        <div class="bug-ref">S7 · Every module page is force-dynamic, which means Next's default &lt;Link&gt; prefetch (on-viewport, on by default) only warms the shared layout shell, not the actual server-rendered data -- confirmed this is a documented Next.js App Router limitation for dynamic routes, not a bug. Added router.prefetch(href) to Sidebar's module links, fired on mouseenter (desktop rail) and touchstart (both the desktop rail, for touchscreen laptops, and the mobile bottom tab bar) -- this forces Next to eagerly fetch the real RSC payload, including each page's server-computed initialData, ahead of the actual navigation. Left Main's own quick-nav tiles unchanged since Sidebar is the persistent, always-present navigation surface and already covers every module.</div>
       </div>
 
       <div class="bug-row" data-status="waiting" data-id="S8" data-time-est="20" data-credit-est="20000">
