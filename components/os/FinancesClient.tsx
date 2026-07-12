@@ -132,22 +132,33 @@ export function FinancesClient({ initialData }: { initialData?: Summary } = {}) 
 
   if (summary.isLoading) {
     return (
-      <div className="flex flex-col gap-4 animate-pulse">
-        <div className="rounded-2xl bg-surface border border-border p-5 flex flex-col gap-3">
-          <div className="h-3 w-24 rounded bg-surface-elevated" />
-          <div className="h-9 w-40 rounded bg-surface-elevated" />
-          <div className="h-[120px] w-full rounded bg-surface-elevated" />
+      <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-bold text-text">Finances</h1>
+        <div className="flex flex-col gap-4 animate-pulse">
+          <div className="rounded-2xl bg-surface border border-border p-5 flex flex-col gap-3">
+            <div className="h-3 w-24 rounded bg-surface-elevated" />
+            <div className="h-9 w-40 rounded bg-surface-elevated" />
+            <div className="h-[120px] w-full rounded bg-surface-elevated" />
+          </div>
+          <div className="rounded-2xl bg-surface border border-border p-4 h-24" />
+          <div className="rounded-2xl bg-surface border border-border p-4 h-24" />
         </div>
-        <div className="rounded-2xl bg-surface border border-border p-4 h-24" />
-        <div className="rounded-2xl bg-surface border border-border p-4 h-24" />
       </div>
     )
   }
   const data = summary.data
-  if (!data) return <p className="text-sm text-negative">Couldn&apos;t load your finances — try refreshing.</p>
+  if (!data) {
+    return (
+      <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-bold text-text">Finances</h1>
+        <p className="text-sm text-negative">Couldn&apos;t load your finances — try refreshing.</p>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-4">
+      <h1 className="text-2xl font-bold text-text">Finances</h1>
       {/* Net worth + trend */}
       <div className="rounded-2xl bg-surface border border-border p-5 flex flex-col gap-3">
         <p className="text-xs font-semibold text-text-muted uppercase tracking-widest">Net worth</p>

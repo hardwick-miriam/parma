@@ -11,10 +11,5 @@ export default async function FinancesPage() {
 
   const data = await getFinancesPageData(user.id, supabase)
 
-  return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold text-text">Finances</h1>
-      <FinancesClient initialData={data} />
-    </div>
-  )
+  return <FinancesClient initialData={data} />
 }

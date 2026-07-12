@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getTodayStats, getTodayWorkouts } from '@/lib/db/queries'
 import { getDailyStatsHistory } from '@/lib/db/history'
 import { getJournalNotes } from '@/lib/db/journal'
-import { JournalWidget } from '@/components/dashboard/JournalWidget'
+import { JournalPageClient } from '@/components/os/JournalPageClient'
 
 export default async function JournalPage() {
   const supabase = await createClient()
@@ -20,10 +20,5 @@ export default async function JournalPage() {
   const initialNotes: Record<string, string> = {}
   for (const n of notes) initialNotes[n.note_date] = n.note
 
-  return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold text-text">Journal</h1>
-      <JournalWidget stats={stats} workouts={workouts} history={history} initialNotes={initialNotes} />
-    </div>
-  )
+  return <JournalPageClient stats={stats} workouts={workouts} history={history} initialNotes={initialNotes} />
 }

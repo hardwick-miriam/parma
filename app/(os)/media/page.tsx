@@ -11,10 +11,5 @@ export default async function MediaPage() {
 
   const entries = await getMediaLog(user.id).catch(() => [])
 
-  return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold text-text">Media</h1>
-      <MediaPageClient initialEntries={entries} />
-    </div>
-  )
+  return <MediaPageClient initialEntries={entries} />
 }
