@@ -35,6 +35,11 @@ export const MODULE_BIAS: Record<string, { label: string; bias: string; placehol
     bias: 'a workout or exercise set',
     placeholder: '"benched 80kg for 5" or describe your session',
   },
+  body: {
+    label: 'Body',
+    bias: 'a body measurement or muscle soreness/recovery note',
+    placeholder: '"chest is 42cm now" or "quads are sore today"',
+  },
 }
 
 export function moduleContextForPath(pathname: string): string | undefined {
@@ -44,5 +49,6 @@ export function moduleContextForPath(pathname: string): string | undefined {
   if (pathname.startsWith('/wardrobe')) return 'wardrobe'
   if (pathname.startsWith('/journal')) return 'journal'
   if (pathname.startsWith('/gym')) return 'gym'
-  return undefined // Main, Body, Settings, Grid — general, no bias
+  if (pathname.startsWith('/body')) return 'body'
+  return undefined // Main, Settings, Grid — genuinely general, no single log type to bias toward
 }
