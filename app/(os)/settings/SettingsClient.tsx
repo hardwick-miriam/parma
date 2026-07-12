@@ -300,6 +300,7 @@ export function SettingsClient({ currentEmail, initialPrefs, whoopConnection }: 
           <button
             role="switch"
             aria-checked={mounjaroEnabled}
+            aria-label="Mounjaro tracking"
             onClick={() => setMounjaroEnabled((v) => !v)}
             className={`relative w-10 h-6 rounded-full transition-colors ${mounjaroEnabled ? 'bg-accent' : 'bg-surface-elevated border border-border'}`}
           >
@@ -317,6 +318,7 @@ export function SettingsClient({ currentEmail, initialPrefs, whoopConnection }: 
           <button
             role="switch"
             aria-checked={weatherBgEnabled}
+            aria-label="Weather background"
             onClick={() => setWeatherBgEnabled((v) => !v)}
             className={`relative w-10 h-6 rounded-full transition-colors ${weatherBgEnabled ? 'bg-accent' : 'bg-surface-elevated border border-border'}`}
           >
@@ -334,6 +336,7 @@ export function SettingsClient({ currentEmail, initialPrefs, whoopConnection }: 
           <button
             role="switch"
             aria-checked={bgEffectsMobile}
+            aria-label="Background effects on mobile"
             onClick={() => setBgEffectsMobile(!bgEffectsMobile)}
             className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${bgEffectsMobile ? 'bg-accent' : 'bg-surface-elevated border border-border'}`}
           >

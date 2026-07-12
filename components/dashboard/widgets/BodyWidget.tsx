@@ -187,7 +187,7 @@ function MusclePopover({
       >
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold text-text">{label}</p>
-          <button onClick={onClose} className="text-text-subtle text-lg leading-none hover:text-text">×</button>
+          <button onClick={onClose} aria-label="Close" className="text-text-subtle text-lg leading-none hover:text-text w-11 h-11 -m-2 flex items-center justify-center shrink-0">×</button>
         </div>
         {recovery ? (
           <div className="flex flex-col gap-1">

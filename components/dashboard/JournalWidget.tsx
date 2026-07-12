@@ -133,7 +133,8 @@ function FullJournal({
         <h2 className="text-lg font-bold text-text">Journal</h2>
         <button
           onClick={onClose}
-          className="text-text-subtle hover:text-text transition-colors text-2xl leading-none w-8 h-8 flex items-center justify-center"
+          aria-label="Close"
+          className="text-text-subtle hover:text-text transition-colors text-2xl leading-none w-11 h-11 flex items-center justify-center"
         >
           ×
         </button>

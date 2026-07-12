@@ -35,9 +35,9 @@ function Shelf({ category, slots, allInCategory, onPin, onUnpin, pinning }: {
                 {s.entry.rating != null && <p className="text-[11px] text-accent">{s.entry.rating}/10</p>}
                 <div className="mt-auto flex items-center gap-2 pt-1">
                   {s.pinned ? (
-                    <button onClick={() => onUnpin(s.entry!.id)} disabled={pinning} className="text-[10px] text-text-subtle hover:text-text-muted">Unpin</button>
+                    <button onClick={() => onUnpin(s.entry!.id)} disabled={pinning} className="text-[10px] text-text-subtle hover:text-text-muted py-2 px-1 -my-2 -mx-1">Unpin</button>
                   ) : (
-                    <button onClick={() => setPickerSlot(s.slot)} disabled={pinning || !hasAny} className="text-[10px] text-accent hover:opacity-80">Pin choice…</button>
+                    <button onClick={() => setPickerSlot(s.slot)} disabled={pinning || !hasAny} className="text-[10px] text-accent hover:opacity-80 py-2 px-1 -my-2 -mx-1">Pin choice…</button>
                   )}
                 </div>
               </>

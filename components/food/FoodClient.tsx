@@ -180,15 +180,15 @@ function FoodItemRow({
         </p>
         {!selectMode && (!confirmDelete ? (
           <div className="flex gap-2 shrink-0">
-            <button onClick={() => setEditing(true)} className="text-[11px] text-text-subtle hover:text-text-muted">Edit</button>
-            <button onClick={() => setConfirmDelete(true)} className="text-[11px] text-negative hover:text-negative">Delete</button>
+            <button onClick={() => setEditing(true)} className="text-[11px] text-text-subtle hover:text-text-muted py-2.5 px-1 -my-2.5">Edit</button>
+            <button onClick={() => setConfirmDelete(true)} className="text-[11px] text-negative hover:text-negative py-2.5 px-1 -my-2.5">Delete</button>
           </div>
         ) : (
           <div className="flex items-center gap-2 shrink-0">
-            <button onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending} className="text-[11px] font-semibold text-negative hover:text-negative">
+            <button onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending} className="text-[11px] font-semibold text-negative hover:text-negative py-2.5 px-1 -my-2.5">
               {deleteMutation.isPending ? 'Deleting…' : 'Confirm'}
             </button>
-            <button onClick={() => setConfirmDelete(false)} className="text-[11px] text-text-subtle">Cancel</button>
+            <button onClick={() => setConfirmDelete(false)} className="text-[11px] text-text-subtle py-2.5 px-1 -my-2.5">Cancel</button>
           </div>
         ))}
       </div>
@@ -255,7 +255,7 @@ function DayCard({
         <div className="flex items-center gap-3">
           <p className="text-xs text-text-subtle">{Math.round(totals.calories)} kcal · {Math.round(totals.protein_g)}g protein</p>
           {selectMode && (
-            <button onClick={() => onSelectAllInDay(day)} className="text-[11px] text-accent hover:opacity-80">
+            <button onClick={() => onSelectAllInDay(day)} className="text-[11px] text-accent hover:opacity-80 py-2.5 px-1 -my-2.5">
               Select all
             </button>
           )}
@@ -665,7 +665,7 @@ export function FoodClient({ targets }: { targets: MacroTargets }) {
                     {meal.items.length} item{meal.items.length === 1 ? '' : 's'} · {meal.items.reduce((s, i) => s + i.calories, 0)} kcal
                   </span>
                 </button>
-                <button onClick={() => deleteMealMutation.mutate(meal.id)} className="text-[10px] text-negative hover:text-negative self-start">
+                <button onClick={() => deleteMealMutation.mutate(meal.id)} className="text-[10px] text-negative hover:text-negative self-start py-2 px-1 -my-2 -mx-1">
                   Delete
                 </button>
               </div>

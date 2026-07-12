@@ -233,7 +233,7 @@ export function FinancesClient({ initialData }: { initialData?: Summary } = {}) 
                 }}
                 className="w-24 text-right rounded-lg bg-surface-elevated border border-border text-text text-sm px-2 py-1"
               />
-              <button onClick={() => deleteAccountMutation.mutate(a.id)} className="text-xs text-negative">Delete</button>
+              <button onClick={() => deleteAccountMutation.mutate(a.id)} className="text-xs text-negative py-2.5 px-1 -my-2.5">Delete</button>
             </div>
           </div>
         ))}
@@ -278,7 +278,7 @@ export function FinancesClient({ initialData }: { initialData?: Summary } = {}) 
                   }}
                   className="w-24 text-right rounded-lg bg-surface-elevated border border-border text-text text-sm px-2 py-1"
                 />
-                <button onClick={() => deleteDebtMutation.mutate(d.id)} className="text-xs text-negative">Delete</button>
+                <button onClick={() => deleteDebtMutation.mutate(d.id)} className="text-xs text-negative py-2.5 px-1 -my-2.5">Delete</button>
               </div>
             </div>
             <p className="text-xs text-text-subtle">

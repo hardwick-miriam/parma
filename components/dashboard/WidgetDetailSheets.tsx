@@ -37,7 +37,7 @@ function WidgetShell({ title, onClose, children }: { title: string; onClose: () 
       >
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-border shrink-0">
           <h2 className="text-base font-semibold text-text">{title}</h2>
-          <button onClick={onClose} className="w-7 h-7 rounded-full bg-surface-elevated flex items-center justify-center text-text-muted hover:text-text text-lg leading-none">×</button>
+          <button onClick={onClose} aria-label="Close" className="w-11 h-11 rounded-full bg-surface-elevated flex items-center justify-center text-text-muted hover:text-text text-lg leading-none">×</button>
         </div>
         <div className="overflow-y-auto flex-1 px-6 py-5 flex flex-col gap-5">{children}</div>
       </motion.div>

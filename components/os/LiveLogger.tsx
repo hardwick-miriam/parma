@@ -345,13 +345,13 @@ export function LiveLogger() {
                           const w = prompt('Weight (kg)', String(s.weight))
                           if (w) editSetMutation.mutate({ id: s.id, updates: { weight: Number(w) } })
                         }}
-                        className="text-xs text-text-subtle hover:text-text-muted"
+                        className="text-xs text-text-subtle hover:text-text-muted py-2.5 px-1 -my-2.5"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => deleteSetMutation.mutate(s.id)}
-                        className="text-xs text-negative hover:text-negative"
+                        className="text-xs text-negative hover:text-negative py-2.5 px-1 -my-2.5"
                       >
                         Delete
                       </button>

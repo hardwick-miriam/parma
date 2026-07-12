@@ -272,7 +272,7 @@ export function BulkImportFlow({ open, onClose, onSaved }: {
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'var(--bg)' }}>
       <div className="flex items-center justify-between px-4 sm:px-6 pt-6 pb-4 border-b border-border shrink-0">
         <h2 className="text-lg font-bold text-text">Bulk import</h2>
-        <button onClick={closeAll} className="text-text-subtle hover:text-text transition-colors text-2xl leading-none w-8 h-8 flex items-center justify-center">×</button>
+        <button onClick={closeAll} aria-label="Close" className="text-text-subtle hover:text-text transition-colors text-2xl leading-none w-11 h-11 flex items-center justify-center">×</button>
       </div>
 
       {mode === 'pick' && (
@@ -440,10 +440,10 @@ export function BulkImportFlow({ open, onClose, onSaved }: {
                   )}
 
                   <div className="flex items-center justify-between pt-1">
-                    <button onClick={() => setExpandedId(expanded ? null : item.tempId)} className="text-[11px] text-accent hover:opacity-80">
+                    <button onClick={() => setExpandedId(expanded ? null : item.tempId)} className="text-[11px] text-accent hover:opacity-80 py-2.5 px-1 -my-2.5 -mx-1">
                       {expanded ? 'Less' : 'More fields'}
                     </button>
-                    <button onClick={() => removeItem(item.tempId)} className="text-[11px] text-negative hover:opacity-80">
+                    <button onClick={() => removeItem(item.tempId)} className="text-[11px] text-negative hover:opacity-80 py-2.5 px-1 -my-2.5 -mx-1">
                       Remove from batch
                     </button>
                   </div>

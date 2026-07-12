@@ -77,7 +77,7 @@ export function BarcodeScanner({ onResult, onClose }: BarcodeScannerProps) {
       >
         <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
           <h2 className="text-sm font-semibold text-text">Scan barcode</h2>
-          <button onClick={onClose} className="text-text-muted hover:text-text text-lg">×</button>
+          <button onClick={onClose} aria-label="Close" className="text-text-muted hover:text-text text-lg w-11 h-11 -m-2 flex items-center justify-center shrink-0">×</button>
         </div>
 
         {status === 'error' ? (
