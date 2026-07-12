@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { computeFavourites, type FavouriteSlot } from '@/lib/mediaTaste'
 import type { MediaEntry, MediaCategory } from '@/lib/db/media'
@@ -85,8 +85,25 @@ export function MediaFavouritesShelf({ entries }: { entries: MediaEntry[] }) {
       })
       if (!res.ok) throw new Error('Failed to pin')
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['media'] }),
-    onError: () => toast.error('Failed to pin that item'),
+    onMutate: async ({ id, category, slot }) => {
+      await queryClient.cancelQueries({ queryKey: ['media'] })
+      const previous = queryClient.getQueryData<{ entries: MediaEntry[] }>(['media'])
+      queryClient.setQueryData<{ entries: MediaEntry[] }>(['media'], (old) => old ? {
+        entries: old.entries.map((e) => {
+          if (e.id === id) return { ...e, pinned_slot: slot }
+          // Mirror the server's "one item per slot" rule so the shelf doesn't
+          // briefly show two items claiming the same slot.
+          if (e.category === category && e.pinned_slot === slot) return { ...e, pinned_slot: null }
+          return e
+        }),
+      } : old)
+      return { previous }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(['media'], context.previous)
+      toast.error('Failed to pin that item')
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['media'] }),
   })
 
   const unpinMutation = useMutation({
@@ -94,8 +111,19 @@ export function MediaFavouritesShelf({ entries }: { entries: MediaEntry[] }) {
       const res = await fetch(`/api/media/pin?id=${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Failed to unpin')
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['media'] }),
-    onError: () => toast.error('Failed to unpin that item'),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['media'] })
+      const previous = queryClient.getQueryData<{ entries: MediaEntry[] }>(['media'])
+      queryClient.setQueryData<{ entries: MediaEntry[] }>(['media'], (old) => old ? {
+        entries: old.entries.map((e) => (e.id === id ? { ...e, pinned_slot: null } : e)),
+      } : old)
+      return { previous }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(['media'], context.previous)
+      toast.error('Failed to unpin that item')
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['media'] }),
   })
 
   const pinning = pinMutation.isPending || unpinMutation.isPending

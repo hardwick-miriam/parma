@@ -160,11 +160,11 @@
         <div class="bug-ref">T4 · This was already fully built in an earlier session -- confirmed the wiring is still intact (MounjaroHistorySection in HealthClient, ProgressPhotosSection in BodyClient, GlobeSection+WorldClocksSection in MainClient, all 4 files still exist), no later session accidentally broke it. Checked the live DB for the real account and found genuinely new evidence to verify against: 34 visited countries and 3 world-clock cities now exist (both empty when this was first built) -- confirmed the stored country codes (GBR, IRL, FRA...) match GlobeGL's expected ISO_A3 3-letter format exactly, so the globe will render real data correctly. Mounjaro is toggled off (mounjaro_enabled: false) and 0 progress photos exist -- both correctly show their empty/gated states, not a bug.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="T5" data-time-est="25" data-credit-est="30000">
+      <div class="bug-row" data-status="done" data-id="T5" data-time-est="25" data-time-actual="20" data-credit-est="30000" data-credit-actual="22000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">T5 — Optimistic UI re-audit, including mutations added since the last pass (bulk import, media pin).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref"></div>
+        <div class="bug-ref">T5 · Still no dedicated habit-tracker UI anywhere in the app (re-checked; only incidental habits_done chips in Journal's summary) -- N/A, not something to build here. MediaWidget's own status-cycle (want-to/in-progress/finished) was already optimistic with rollback, no change needed. Made MediaFavouritesShelf's pin/unpin genuinely optimistic: tapping "Pin choice" now updates the shelf immediately (mirroring the server's one-item-per-slot rule client-side so it never briefly shows two items claiming the same slot) instead of waiting on the round trip, full rollback via the cached previous state on failure. WorldClocksSection's add-city deliberately stays non-optimistic -- it needs a real server-side geocode lookup before a city's lat/lon/timezone are even known, so there's nothing honest to show optimistically; this isn't a gap, it's a real constraint. Cleaned up an unused useQuery import found while in the file.</div>
       </div>
 
       <div class="bug-row" data-status="waiting" data-id="T6" data-time-est="30" data-credit-est="35000">
