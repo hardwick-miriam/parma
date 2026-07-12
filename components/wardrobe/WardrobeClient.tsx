@@ -27,7 +27,15 @@ function ItemCard({ item }: { item: WardrobeItemWithStats }) {
     >
       <div className="aspect-square bg-surface-elevated relative overflow-hidden">
         {item.photo_url ? (
-          <img src={item.photo_url} alt={item.name} className="w-full h-full object-cover" />
+          <img
+            src={item.photo_url}
+            alt={item.name}
+            width={300}
+            height={300}
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-cover"
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-3xl">👕</div>
         )}
@@ -50,8 +58,8 @@ function ItemCard({ item }: { item: WardrobeItemWithStats }) {
   )
 }
 
-export function WardrobeClient() {
-  const [season, setSeason] = useState<Season | 'all'>(currentSeason())
+export function WardrobeClient({ initialItems, initialSeason }: { initialItems?: WardrobeItemWithStats[]; initialSeason?: Season } = {}) {
+  const [season, setSeason] = useState<Season | 'all'>(initialSeason ?? currentSeason())
   const [type, setType] = useState<string>('')
   const [colour, setColour] = useState<string>('')
   const [search, setSearch] = useState('')
@@ -78,6 +86,11 @@ export function WardrobeClient() {
     queryKey: ['wardrobe', params.toString()],
     queryFn: () => fetchItems(params),
     placeholderData: keepPreviousData,
+    // Only meaningful on the very first render — the query key at that
+    // point always matches the default filters the server page fetched
+    // with (current season, no other filters, newest-first), so this
+    // avoids the cold client-side fetch-after-mount entirely.
+    initialData: initialItems,
   })
 
   async function submitWear(e: React.FormEvent) {

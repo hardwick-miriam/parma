@@ -190,9 +190,10 @@ interface JournalWidgetProps {
   stats: DailyStats | null
   workouts: WorkoutSession[]
   history: DailyStats[]
+  initialNotes?: Record<string, string>
 }
 
-export function JournalWidget({ stats, workouts, history }: JournalWidgetProps) {
+export function JournalWidget({ stats, workouts, history, initialNotes }: JournalWidgetProps) {
   const todayISO = localDate()
   const queryClient = useQueryClient()
   const [notes, setNotes] = useState<Record<string, string>>({})
@@ -214,6 +215,7 @@ export function JournalWidget({ stats, workouts, history }: JournalWidgetProps) 
       for (const n of d.notes ?? []) map[n.note_date] = n.note
       return map
     },
+    initialData: initialNotes,
   })
 
   // Merge incoming data in, but never clobber a day with an in-flight local

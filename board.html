@@ -146,25 +146,25 @@
         <div class="bug-ref">N2 · First run: 86 inserted, 0 updated, 0 errors. Re-ran the identical script twice more to prove idempotency: 0 inserted / 86 updated both times, total netflix-tagged row count stayed at 86 throughout (never 172) -- confirmed no duplicates. Read back 5 sample rows: correct titles, category (show/film), rating (matches CSV 0-10 scale, e.g. "The Fall: Skydive Murder Plot" rating 5), status=finished, note=netflix, added_date=last_watched. Checked for pre-existing non-netflix media_log rows before assuming nothing was at risk of being overwritten -- there were none, so "don't touch existing rows" had nothing to accidentally touch this time, but the dedupe logic itself only ever matches on exact title+category so it's safe either way. Confirmed via /api/media's own GET handler (getMediaLog -- the exact function the Media module's MediaWidget calls) that all 86 rows are returned; category/rating/note map directly onto MediaWidget's existing CATEGORY_EMOJI/rating/note rendering with no changes needed. Removed both one-off scripts after use -- nothing left in the repo to clean up later.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S1" data-time-est="25" data-credit-est="30000">
+      <div class="bug-row" data-status="done" data-id="S1" data-time-est="25" data-time-actual="20" data-credit-est="30000" data-credit-actual="28000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">S1 — Media: server initialData wiring + paginate the 86+ item catalogue list.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref"></div>
+        <div class="bug-ref">S1 · MediaWidget already accepted initialEntries/initialCounts props from an earlier session but media/page.tsx never passed them -- it was fetching cold on mount despite the plumbing already existing. Wired app/(os)/media/page.tsx to call getMediaLog(user.id) server-side and pass initialEntries; MediaWidget's own countByCategory derives counts from that, so no separate initialCounts fetch needed. CatalogueModal (the full-list view, now 86+ items after the Netflix import) was rendering every filtered/sorted entry in one go -- added a PAGE_SIZE=30 slice with a "Load more (N more)" button, resetting to page 1 whenever the tab/status/sort filter changes.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S2" data-time-est="30" data-credit-est="35000">
+      <div class="bug-row" data-status="done" data-id="S2" data-time-est="30" data-time-actual="25" data-credit-est="35000" data-credit-actual="32000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">S2 — Wardrobe: server initialData for default view + lazy-loaded/sized images.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref"></div>
+        <div class="bug-ref">S2 · wardrobe/page.tsx now calls getWardrobeItems server-side and filters to the current season (via the same currentSeason() helper the client uses), passing both initialItems and the server-computed initialSeason so the client's first render's filter state and its very first TanStack query key exactly match what the server already fetched -- WardrobeClient no longer fetches cold on mount for the default (no-filter) view. ItemCard's photo &lt;img&gt; now has loading="lazy" + decoding="async" + explicit width/height. NOT done: true compressed thumbnails would need a server-side resize pipeline at upload time (sharp is only a transitive dependency here, not a first-class one I should silently add) -- flagged as a bigger feature, not built.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="S3" data-time-est="20" data-credit-est="25000">
+      <div class="bug-row" data-status="done" data-id="S3" data-time-est="20" data-time-actual="15" data-credit-est="25000" data-credit-actual="20000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">S3 — Journal: server initialData for the notes list (JournalWidget's client-only fetch).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref"></div>
+        <div class="bug-ref">S3 · journal/page.tsx already fetched today's stats/workouts/history server-side but JournalWidget's actual notes list (the thing you scroll through) was a pure client fetch to /api/journal on mount. Added getJournalNotes(user.id, 90) to the page's server-side Promise.all, built the same note_date-&gt;note map the client's queryFn builds, passed it as initialNotes into JournalWidget's notesQuery initialData.</div>
       </div>
 
       <div class="bug-row" data-status="waiting" data-id="S4" data-time-est="20" data-credit-est="20000">

@@ -41,6 +41,7 @@ const STATUS_CYCLE: Record<MediaStatus, MediaStatus> = {
 }
 
 type SortMode = 'date' | 'rating' | 'title'
+const PAGE_SIZE = 30
 
 function fmtDate(d: string) {
   return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -81,10 +82,13 @@ function CatalogueModal({
   const [statusFilter, setStatusFilter] = useState<MediaStatus | 'all'>('all')
   const [sortMode, setSortMode] = useState<SortMode>('date')
   const [confirmId, setConfirmId] = useState<string | null>(null)
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
   useEffect(() => { setMounted(true) }, [])
   // Keep in sync when parent updates (new entries logged while modal is open)
   useEffect(() => { setEntries(initialEntries) }, [initialEntries])
+  // Reset pagination whenever the filtered/sorted set changes shape
+  useEffect(() => { setVisibleCount(PAGE_SIZE) }, [activeTab, statusFilter, sortMode])
   if (!mounted) return null
 
   const categories: (MediaCategory | 'all')[] = ['all', 'book', 'film', 'show', 'song']
@@ -93,7 +97,7 @@ function CatalogueModal({
   const base = activeTab === 'all' ? entries : entries.filter((e) => e.category === activeTab)
   const afterStatus = statusFilter === 'all' ? base : base.filter((e) => e.status === statusFilter)
 
-  const sorted = [...afterStatus].sort((a, b) => {
+  const sortedAll = [...afterStatus].sort((a, b) => {
     if (sortMode === 'rating') {
       const ra = a.rating ?? -1, rb = b.rating ?? -1
       return rb - ra || b.added_date.localeCompare(a.added_date)
@@ -101,6 +105,11 @@ function CatalogueModal({
     if (sortMode === 'title') return a.title.localeCompare(b.title)
     return b.added_date.localeCompare(a.added_date) || b.created_at.localeCompare(a.created_at)
   })
+  // Render only a page at a time — this list can now hold 100+ entries
+  // (Netflix history import) and re-rendering/regrouping all of them on
+  // every filter/sort tweak is unnecessary work the user never sees.
+  const sorted = sortedAll.slice(0, visibleCount)
+  const hasMore = sortedAll.length > visibleCount
 
   const grouped = sorted.reduce<Record<string, MediaEntry[]>>((acc, e) => {
     const key = sortMode === 'date' ? e.added_date : sortMode === 'title' ? e.title[0]?.toUpperCase() ?? '#' : `${e.rating ?? 'No'} rating`
@@ -270,6 +279,14 @@ function CatalogueModal({
                 </ul>
               </div>
             ))}
+            {hasMore && (
+              <button
+                onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
+                className="self-center text-xs font-medium text-accent hover:opacity-80 px-4 py-2"
+              >
+                Load more ({sortedAll.length - sorted.length} more)
+              </button>
+            )}
           </div>
         )}
       </div>
