@@ -263,7 +263,7 @@ function InjuryCard({ injury }: { injury: InjuryWithCheckins }) {
                 ) : (
                   <button
                     onClick={() => setConfirmCheckinId(c.id)}
-                    className="opacity-0 group-hover:opacity-100 text-text-subtle hover:text-red-400 transition-opacity p-0.5 shrink-0"
+                    className="opacity-60 group-hover:opacity-100 text-text-subtle hover:text-red-400 transition-opacity p-0.5 shrink-0"
                     title="Delete check-in"
                   >
                     <TrashIcon />

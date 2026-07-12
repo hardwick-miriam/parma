@@ -229,10 +229,10 @@ export function FinancesClient() {
                 {DEBT_TYPES.map((t) => <option key={t} value={t}>{DEBT_TYPE_LABELS[t]}</option>)}
               </select>
             </div>
-            <div className="flex gap-2">
-              <input type="number" value={newDebt.balance} onChange={(e) => setNewDebt((s) => ({ ...s, balance: e.target.value }))} placeholder="Balance" className="flex-1 rounded-lg bg-surface-elevated border border-border text-text text-sm px-2 py-1.5" />
-              <input type="number" value={newDebt.apr} onChange={(e) => setNewDebt((s) => ({ ...s, apr: e.target.value }))} placeholder="APR %" className="w-24 rounded-lg bg-surface-elevated border border-border text-text text-sm px-2 py-1.5" />
-              <input type="number" value={newDebt.min_payment} onChange={(e) => setNewDebt((s) => ({ ...s, min_payment: e.target.value }))} placeholder="Min payment" className="w-28 rounded-lg bg-surface-elevated border border-border text-text text-sm px-2 py-1.5" />
+            <div className="grid grid-cols-2 sm:flex gap-2">
+              <input type="number" value={newDebt.balance} onChange={(e) => setNewDebt((s) => ({ ...s, balance: e.target.value }))} placeholder="Balance" className="sm:flex-1 rounded-lg bg-surface-elevated border border-border text-text text-sm px-2 py-1.5 min-w-0" />
+              <input type="number" value={newDebt.apr} onChange={(e) => setNewDebt((s) => ({ ...s, apr: e.target.value }))} placeholder="APR %" className="sm:w-24 rounded-lg bg-surface-elevated border border-border text-text text-sm px-2 py-1.5 min-w-0" />
+              <input type="number" value={newDebt.min_payment} onChange={(e) => setNewDebt((s) => ({ ...s, min_payment: e.target.value }))} placeholder="Min payment" className="sm:w-28 rounded-lg bg-surface-elevated border border-border text-text text-sm px-2 py-1.5 min-w-0" />
               <button onClick={() => addDebtMutation.mutate()} disabled={!newDebt.name || !newDebt.balance} className="rounded-lg text-xs font-semibold text-white px-3 py-1.5 disabled:opacity-40" style={{ background: 'var(--accent)' }}>Save</button>
             </div>
           </div>

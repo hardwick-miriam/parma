@@ -387,7 +387,7 @@ export function LogInput({ onParsed, onQuestion, onVoiceTranscript, moduleContex
           type="button"
           onClick={handleSubmit}
           disabled={!text.trim() || loading || micBusy}
-          className="shrink-0 p-2 rounded-xl bg-accent text-white disabled:opacity-30 hover:opacity-90 transition-opacity"
+          className="shrink-0 p-3 sm:p-2 rounded-xl bg-accent text-white disabled:opacity-30 hover:opacity-90 transition-opacity"
           title="Log it (⌘↵)"
         >
           {loading ? <SpinnerIcon /> : <SendIcon />}

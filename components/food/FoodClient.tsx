@@ -285,7 +285,7 @@ function SelectionActionBar({
 }) {
   const [mealMenuOpen, setMealMenuOpen] = useState(false)
   return (
-    <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 rounded-xl bg-surface-elevated border border-accent/40 px-4 py-2.5 shadow-lg">
+    <div className="sticky top-12 z-20 flex flex-wrap items-center gap-2 rounded-xl bg-surface-elevated border border-accent/40 px-4 py-2.5 shadow-lg">
       <span className="text-sm font-semibold text-text">{count} selected</span>
       <div className="flex-1" />
       <div className="relative">

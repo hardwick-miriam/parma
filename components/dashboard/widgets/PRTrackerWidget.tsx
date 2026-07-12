@@ -153,7 +153,7 @@ export function PRTrackerWidget() {
               {!compact && (
                 <span className="text-xs text-text-subtle">{new Date(pr.logged_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
               )}
-              <ShareButton type="pr" exercise={pr.exercise} className="text-text-muted hover:text-accent transition-colors" />
+              <ShareButton type="pr" exercise={pr.exercise} className="p-2 -m-2 text-text-muted hover:text-accent transition-colors" />
             </div>
           </div>
         ))}

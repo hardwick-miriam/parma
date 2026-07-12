@@ -64,7 +64,7 @@ function CityCard({ city, weather, tick, onRemove, removing }: {
       ) : (
         <button
           onClick={() => setConfirm(true)}
-          className="absolute top-1.5 right-1.5 w-4 h-4 rounded flex items-center justify-center text-text-subtle opacity-0 group-hover:opacity-100 transition-opacity text-xs"
+          className="absolute top-1.5 right-1.5 w-4 h-4 rounded flex items-center justify-center text-text-subtle opacity-60 group-hover:opacity-100 transition-opacity text-xs"
           style={{ background: 'var(--surface)' }}
         >
           ×
