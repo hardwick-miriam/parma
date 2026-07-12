@@ -1574,3 +1574,37 @@ not assumed from the script's exit code.
 above is that the waterfall is gone (data now arrives with the page instead of after it) and the
 chart bundles no longer block first paint, not a stopwatch measurement of perceived speed, which
 only you experiencing it can really confirm.
+
+---
+
+## Correction: the Netflix import was on the wrong account (2026-07-12, same day)
+
+The 86 imported rows were confirmed to exist in `media_log` but the Media module only showed the
+one manually-added item ("Kung Fu Panda"). The working theory going in was a column-shape mismatch
+between the imported rows and a normal app-created row. **That wasn't it.**
+
+Dumped the one manually-added row in full, then queried the 86 imported rows and found they sat
+under a **completely different `user_id`** than the manual row. There are two separate Supabase
+auth accounts in this project:
+- `a_hard_wick@icloud.com` (`user_id 142d1666...`) — the real, actively-used account: signed in
+  today, 16 `food_log` rows, 42 `workout_sessions`, and the one manual media entry.
+- `hardwickars@gmail.com` (`user_id 0a044e43...`) — a separate, nearly-empty account: signed in
+  exactly once, at creation, essentially unused.
+
+The Netflix import script (like every prior live-DB script in this project) resolved "the user" by
+matching the email on this Claude conversation/account — `hardwickars@gmail.com` — which is *not*
+the email the Parma app is actually signed in with. All 86 rows landed on the empty account and
+were invisible for the ordinary reason: the Media module correctly scopes its query to whichever
+account is signed in, and that's never been the `hardwickars@gmail.com` one.
+
+Presented this finding and the two accounts' row counts/last-sign-in timestamps before touching
+anything, and got explicit confirmation on the fix. Moved all 86 rows to the real account
+(`UPDATE ... SET user_id, note = null WHERE ...`), checking first for title+category collisions
+against the real account's existing row (none found). Verified: 0 rows remain on the wrong account,
+87 now on the real one, every row's column shape — including `note`, now `null` on all of
+them — is identical to the one manually-added row. Corrected project memory so no future session
+repeats the wrong-account lookup (a real risk: every prior session's throwaway verification scripts
+used the same wrong-account lookup, harmless there only because they cleaned up after themselves
+before anyone would notice).
+
+No code changed — this was a pure data correction, so no build/commit/deploy was needed.

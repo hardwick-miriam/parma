@@ -202,6 +202,13 @@
         <div class="bug-ref">S8 · Final npm run build clean. git rev-parse HEAD == origin/main (a979564). www.parma.ink returns 200. Hit all 8 named module routes in production (/media, /wardrobe, /journal, /main, /health, /gym, /body, /food) -- all return 200 after following the unauthenticated redirect to /login, confirming none of this session's changes broke server-side rendering on any of them. 7 commits this session, each built clean before pushing: Netflix import, server-initialData for Media/Wardrobe/Journal, skeleton sweep, chart lazy-loading + nav prefetch.</div>
       </div>
 
+      <div class="bug-row" data-status="done" data-id="N3" data-time-est="20" data-time-actual="15" data-credit-est="25000" data-credit-actual="22000">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">N3 — CORRECTION: the 86 imported rows were invisible not from a shape mismatch but a wrong Supabase account; moved to the real account.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref">N3 · Root cause was NOT a column-shape mismatch (the user's working hypothesis) -- it was that N1/N2's import script resolved "the user" by matching email hardwickars@gmail.com, which is a SEPARATE, nearly-empty Supabase auth account (user_id 0a044e43..., signed in once at creation, 0 food_log rows) from the one actually used day-to-day: a_hard_wick@icloud.com (user_id 142d1666..., signed in today, 16 food_log rows, 42 workout_sessions, and the one manually-added "Kung Fu Panda" media_log row). All 86 imported rows landed on the wrong account and were never visible because the Media module correctly scopes to whichever account is signed in. Confirmed via a full column dump of the one manually-added row vs 3 imported rows, plus a whole-table distinct-user_id check and cross-table row counts (food_log/workout_sessions/daily_stats) to identify which account was real before touching anything. Presented the finding and got explicit confirmation before mutating data across two different accounts. Fix: UPDATE media_log SET user_id = (real account), note = null WHERE user_id = (wrong account) AND note = 'netflix' -- checked for title+category collisions against the real account's existing row first (none), moved all 86, verified 0 rows remain on the wrong account, 87 now on the real one, and every row's column shape (including note now null, matching the manual row exactly) is identical. Corrected project memory so no future session repeats the wrong-account lookup.</div>
+      </div>
+
     </div>
   </section>
 
