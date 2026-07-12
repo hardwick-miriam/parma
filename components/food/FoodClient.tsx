@@ -87,6 +87,7 @@ function FoodItemRow({
     calories: String(item.calories), protein_g: String(item.protein_g), carbs_g: String(item.carbs_g),
     fat_g: String(item.fat_g), fibre_g: String(item.fibre_g), sugar_g: String(item.sugar_g), salt_g: String(item.salt_g),
   })
+  const [dateDraft, setDateDraft] = useState(item.date)
 
   function invalidate() {
     queryClient.invalidateQueries({ queryKey: ['food-timeline'] })
@@ -95,8 +96,9 @@ function FoodItemRow({
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const updates: Record<string, number> = {}
+      const updates: Record<string, number | string> = {}
       for (const { key } of EDITABLE_MACROS) updates[key] = Number(draft[key]) || 0
+      if (dateDraft !== item.date) updates.date = dateDraft
       const res = await fetch(`/api/food-log/${item.id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates),
       })
@@ -132,6 +134,15 @@ function FoodItemRow({
             </label>
           ))}
         </div>
+        <label className="flex flex-col gap-0.5 text-[10px] text-text-muted w-40">
+          Date logged
+          <input
+            type="date"
+            value={dateDraft}
+            onChange={(e) => setDateDraft(e.target.value)}
+            className="w-full rounded-md bg-surface-elevated border border-border text-text text-xs px-2 py-1 focus:outline-none focus:border-accent"
+          />
+        </label>
         <div className="flex gap-2">
           <button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white disabled:opacity-50" style={{ background: 'var(--accent)' }}>
             {saveMutation.isPending ? 'Saving…' : 'Save'}

@@ -106,10 +106,23 @@ export async function recomputeDailyFoodMacros(
 export async function updateFoodItem(
   userId: string,
   itemId: string,
-  updates: Partial<Pick<FoodLogItem, 'description' | 'meal' | 'calories' | 'protein_g' | 'carbs_g' | 'fat_g' | 'fibre_g' | 'sugar_g' | 'salt_g'>>,
+  updates: Partial<Pick<FoodLogItem, 'description' | 'meal' | 'calories' | 'protein_g' | 'carbs_g' | 'fat_g' | 'fibre_g' | 'sugar_g' | 'salt_g' | 'date'>>,
   client?: SupabaseClient
 ): Promise<FoodLogItem> {
   const supabase = client ?? (await createClient())
+
+  // Editing the date moves the row between two days' totals — read the
+  // OLD date first so both days get recomputed, not just the new one
+  // (otherwise the old day's daily_stats would keep counting a macro total
+  // for an item that's no longer logged under it).
+  let previousDate: string | null = null
+  if (updates.date) {
+    const { data: existing, error: readError } = await supabase
+      .from('food_log').select('date').eq('id', itemId).eq('user_id', userId).maybeSingle()
+    if (readError) throw readError
+    previousDate = existing?.date ?? null
+  }
+
   const { data, error } = await supabase
     .from('food_log')
     .update(updates)
@@ -119,6 +132,9 @@ export async function updateFoodItem(
     .single()
   if (error) throw error
 
+  if (previousDate && previousDate !== data.date) {
+    await recomputeDailyFoodMacros(userId, previousDate, supabase)
+  }
   await recomputeDailyFoodMacros(userId, data.date, supabase)
   return data
 }
