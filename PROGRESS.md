@@ -1608,3 +1608,78 @@ used the same wrong-account lookup, harmless there only because they cleaned up 
 before anyone would notice).
 
 No code changed — this was a pure data correction, so no build/commit/deploy was needed.
+
+---
+
+## Wardrobe bulk photo import & Media taste graphs (2026-07-12, later session)
+
+**Both tasks done**, 4 commits, each built clean and pushed independently. Production confirmed
+serving the final commit (`45fbb1c`); `/wardrobe` and `/media` both return 200.
+
+### Task 1 — Wardrobe bulk photo import
+New pipeline per photo: client-side compress → remove.bg background removal (baked onto one fixed
+neutral colour, `#F2F1ED`, so the catalogue looks uniform) → the app's existing one-off Claude vision
+call (already used by the single-item add flow — extended, not forked, with a `needs_review` field
+list so low-confidence guesses get flagged rather than presented as certain). Nothing touches the
+database until the user reviews and confirms the whole batch — an abandoned import leaves zero
+orphaned rows or storage files.
+
+New `components/wardrobe/BulkImportFlow.tsx`: pick photos individually (mobile-friendly multi-select)
+or a whole folder at once (`webkitdirectory`, desktop) → a progress bar while each photo processes →
+a review grid with the AI's guesses pre-filled, needs-review fields highlighted, a duplicate-detection
+warning (same type+brand+colour as an existing item), bulk actions across a selection (set type/brand,
+add a season/tag to everything selected at once), and a per-item "More fields" expansion for anything
+the AI didn't touch (size, condition, price, notes).
+
+**Real-world gap found and fixed during verification, not before:** the only test photo available was
+an iPhone `.HEIC` file — the default format for iPhone photos, and neither the browser, remove.bg, nor
+Claude's vision API can decode it directly. Added `heic2any` (dynamically imported, so the common
+non-HEIC case doesn't pay for it) to convert HEIC/HEIF to JPEG client-side before the existing resize
+step. Then verified the complete pipeline for real: a puffer jacket photo, compressed 751KB→113KB,
+cutout via remove.bg, identified by Claude as "Black and tan puffer jacket with sherpa collar" /
+outerwear / black,tan,cream / autumn,winter / puffer,insulated,casual,winter — correctly flagging
+`brand` as needing review rather than guessing at the visible "NORWAY"/"GNX 650" patches. Saved to the
+real account, read back identical, signed URL resolves, and its type/seasons values are valid filter
+options. Only one real test photo existed, so duplicate-detection and bulk-edit-across-a-selection
+were verified by code review rather than a live second item — said so plainly rather than claiming a
+test that didn't happen.
+
+### Task 2 — Media favourites, genre-taste radar, watch breakdown
+Migration 031 (live + verified): `genres text[]` and `pinned_slot smallint` (1-3, unique per
+user+category) on `media_log`. Genre-tagged all 87 existing rows in **one** batched Claude call
+(index+title+category in, genre-per-index out) rather than 87 separate calls — no TMDB key exists in
+this project, so the AI-batch fallback the task allowed was used directly rather than chasing an
+external signup. Real distribution came back documentary (34)/drama (32)/crime (28)/comedy (18)
+dominant — matching the "skews crime/documentary" expectation stated in the task, not a made-up
+result.
+
+Favourites shelf (`MediaFavouritesShelf.tsx`) auto-selects top-3 films/shows by rating then recency,
+with a pin/unpin override persisted via new `/api/media/pin`; books/songs show an honest "add
+books"/"connect music" placeholder rather than a broken empty grid, since neither category has any
+data yet. The genre-taste radar (`MediaTasteRadar.tsx`) plots a rating-weighted score per genre
+(average rating scaled by √count, so one high rating can't out-rank a genre watched many times) against
+an explicitly-labelled flat 50/100 "Average" baseline — there's no other-user data in this app to
+compare against for real, and the UI says so rather than pretending otherwise. The breakdown section
+adds films-vs-shows split, average rating, top genre, and a rating-distribution histogram. Both charts
+are dynamically imported (`next/dynamic`, `ssr:false`) so they don't block the Media page's first
+paint, and every colour comes from theme CSS variables rather than a hardcoded palette, so it repaints
+correctly across all 7 themes instead of reproducing the "half-themed corner" bug class fixed in an
+earlier polish session.
+
+Verified all of it against the real 87-row dataset: favourites resolved to Parasite (10)/Get Out
+(9)/Wolf of Wall Street (9) for films and Vikings/Snowpiercer/DEPP V HEARD (all 9) for shows; the
+radar's top 6 axes and the breakdown's totals (38 films/49 shows, 5.51 average rating, documentary as
+top genre, 43 items logged this year) all matched a hand-check of the raw data.
+
+### Evidence trail
+Each commit built clean before pushing (`6a86c90`, `dda1bf8`, `45fbb1c` plus the board-only commit).
+Migration 031 confirmed live via `information_schema`/`pg_indexes` queries against the real database.
+Genre-tagging, favourites, radar, and breakdown were all run against the real 87-item media log, not
+mocked data. Final `npm run build` clean, `git rev-parse HEAD` matches `origin/main`, `www.parma.ink`
+returns 200, both `/wardrobe` and `/media` return 200 in production.
+
+**Needs your eyes:** the actual bulk-import UI (multi-photo/folder picker, the review grid's layout,
+bulk-edit bar) and the favourites shelf/radar/breakdown's visual appearance across your 7 themes —
+what's verified above is that the pipeline and the underlying data computations are correct, not
+pixels. Also worth trying yourself: a real multi-photo batch (2+ images) to see the duplicate-detection
+and bulk-edit-across-selection paths in action, since only one test photo was available this session.
