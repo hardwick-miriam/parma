@@ -6,9 +6,28 @@ export interface CompressedImage {
   mediaType: 'image/jpeg'
 }
 
+function isHeic(file: File): boolean {
+  const type = file.type.toLowerCase()
+  if (type === 'image/heic' || type === 'image/heif') return true
+  // iPhone photos picked via a desktop browser's file input frequently report
+  // an empty/generic MIME type for HEIC — the extension is the only reliable signal then.
+  return /\.hei[cf]$/i.test(file.name)
+}
+
+/** Browsers (other than Safari) can't decode HEIC/HEIF via createImageBitmap — iPhone's default photo
+ * format, so a realistic case for wardrobe photos, not an edge case. Converts to JPEG first via
+ * heic2any (dynamically imported so non-HEIC uploads, the common case, don't pay for it). */
+async function toDecodableFile(file: File): Promise<File | Blob> {
+  if (!isHeic(file)) return file
+  const heic2any = (await import('heic2any')).default
+  const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 })
+  return Array.isArray(converted) ? converted[0] : converted
+}
+
 /** Client-side compress: downscale to a max dimension and re-encode as JPEG. */
 export async function compressImage(file: File, maxDimension = 1024, quality = 0.82): Promise<CompressedImage> {
-  const bitmap = await createImageBitmap(file)
+  const decodable = await toDecodableFile(file)
+  const bitmap = await createImageBitmap(decodable)
   const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height))
   const width = Math.round(bitmap.width * scale)
   const height = Math.round(bitmap.height * scale)

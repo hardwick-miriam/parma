@@ -27,6 +27,7 @@
     "driver.js": "^1.6.0",
     "framer-motion": "^12.42.0",
     "fuse.js": "^7.4.2",
+    "heic2any": "^0.0.4",
     "html5-qrcode": "^2.3.8",
     "lottie-react": "^2.4.1",
     "lucide-react": "^1.22.0",
