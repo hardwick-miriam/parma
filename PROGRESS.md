@@ -1416,3 +1416,89 @@ every test row/meal afterward and confirmed the test meal no longer appears in `
 
 **Needs your eyes:** the UI itself (checkbox rendering, sticky action bar placement, meal-time
 section headers) — what's verified above is the data layer end to end, not pixels on screen.
+
+---
+
+## Quality & polish pass (2026-07-12)
+
+**All 6 tasks done**, 6 commits, each built clean and pushed independently. Production confirmed
+serving the final commit (`8f59f7c`).
+
+### 1. Re-homed the 3 features orphaned by retiring /grid
+Mounjaro dose/effects history (Health module), progress photos with a new compare-two-side-by-side
+mode (Body module), and the visited-countries globe + world clocks (Main) all lost their only UI
+when the old bento dashboard was removed, even though logging/data kept working underneath. Pulled
+the render logic back out of git history (`git show` on the pre-removal commit) and re-homed each
+properly in the module OS rather than rebuilding from scratch, converting each from raw
+`useState`/`fetch` to TanStack Query with real loading/empty states along the way. Checked the live
+DB: this account has zero doses/photos/countries/clocks logged yet, so what's actually exercised
+right now is the empty-state path for all three — confirmed each shows a proper message rather than
+a blank box. The populated-data rendering needs real use (log a dose, upload a photo, tap a
+country) to see.
+
+### 2. Loading & empty states
+Audited every data-fetching component in the app. Found and fixed 3 real problems: Food's calorie
+ring showed a fake "0 kcal" before its first fetch resolved; the live gym logger showed false "no
+previous sets" / "no suggestion" messages when switching exercises, before the real data arrived;
+changing any wardrobe filter replaced the whole item grid with a bare "Loading…" string instead of
+keeping the previous results visible (`placeholderData: keepPreviousData` fixed both the gym search
+and the wardrobe filters). Everything else already handled this correctly.
+
+### 3. Error resilience
+~25 mutations across food, gym, saved meals, measurements, learning tracker, wardrobe, and the
+NLP chat-bar failed completely silently — no toast, no message, nothing. Wired `sonner`'s
+`toast.error` (already globally mounted, barely used) into all of them. Found two worse bugs along
+the way: Settings' Save button could get **permanently stuck** on "Saving…" if the server action
+threw (no try/catch, `setSaving(false)` never ran), and Journal's autosave showed **"Saved" even
+when the request failed** because it never checked `res.ok` — actively misinforming rather than
+staying quiet. Both fixed. Added `app/(os)/error.tsx` as a real error boundary, since nothing in
+the app had one — an uncaught throw from a module page's data fetch now shows a recoverable "Try
+again" screen with the sidebar still mounted, instead of a white page.
+
+### 4. Mobile polish at 390px
+No browser available, so this was a code-level audit, not a visual one. Real bug: Food's new
+selection action bar was sticking underneath the app's own header instead of stacking below it
+once scrolled. Three delete/remove icon buttons relied on hover-only visibility with no fallback —
+invisible and undiscoverable on a touch device. Finances' debt-add row was tight enough to squeeze
+inputs unusably narrow at phone width. A few tap targets (Send button, PR-tracker share icon) were
+smaller than their sibling controls. All fixed. Flagged, not fixed: several text-xs Edit/Delete
+links across a few list rows sit under the ~44px comfortable tap-target guideline — functional,
+just tighter than ideal.
+
+### 5. Perceived speed (optimistic UI)
+No dedicated habit tracker exists to "tick," so targeted the highest-frequency real actions:
+logging a gym set (the single most-repeated tap in the app) now appears in the session list and
+updates the stats row instantly instead of after the round trip; Food's quick re-log and saved-meal
+quick-add now bump the calorie ring/macro bars the instant you tap; the learning tracker's status
+changes are optimistic too. All with full rollback to the previous state on failure. The globe's
+country-toggle (built in task 1) was already optimistic.
+
+### 6. Consistency sweep
+The real find: 45 hardcoded Tailwind palette colors (red/amber/orange/emerald) across 20 files
+stayed the same regardless of the active theme instead of using the CSS-variable-backed classes
+already used elsewhere in the same files — `MediaWidget.tsx` alone had 9. Root cause for the whole
+amber/orange bucket: `--warning` was defined per-theme in `globals.css` but never registered as a
+Tailwind utility, so hardcoding was the only option anyone had — fixed at the source by adding
+`--color-warning` to the `@theme inline` block, then replaced every hardcoded instance. These will
+now actually repaint correctly across old-money/synthwave/hacker/etc instead of staying the same
+red/amber everywhere. Also matched Food/Wardrobe's header size to every other module.
+
+**Flagged, not fixed (bigger than a polish fix, your call):** 8 structurally distinct "show more
+detail" implementations exist across the app (a shared bottom-sheet component with only one real
+consumer, several hand-rolled full-screen portals, a lightbox, a command palette, inline expand,
+and a full-page navigation for wardrobe items) — unifying them is a real refactor with functional
+risk, not a line-item polish fix. Journal/Media/Finances also don't own their page header the way
+every other module's Client component does (Finances has no `<h1>` at all, it's one level up in
+the server page).
+
+### Evidence trail
+Each task's commit built clean before being pushed (6 commits: `92232fd`, `9ff5ab1`, `d044c5c`,
+`7c8726c`, `e674255`, `8f59f7c`). Final `npm run build` clean. `git rev-parse HEAD` matches
+`origin/main`. `www.parma.ink` returns 200. All 3 new API routes from this session
+(`/api/mounjaro/history`, `/api/food-log/bulk-delete`, `/api/food-log/bulk-meal`) return 307 →
+`/login` in production (auth middleware), not 404 — confirming they actually deployed.
+
+**Needs your eyes:** everything visual — the re-homed features' actual appearance, the mobile
+layout fixes, whether the optimistic UI genuinely feels instant, and whether the theme fixes look
+right across all 7 themes. What's verified above is code-level correctness and live reachability,
+not pixels.
