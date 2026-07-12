@@ -97,12 +97,12 @@
 <body>
 <div class="wrap">
   <header>
-    <h1><span class="brand">Parma</span> — Quality &amp; Polish Pass</h1>
-    <p class="subtitle">Re-homing the 3 features orphaned by the /grid retirement, then a full sweep for loading/empty states, error resilience, mobile polish at 390px, perceived speed (optimistic UI), and cross-module consistency.</p>
+    <h1><span class="brand">Parma</span> — Netflix Import &amp; Perceived Speed</h1>
+    <p class="subtitle">Bulk-import 86 rows of Netflix history into Media, then kill the client-fetch waterfall on every module page (server initialData, real caching, skeletons, lazy assets, prefetch) so navigating modules feels instant.</p>
   </header>
 
   <div class="overall-card">
-    <div class="overall-count"><span class="num" id="overall-num">0</span><span class="label">of <span id="overall-total">9</span> done</span></div>
+    <div class="overall-count"><span class="num" id="overall-num">0</span><span class="label">of <span id="overall-total">10</span> done</span></div>
     <div class="progress-track"><div class="progress-fill" id="overall-progress"></div></div>
     <div class="overall-breakdown" id="overall-breakdown"></div>
     <div class="status-banner" id="done-banner">✓ All steps resolved — board is no longer auto-refreshing.</div>
@@ -132,67 +132,74 @@
     <div class="tier-header"><div class="tier-title"><span class="tier-badge">Session steps</span></div></div>
     <div class="bug-list" data-tier="steps">
 
-      <div class="bug-row" data-status="done" data-id="P1" data-time-est="30" data-time-actual="25" data-credit-est="35000" data-credit-actual="32000">
+      <div class="bug-row" data-status="done" data-id="N1" data-time-est="15" data-time-actual="12" data-credit-est="20000" data-credit-actual="18000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">P1 — Re-home Mounjaro dose/effects history + cadence intelligence into Health module.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">N1 — Check media_log schema; write idempotent one-off Netflix import script (dedupe on title+type).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">P1 · New GET /api/mounjaro/history (doses+effects+cadence status, reusing getMounjaroDoses/getMounjaroEffects/computeDueStatus unchanged) and components/os/MounjaroHistorySection.tsx -- full scrollable dose+symptom history (not just the old widget's top-5), cadence/next-due line reusing the same intelligence as DoseDueBanner, proper skeleton + LottieEmpty empty state. Wired into HealthClient.tsx gated on mounjaroEnabled, right under the due banner. Added mounjaro-history to TABLE_QUERY_KEYS so it live-updates.</div>
+        <div class="bug-ref">N1 · media_log has no source/tag column (id, user_id, category, title, rating numeric(3,1), note, status, added_date, created_at) and no unique constraint on title+category -- so dedupe has to happen in the script, not the DB. CSV titles contain unquoted commas ("House, M.D.", "Manhunt: The Liar, the Thief, the Conman") so parsing splits from the right (last_watched/source/status/rating/type are always simple, everything before that is the title) rather than a naive comma-split -- verified against all 86 rows with zero bad-rating or mis-parsed-type rows before touching the DB. Script queries all existing media_log rows for the user first, builds a title+category lookup, and updates in place on a match instead of inserting -- "netflix" goes into note since there's no dedicated source column.</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="P2" data-time-est="35" data-time-actual="30" data-credit-est="40000" data-credit-actual="35000">
+      <div class="bug-row" data-status="done" data-id="N2" data-time-est="20" data-time-actual="15" data-credit-est="25000" data-credit-actual="20000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">P2 — Re-home progress photos into Body module: gallery, compare two side-by-side, upload, delete.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">N2 — Run import live against Supabase; report inserted/updated counts + 5 sample read-backs; confirm Media module renders them.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">P2 · New components/os/ProgressPhotosSection.tsx, rebuilt on the recovered ProgressPhotos.tsx logic but converted from raw useState/fetch to TanStack Query (upload/delete mutations, invalidates the existing 'photos' query key already wired in realtimeInvalidation.ts) and given a genuinely new "Compare" mode (tap exactly 2 thumbnails, renders them side-by-side) that didn't exist before. Reuses /api/photos untouched -- private bucket + signed URLs already worked. Wired into BodyClient.tsx next to Measurements.</div>
+        <div class="bug-ref">N2 · First run: 86 inserted, 0 updated, 0 errors. Re-ran the identical script twice more to prove idempotency: 0 inserted / 86 updated both times, total netflix-tagged row count stayed at 86 throughout (never 172) -- confirmed no duplicates. Read back 5 sample rows: correct titles, category (show/film), rating (matches CSV 0-10 scale, e.g. "The Fall: Skydive Murder Plot" rating 5), status=finished, note=netflix, added_date=last_watched. Checked for pre-existing non-netflix media_log rows before assuming nothing was at risk of being overwritten -- there were none, so "don't touch existing rows" had nothing to accidentally touch this time, but the dedupe logic itself only ever matches on exact title+category so it's safe either way. Confirmed via /api/media's own GET handler (getMediaLog -- the exact function the Media module's MediaWidget calls) that all 86 rows are returned; category/rating/note map directly onto MediaWidget's existing CATEGORY_EMOJI/rating/note rendering with no changes needed. Removed both one-off scripts after use -- nothing left in the repo to clean up later.</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="P3" data-time-est="25" data-time-actual="25" data-credit-est="30000" data-credit-actual="28000">
+      <div class="bug-row" data-status="waiting" data-id="S1" data-time-est="25" data-credit-est="30000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">P3 — Re-home visited-countries globe + world clocks onto Main.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">S1 — Media: server initialData wiring + paginate the 86+ item catalogue list.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">P3 · New components/os/GlobeSection.tsx (reuses GlobeGL.tsx unchanged, which survived the grid removal) converted to TanStack Query with an optimistic toggle mutation (tap a country, it flips instantly, rolls back on failure) instead of the old widget's manual setState+fetch. New components/os/WorldClocksSection.tsx, same conversion. Both dropped into MainClient.tsx under a new "World" section. Added visited-countries + world-clocks to the user_preferences row of TABLE_QUERY_KEYS so NLP-driven changes ("add Tokyo to my clocks") stay live. Checked the live DB: this account has zero doses/photos/countries/clocks logged yet, so what's actually exercised right now is the empty-state path for all three -- confirmed each shows a proper LottieEmpty/empty message rather than a blank box; the populated-data rendering needs your own use to see (add a photo, log a dose, tap a country).</div>
+        <div class="bug-ref"></div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="P4" data-time-est="45" data-time-actual="35" data-credit-est="55000" data-credit-actual="60000">
+      <div class="bug-row" data-status="waiting" data-id="S2" data-time-est="30" data-credit-est="35000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">P4 — Loading &amp; empty states: audit every module/widget, add skeletons + keepPreviousData + friendly empty states.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">S2 — Wardrobe: server initialData for default view + lazy-loaded/sized images.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">P4 · Delegated the audit to an Explore pass across every os/dashboard/food/wardrobe client component -- confirmed Main/Health/Gym/Body/Media/Journal/Finances/the new P1-P3 sections all already gate correctly (initialData + static query keys means realtime refetches swap in place, no flash). 3 real problems found and fixed: (1) FoodClient's food-today query had no loading gate -- showed a fake "0 kcal" ring on cold load, now shows a skeleton ring+bars while isLoading. (2) LiveLogger's exercise-detail query showed false "No previous sets logged" / "Log a set to get a suggestion" messages before the real data arrived when switching exercises -- now gated on isLoading with skeleton placeholders; its exercise-search query got placeholderData:keepPreviousData so results don't blank between keystrokes. (3) WardrobeClient's item-grid query rebuilds its key on every filter change with no keepPreviousData -- was replacing the whole grid with a bare "Loading…" string on every filter tweak; now keeps the previous grid visible while the new filter's results load in. Full repo build clean.</div>
+        <div class="bug-ref"></div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="P5" data-time-est="45" data-time-actual="40" data-credit-est="55000" data-credit-actual="70000">
+      <div class="bug-row" data-status="waiting" data-id="S3" data-time-est="20" data-credit-est="25000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">P5 — Error resilience: audit main logging/save paths, add error toasts + error boundaries, confirm no silent failures.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">S3 — Journal: server initialData for the notes list (JournalWidget's client-only fetch).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">P5 · Delegated a full audit (Food, Gym, chat-bar NLP logging, saved meals, measurements, photos, finances, settings, wardrobe, journal, learning) -- found ~25 silent-failure mutations and 2 genuinely dangerous bugs: SettingsClient's handleSave had no try/catch, so a failed save left the Save button permanently stuck on "Saving…" until reload; handleWhoopDisconnect never checked res.ok, so a failed disconnect still showed "disconnected" in the UI while the real WHOOP link stayed active server-side. Also found JournalWidget's debounced note-save never checked res.ok either -- showed "Saved" even when the POST failed, actively misinforming rather than staying quiet. FinancesClient's two balance inputs are uncontrolled (defaultValue) with no revert-on-failure -- fixed so a failed balance update snaps the input back to the real server value instead of leaving the unsaved number displayed. Wired sonner's toast.error (already globally mounted, barely used) into every silent mutation across FoodClient (7), LiveLogger (3), BodyMeasurementsSection (1), LearningTrackerSection (3), FinancesClient (6), replaced FoodClient's 3 bare alert() calls with toast.error, wrapped WardrobeClient's wear-log fetch and LogInput's offline-queue enqueue in try/catch (previously unhandled promise rejections that silently dropped the user's typed log), and made LogFlow's voice-log fallback failure and undo failure both surface a toast instead of vanishing. Added a real error boundary: new app/(os)/error.tsx catches any uncaught throw from a module page's data fetch or render (confirmed Main/Health/Gym/Body's page.tsx files had no such guard anywhere in the app) and shows a "Try again" screen with the Sidebar still mounted, instead of a white screen.</div>
+        <div class="bug-ref"></div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="P6" data-time-est="40" data-time-actual="30" data-credit-est="45000" data-credit-actual="45000">
+      <div class="bug-row" data-status="waiting" data-id="S4" data-time-est="20" data-credit-est="20000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">P6 — Mobile polish at 390px: chat bar, action bars, tap targets, clipping/overlap across every module.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">S4 — staleTime/keepPreviousData sweep across module queries so revisits are instant.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">P6 · Code-level audit (no browser available) across every os/dashboard/food/wardrobe component for fixed-width overflow, sticky-bar stacking, and sub-44px tap targets. Confirmed the chat bar (ContextualLogBar) and mobile tab bar (Sidebar) already share one height constant with correct bottom padding reserved in layout.tsx -- no fix needed. Real bug found: Food's new SelectionActionBar used sticky top-0 z-10, landing UNDERNEATH the app's own sticky header (h-12 z-30) once scrolled -- the whole "N selected" bar would vanish behind the header; fixed to top-12 z-20 so it stacks correctly below it. Found 3 delete/remove icon buttons (WorldClocks city removal, InjuryWidget checkin trash, MediaWidget catalogue trash) using opacity-0 group-hover:opacity-100 with no touch/focus fallback -- invisible and undiscoverable on a phone with no real :hover; all three now default to opacity-60 so they're visible but subtle, full opacity on hover. Finances' debt-add row (Balance/APR/Min payment/Save all in one un-wrapped flex row) was tight enough to squeeze inputs unusably narrow at 390px -- now a responsive 2-col grid on mobile, single row from sm: up, matching its sibling rows' pattern. LogInput's Send button was smaller (p-2, ~32px) than its sibling mic/barcode buttons (p-3 on mobile, ~44px) -- now matches. PRTrackerWidget's inline ShareButton had zero padding (a bare 16px icon as the only tap target) -- added padding with an offsetting negative margin so the hit area grows without shifting the layout. Flagged, not fixed (lower-priority, touches many files): several text-xs "Edit"/"Delete" links across FoodItemRow/FinancesClient/LiveLogger's session-set rows sit under the ~44px comfortable tap-target guideline -- functional, just tighter than ideal on a phone.</div>
+        <div class="bug-ref"></div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="P7" data-time-est="30" data-time-actual="30" data-credit-est="35000" data-credit-actual="38000">
+      <div class="bug-row" data-status="waiting" data-id="S5" data-time-est="20" data-credit-est="20000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">P7 — Perceived speed: optimistic UI pass on logging/tick/save mutations.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">S5 — Skeletons (not spinners/blanks) on genuine first-load, remaining gaps.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">P7 · No dedicated "habit tracker" widget exists in the module OS to tick (checked -- only incidental NLP mentions), so targeted the highest-frequency real actions instead. Gym set logging (the single most-repeated tap in the whole app) -- log/edit/delete set mutations in LiveLogger.tsx now push/patch/remove directly against the ['gym-session'] cache in onMutate, so a logged set appears in "This session" and the stats row update instantly rather than after the POST resolves; full rollback to the previous cache snapshot on error via onError, final reconciliation via onSettled. Food's "Quick re-log" and saved-meal "quick-add" now optimistically bump the ['food-today'] macro totals (the ring + macro bars move the instant you tap, not after the round trip), with rollback on failure. Learning tracker's status-select and delete are now optimistic against ['learning-items'] with rollback -- covers the closest thing to "ticking" a status in this app. Globe country-toggle (built in P3) was already optimistic. Left FoodItemRow's single edit/delete and BodyMeasurements' log-mutation non-optimistic -- both already resolve fast enough (single-row writes, not list-wide) that the win was marginal versus the added rollback-logic risk; flagging rather than touching everything for the sake of it.</div>
+        <div class="bug-ref"></div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="P8" data-time-est="30" data-time-actual="35" data-credit-est="35000" data-credit-actual="50000">
+      <div class="bug-row" data-status="waiting" data-id="S6" data-time-est="20" data-credit-est="25000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">P8 — Consistency sweep: buttons/spacing/headers/detail-view pattern/theme correctness across all 7 themes.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">S6 — Lazy/dynamic-import heavy components (globe/3D/charts) so they don't block first paint.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">P8 · Theme correctness (the real bug, fixed): swept components/ and app/ for hardcoded Tailwind palette colors bypassing the 7-theme CSS-variable system -- found 45 hits across 20 files, almost all red-4xx/5xx (error/delete states), amber-400/orange-4xx (warning/in-progress states), and a few emerald-400 (positive/finished states) sitting in the SAME files as correctly-themed text-negative/text-positive classes (MediaWidget.tsx alone had 9). Root cause for the warning bucket: --warning was defined per-theme in globals.css but never registered in the @theme inline block, so no text-warning/bg-warning Tailwind utility existed at all -- added --color-warning: var(--warning) once, which fixed the only-option-was-hardcoding problem at the source. Replaced every hardcoded instance with its theme-var-backed equivalent (text-negative/bg-negative, text-warning/bg-warning, text-positive/bg-positive) across BarcodeScanner, OfflineQueue, wardrobe (AddItemFlow/WardrobeClient/ItemDetailClient), LearningTrackerSection, LiveLogger, MainClient, FinancesClient, RoutineSection, FoodClient, ConfirmationDrawer, LogInput, WidgetDetailSheets, MediaWidget, InjuryWidget, HealthStatusWidget, BodyWidget, login/signup pages -- these will now actually repaint correctly in old-money/synthwave/hacker/etc instead of staying the same red/amber in every theme. Header drift (minor, fixed): Food and Wardrobe's h1 was text-xl while every other module uses text-2xl -- matched. NOT changed (flagged below as bigger-than-polish): 8 structurally distinct "show more detail" implementations exist across the app (WidgetDetailSheets' sheet, the barely-used BottomSheet/vaul primitive, ConfirmationDrawer, QnA popup, Journal/Media's full-screen portals, CommandPalette, the photo lightbox, RoutineSection's inline expand, and Wardrobe's full-page navigation) -- unifying them is a real refactor with functional risk, not a line-item polish fix, so left alone. Journal/Media/Finances also don't own their own page header the way every other module's *Client.tsx does (it lives one level up in the server page.tsx, and Finances has no h1 at all) -- same reasoning, flagged not touched.</div>
+        <div class="bug-ref"></div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="P9" data-time-est="20" data-time-actual="10" data-credit-est="25000" data-credit-actual="15000">
+      <div class="bug-row" data-status="waiting" data-id="S7" data-time-est="20" data-credit-est="25000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">P9 — Build clean; commit+push per task already done along the way; final production verification; PROGRESS.md.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">S7 — Prefetch a module's data on nav hover/tap-intent (Sidebar).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">P9 · Final npm run build clean. git rev-parse HEAD == origin/main (8f59f7c). www.parma.ink returns 200. Hit all 3 of this session's new API routes in production (POST /api/mounjaro/history, /api/food-log/bulk-delete, /api/food-log/bulk-meal) -- all return 307 to /login (auth middleware), not 404, confirming the routes actually deployed rather than just existing in git. 6 commits this session, each built+pushed independently: re-home orphaned features, loading/empty-state fixes, error-resilience fixes, mobile polish, optimistic UI, theme consistency.</div>
+        <div class="bug-ref"></div>
+      </div>
+
+      <div class="bug-row" data-status="waiting" data-id="S8" data-time-est="20" data-credit-est="20000">
+        <div class="status-chip"></div>
+        <div class="bug-main"><div class="bug-text">S8 — Build clean; verify production serves latest commit; board.html + PROGRESS.md final state.</div><div class="bug-reason"></div></div>
+        <div class="metrics"></div>
+        <div class="bug-ref"></div>
       </div>
 
     </div>
@@ -205,7 +212,7 @@
 </div>
 
 <script>
-  var SESSION_TOKEN_BUDGET = 3500000;
+  var SESSION_TOKEN_BUDGET = 3000000;
 </script>
 <script>
 (function () {
