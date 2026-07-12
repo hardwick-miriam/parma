@@ -196,18 +196,6 @@ export const ParseLogPayloadSchema = z.object({
   moduleContext: z.string().optional(),
 })
 
-// ── /api/body/soreness payload ────────────────────────────────────────────────
-
-export const SorenessPayloadSchema = z.object({
-  entries: z.array(
-    z.object({
-      muscle_id: z.string().min(1),
-      intensity: z.number().min(1).max(10),
-      source: z.string().optional(),
-    })
-  ).min(1, 'entries must not be empty'),
-})
-
 // ── /api/routine payload ──────────────────────────────────────────────────────
 
 export const RoutinePostPayloadSchema = z.object({

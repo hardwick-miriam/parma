@@ -97,8 +97,8 @@
 <body>
 <div class="wrap">
   <header>
-    <h1><span class="brand">Parma</span> — Wardrobe Bulk Import &amp; Media Taste Graphs</h1>
-    <p class="subtitle">Photo → background-removed cutout → AI-identified clothing item, batch-reviewed and confirmed in bulk. Then genre-tag the media log and build a favourites shelf + FIFA-style taste radar.</p>
+    <h1><span class="brand">Parma</span> — Unattended Session: 10 Tasks + Bug Sweep</h1>
+    <p class="subtitle">Working strictly in order. Several tasks overlap with earlier sessions' work — each starts with a real re-check against current code before deciding what's actually left to do, rather than redoing settled work.</p>
   </header>
 
   <div class="overall-card">
@@ -132,81 +132,81 @@
     <div class="tier-header"><div class="tier-title"><span class="tier-badge">Session steps</span></div></div>
     <div class="bug-list" data-tier="steps">
 
-      <div class="bug-row" data-status="done" data-id="W1" data-time-est="25" data-time-actual="18" data-credit-est="30000" data-credit-actual="25000">
+      <div class="bug-row" data-status="done" data-id="T1" data-time-est="25" data-time-actual="30" data-credit-est="30000" data-credit-actual="35000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">W1 — remove.bg wrapper + confidence-flagged vision schema.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">T1 — Dead-code cleanup from the /grid removal (imports, unused prefs columns, dead routes, leftover helpers).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">W1 · Reused the existing lib/ai/wardrobeVision.ts (already the app's one approved wardrobe vision one-off, previously only used by the single-item AddItemFlow) rather than building a second pipeline -- extended its tool schema with needs_review: string[] (field names the model flags as genuinely unsure, e.g. unreadable brand logo) instead of forking a new tool. New lib/wardrobeBgRemoval.ts wraps remove.bg: sends the compressed photo, requests bg_color=F2F1ED (one fixed neutral off-white baked into every cutout, not a CSS var, so the catalogue looks uniform regardless of theme) -- on ANY failure (missing key, non-200, network error) it returns the original photo bytes untouched with bgRemoved:false rather than throwing, so a remove.bg outage never loses a photo.</div>
+        <div class="bug-ref">T1 · Delegated the grep sweep to a research agent, then verified its 2 riskiest claims myself before deleting anything. Confirmed hidden_widgets and layouts (user_preferences) are read-only with zero write paths anywhere -- but genuinely used (hidden_widgets gates Main/Health/Gym widgets; layouts is read diagnostically by /api/whoop/debug) -- left both columns alone per "only if genuinely unused." Found and removed 2 dead-code classes the original /grid removal missed: (1) ~90 lines of dead CSS in app/globals.css -- the OLD pre-react-grid-layout .bento-grid named-area system (grid-template-areas: "nutr steps sleep mood"...) AND the react-grid-layout/.rgl-edit-mode override block, confirmed zero .tsx files reference either class family anymore; (2) 5 orphaned API routes with zero callers anywhere in the app (verified myself via direct grep, not just trusting the audit): /api/summary, /api/history, /api/suggest-food, /api/briefing, /api/body/soreness -- each superseded by a direct server-side lib/db/* call from its page instead of ever being wired up, not a /grid casualty specifically but the same "genuinely dead" class the task asked for. Removed the now-orphaned SorenessPayloadSchema from lib/schemas.ts alongside its only caller. Fixed 2 minor CLAUDE.md doc-drift items found during the sweep: the API route list still named 3 deleted routes, and the Vercel cron rule didn't mention the 3rd live cron (cron/daily-briefing). GridItemSizeContext confirmed still genuinely shared (8 widget importers) -- correctly left untouched.</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="W2" data-time-est="30" data-time-actual="25" data-credit-est="35000" data-credit-actual="30000">
+      <div class="bug-row" data-status="waiting" data-id="T2" data-time-est="35" data-credit-est="40000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">W2 — /process (per-photo pipeline, no DB writes) + /confirm (batch save) API routes.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">T2 — Loading &amp; empty states re-audit across every module (skeletons, keepPreviousData).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">W2 · POST /api/wardrobe/bulk-import/process takes one compressed photo, runs bg-removal then vision on the CUTOUT (background clutter removed first, which should improve identification accuracy too), and returns the proposed fields + the cutout as base64 -- writes nothing to the DB, so an abandoned batch leaves zero orphaned rows/storage objects. If vision itself throws, still returns the cutout with every field flagged needs_review rather than losing the photo. POST /api/wardrobe/bulk-import/confirm takes the final array (fields + cutout bytes) and uploads+inserts each item independently in a loop -- one item's failure is reported by name/index and does NOT abort the rest of the batch (no silent failures, no all-or-nothing batch loss).</div>
+        <div class="bug-ref"></div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="W3" data-time-est="45" data-time-actual="45" data-credit-est="55000" data-credit-actual="60000">
+      <div class="bug-row" data-status="waiting" data-id="T3" data-time-est="35" data-credit-est="40000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">W3 — BulkImportFlow UI: multi-file/folder picker, review grid, bulk edit, duplicate flags.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">T3 — Error resilience re-audit, focused on components added since the last pass.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">W3 · New components/wardrobe/BulkImportFlow.tsx, full-screen overlay matching MediaWidget's CatalogueModal pattern (not the small BottomSheet, since a review grid needs real space). Pick screen offers two file inputs: a plain multi-select (mobile-friendly, accept="image/*" multiple) and a second webkitdirectory-attributed input for a desktop folder import -- same underlying processFiles() pipeline either way, no separate CLI/script path needed. Photos process sequentially with a progress bar; each photo's failure (network error, processing error) still produces a card in the review grid with every field flagged needs_review rather than silently vanishing. Review grid: each card shows the cutout thumbnail, inline name/type/colours/brand/season-chips/tags with an amber border on any AI-flagged needs_review field, a "More fields" accordion for size/condition/price/acquired-date/notes, and a per-card "Remove from batch" (discards locally, nothing persisted yet). Selecting 1+ cards surfaces a sticky bulk-action bar (set type/brand, add a season/tag to every selected card at once) styled like the FoodClient selection bar from an earlier session. Duplicate detection: fetches the full unfiltered existing wardrobe once at batch start, keys on type+brand+first-colour, checks both against existing items AND earlier items already in the same batch, and renders a "Possible duplicate of X" warning rather than silently creating a second entry.</div>
+        <div class="bug-ref"></div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="W4" data-time-est="25" data-time-actual="35" data-credit-est="30000" data-credit-actual="35000">
+      <div class="bug-row" data-status="waiting" data-id="T4" data-time-est="15" data-credit-est="15000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">W4 — Wire into Wardrobe module; verify with a real small batch (evidence).</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">T4 — Re-home Mounjaro history / progress photos / globe+clocks — verify already-done work still stands.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">W4 · Wired "Bulk import" button next to "+ Add item" in WardrobeClient.tsx. Real-world blocker found during verification: the only test photo available (user-provided folder C:\Users\Y\Desktop\Wardrobe) was a .HEIC file -- iPhone's default photo format, which neither the browser's createImageBitmap, remove.bg, nor Claude's vision API can decode directly. Confirmed this was a genuine product gap (not just a test-data inconvenience) since HEIC is the default for anyone uploading straight from an iPhone -- fixed properly by adding heic2any (real dependency, dynamically imported so non-HEIC uploads don't pay for it) to lib/wardrobeImage.ts's compressImage, converting HEIC/HEIF to JPEG client-side before the existing resize logic. Verified the FULL real pipeline end-to-end against the actual photo (a puffer jacket) using the exact lib functions the API routes call, saved to the correct account (142d1666..., corrected per last session's memory): compression 751KB-&gt;113KB, remove.bg cutout succeeded (545KB PNG), Claude proposed name "Black and tan puffer jacket with sherpa collar", type=outerwear, colours=[black,tan,cream], seasons=[autumn,winter], tags=[puffer,insulated,casual,winter] -- and correctly flagged brand as needs_review rather than guessing at the "NORWAY"/"GNX 650" patches visible in the photo, exactly the confidence-flagging behaviour asked for. Item inserted, read back identical, signed URL resolves. type/seasons values confirmed valid against the existing filter enums (so it will show up under Wardrobe's Outerwear/Autumn/Winter filters). Left the real item saved (genuinely useful, not thrown away). Only 1 real photo was available so duplicate-detection and bulk-edit-across-a-selection couldn't be exercised against live second-item data -- verified those two paths by code review only, flagged honestly rather than claimed tested.</div>
+        <div class="bug-ref"></div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="M1" data-time-est="15" data-time-actual="10" data-credit-est="15000" data-credit-actual="10000">
+      <div class="bug-row" data-status="waiting" data-id="T5" data-time-est="25" data-credit-est="30000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">M1 — Migration: add genres column to media_log (live + verified).</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">T5 — Optimistic UI re-audit, including mutations added since the last pass (bulk import, media pin).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">M1 · Migration 031: genres text[] default '{}', plus pinned_slot smallint (1-3, nullable) for the favourites-shelf override, with a unique (user_id, category, pinned_slot) partial index so pinning a new #1 can't collide with an existing one. Ran live via the Supavisor pooler + service-role password, verified both columns and the unique index exist via information_schema/pg_indexes queries against the real DB, not assumed from a clean exit code.</div>
+        <div class="bug-ref"></div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="M2" data-time-est="20" data-time-actual="15" data-credit-est="25000" data-credit-actual="15000">
+      <div class="bug-row" data-status="waiting" data-id="T6" data-time-est="30" data-credit-est="35000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">M2 — One-time batched AI genre-tagging pass over all existing media_log titles.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">T6 — Consistency sweep re-audit, focused on components added since the last theme-colour fix.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">M2 · No TMDB key exists in .env.local (would need external signup), so went straight to the batched-AI path the task allowed as a fallback. New lib/ai/mediaGenres.ts sends ALL 87 titles (index + title + category, not per-item calls) in ONE Claude tool-use message constrained to a fixed 20-genre enum, asking for 1-3 genres per index. Ran live: 87 of 87 tagged in the single call, 0 errors. Spot-checked genre distribution against the real data: documentary (34 items), drama (32), crime (28), comedy (18) dominate -- matches the "skews crime/documentary" expectation stated in the task, not a fabricated result.</div>
+        <div class="bug-ref"></div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="M3" data-time-est="30" data-time-actual="30" data-credit-est="35000" data-credit-actual="35000">
+      <div class="bug-row" data-status="waiting" data-id="T7" data-time-est="25" data-credit-est="30000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">M3 — Favourites shelf: top 3 films/shows (auto + pin override), placeholder book/song slots.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">T7 — Contextual chat bar coverage across all 8 named modules.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">M3 · lib/mediaTaste.ts's computeFavourites() is a pure client-safe function: pinned items (pinned_slot column) keep their slot, remaining slots fill with highest-rated-then-most-recent unpinned items -- computed from the already-loaded media list, no extra fetch. New components/os/MediaFavouritesShelf.tsx renders all 4 categories in one grid; book/song slots show a genuine "add books to Media" / "connect music" placeholder rather than a broken empty state, since 0 rows exist for either category yet. Each slot has a "Pin choice..." picker (persists via new POST/DELETE /api/media/pin -> setPinnedSlot/clearPinnedSlot in lib/db/media.ts, which clears whichever OTHER item held that slot first so the DB's unique index is never violated) and an "Unpin" action to revert to auto-selection.</div>
+        <div class="bug-ref"></div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="M4" data-time-est="35" data-time-actual="30" data-credit-est="40000" data-credit-actual="35000">
+      <div class="bug-row" data-status="waiting" data-id="T8" data-time-est="20" data-credit-est="20000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">M4 — Genre-taste radar (You vs Average, FIFA-style, themed).</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">T8 — After-midnight food logging date attribution, verified with a simulated late-night log.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">M4 · New components/os/MediaTasteRadar.tsx, a recharts RadarChart dynamically imported (next/dynamic, ssr:false) so it doesn't block the Media page's first paint, matching the chart-lazy-loading pattern from an earlier polish session. "You" axis = avgRating(genre) * sqrt(count(genre)), normalised 0-100 against the strongest genre -- volume-weighted so one 10/10 watched once can't out-rank a genre watched 15 times and rated consistently well. "Average" is an explicit flat 50/100 baseline, captioned in the UI as a neutral reference rather than misrepresented as real other-users' data, since Parma has no other users to compare against. All colours/strokes use theme CSS vars (var(--accent), var(--text-faint), var(--border)) so it repaints correctly across all 7 themes rather than hardcoding a palette colour (the exact "half-themed corner" bug class fixed in the last polish-pass session). Top 6 genres by frequency become the axes.</div>
+        <div class="bug-ref"></div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="M5" data-time-est="25" data-time-actual="20" data-credit-est="30000" data-credit-actual="25000">
+      <div class="bug-row" data-status="waiting" data-id="T9" data-time-est="30" data-credit-est="30000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">M5 — "What I watch" breakdown: stat cards + chart.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">T9 — Accessibility &amp; tap targets at 390px, full sweep.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">M5 · New components/os/MediaBreakdownSection.tsx, also dynamically imported. Films-vs-shows split, average rating, most-watched genre, and this-year count (via getLocalDate() Europe/London, not raw new Date()) as 4 compact stat cards, plus a 1-10 rating-distribution bar chart colour-coded by theme vars (positive/warning/negative, not hardcoded colours).</div>
+        <div class="bug-ref"></div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="M6" data-time-est="20" data-time-actual="20" data-credit-est="20000" data-credit-actual="20000">
+      <div class="bug-row" data-status="waiting" data-id="T10" data-time-est="20" data-credit-est="20000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">M6 — Wire into Media module page; verify genres/favourites/radar with real data.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">T10 — Lazy-load remaining heavy charts (Body, Finances) and any other render-blocking components.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">M6 · New components/os/MediaPageClient.tsx owns the single ['media'] TanStack query (same key MediaWidget already used internally, so no duplicate fetch) and passes the loaded entries down to MediaWidget/MediaFavouritesShelf/MediaTasteRadar/MediaBreakdownSection/LearningTrackerSection as one page. Verified all three new pieces against the REAL 87-row dataset (not mocked): favourites resolved Parasite (10), Get Out (9), Wolf of Wall Street (9) for top films and Vikings/Snowpiercer/DEPP V HEARD (all 9) for top shows; books correctly showed 3 empty placeholder slots; the radar's top 6 axes (comedy/crime/documentary/drama/horror/thriller) and the breakdown (38 films/49 shows, 5.51 avg rating, documentary top genre, 43 logged this year, a full 1-10 rating histogram) all matched hand-checked totals from the raw data.</div>
+        <div class="bug-ref"></div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="F1" data-time-est="15" data-time-actual="10" data-credit-est="15000" data-credit-actual="10000">
+      <div class="bug-row" data-status="waiting" data-id="T11" data-time-est="50" data-credit-est="60000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">F1 — Build clean; verify production serves latest commit; board.html + PROGRESS.md final state.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">T11 — Full bug sweep: fix safe classes only, log everything ambiguous to BUGS.md for triage.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">F1 · Final npm run build clean. git rev-parse HEAD == origin/main (45fbb1c). www.parma.ink returns 200; /wardrobe and /media both return 200 in production. 4 commits this session, each built clean before pushing: bulk-import pipeline, HEIC fix, media genres/favourites/radar/breakdown.</div>
+        <div class="bug-ref"></div>
       </div>
 
     </div>
@@ -219,7 +219,7 @@
 </div>
 
 <script>
-  var SESSION_TOKEN_BUDGET = 3500000;
+  var SESSION_TOKEN_BUDGET = 4500000;
 </script>
 <script>
 (function () {
