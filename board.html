@@ -97,12 +97,12 @@
 <body>
 <div class="wrap">
   <header>
-    <h1><span class="brand">Parma</span> — Netflix Import &amp; Perceived Speed</h1>
-    <p class="subtitle">Bulk-import 86 rows of Netflix history into Media, then kill the client-fetch waterfall on every module page (server initialData, real caching, skeletons, lazy assets, prefetch) so navigating modules feels instant.</p>
+    <h1><span class="brand">Parma</span> — Wardrobe Bulk Import &amp; Media Taste Graphs</h1>
+    <p class="subtitle">Photo → background-removed cutout → AI-identified clothing item, batch-reviewed and confirmed in bulk. Then genre-tag the media log and build a favourites shelf + FIFA-style taste radar.</p>
   </header>
 
   <div class="overall-card">
-    <div class="overall-count"><span class="num" id="overall-num">0</span><span class="label">of <span id="overall-total">10</span> done</span></div>
+    <div class="overall-count"><span class="num" id="overall-num">0</span><span class="label">of <span id="overall-total">11</span> done</span></div>
     <div class="progress-track"><div class="progress-fill" id="overall-progress"></div></div>
     <div class="overall-breakdown" id="overall-breakdown"></div>
     <div class="status-banner" id="done-banner">✓ All steps resolved — board is no longer auto-refreshing.</div>
@@ -132,81 +132,81 @@
     <div class="tier-header"><div class="tier-title"><span class="tier-badge">Session steps</span></div></div>
     <div class="bug-list" data-tier="steps">
 
-      <div class="bug-row" data-status="done" data-id="N1" data-time-est="15" data-time-actual="12" data-credit-est="20000" data-credit-actual="18000">
+      <div class="bug-row" data-status="done" data-id="W1" data-time-est="25" data-time-actual="18" data-credit-est="30000" data-credit-actual="25000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">N1 — Check media_log schema; write idempotent one-off Netflix import script (dedupe on title+type).</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">W1 — remove.bg wrapper + confidence-flagged vision schema.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">N1 · media_log has no source/tag column (id, user_id, category, title, rating numeric(3,1), note, status, added_date, created_at) and no unique constraint on title+category -- so dedupe has to happen in the script, not the DB. CSV titles contain unquoted commas ("House, M.D.", "Manhunt: The Liar, the Thief, the Conman") so parsing splits from the right (last_watched/source/status/rating/type are always simple, everything before that is the title) rather than a naive comma-split -- verified against all 86 rows with zero bad-rating or mis-parsed-type rows before touching the DB. Script queries all existing media_log rows for the user first, builds a title+category lookup, and updates in place on a match instead of inserting -- "netflix" goes into note since there's no dedicated source column.</div>
+        <div class="bug-ref">W1 · Reused the existing lib/ai/wardrobeVision.ts (already the app's one approved wardrobe vision one-off, previously only used by the single-item AddItemFlow) rather than building a second pipeline -- extended its tool schema with needs_review: string[] (field names the model flags as genuinely unsure, e.g. unreadable brand logo) instead of forking a new tool. New lib/wardrobeBgRemoval.ts wraps remove.bg: sends the compressed photo, requests bg_color=F2F1ED (one fixed neutral off-white baked into every cutout, not a CSS var, so the catalogue looks uniform regardless of theme) -- on ANY failure (missing key, non-200, network error) it returns the original photo bytes untouched with bgRemoved:false rather than throwing, so a remove.bg outage never loses a photo.</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="N2" data-time-est="20" data-time-actual="15" data-credit-est="25000" data-credit-actual="20000">
+      <div class="bug-row" data-status="done" data-id="W2" data-time-est="30" data-time-actual="25" data-credit-est="35000" data-credit-actual="30000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">N2 — Run import live against Supabase; report inserted/updated counts + 5 sample read-backs; confirm Media module renders them.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">W2 — /process (per-photo pipeline, no DB writes) + /confirm (batch save) API routes.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">N2 · First run: 86 inserted, 0 updated, 0 errors. Re-ran the identical script twice more to prove idempotency: 0 inserted / 86 updated both times, total netflix-tagged row count stayed at 86 throughout (never 172) -- confirmed no duplicates. Read back 5 sample rows: correct titles, category (show/film), rating (matches CSV 0-10 scale, e.g. "The Fall: Skydive Murder Plot" rating 5), status=finished, note=netflix, added_date=last_watched. Checked for pre-existing non-netflix media_log rows before assuming nothing was at risk of being overwritten -- there were none, so "don't touch existing rows" had nothing to accidentally touch this time, but the dedupe logic itself only ever matches on exact title+category so it's safe either way. Confirmed via /api/media's own GET handler (getMediaLog -- the exact function the Media module's MediaWidget calls) that all 86 rows are returned; category/rating/note map directly onto MediaWidget's existing CATEGORY_EMOJI/rating/note rendering with no changes needed. Removed both one-off scripts after use -- nothing left in the repo to clean up later.</div>
+        <div class="bug-ref">W2 · POST /api/wardrobe/bulk-import/process takes one compressed photo, runs bg-removal then vision on the CUTOUT (background clutter removed first, which should improve identification accuracy too), and returns the proposed fields + the cutout as base64 -- writes nothing to the DB, so an abandoned batch leaves zero orphaned rows/storage objects. If vision itself throws, still returns the cutout with every field flagged needs_review rather than losing the photo. POST /api/wardrobe/bulk-import/confirm takes the final array (fields + cutout bytes) and uploads+inserts each item independently in a loop -- one item's failure is reported by name/index and does NOT abort the rest of the batch (no silent failures, no all-or-nothing batch loss).</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S1" data-time-est="25" data-time-actual="20" data-credit-est="30000" data-credit-actual="28000">
+      <div class="bug-row" data-status="done" data-id="W3" data-time-est="45" data-time-actual="45" data-credit-est="55000" data-credit-actual="60000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">S1 — Media: server initialData wiring + paginate the 86+ item catalogue list.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">W3 — BulkImportFlow UI: multi-file/folder picker, review grid, bulk edit, duplicate flags.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S1 · MediaWidget already accepted initialEntries/initialCounts props from an earlier session but media/page.tsx never passed them -- it was fetching cold on mount despite the plumbing already existing. Wired app/(os)/media/page.tsx to call getMediaLog(user.id) server-side and pass initialEntries; MediaWidget's own countByCategory derives counts from that, so no separate initialCounts fetch needed. CatalogueModal (the full-list view, now 86+ items after the Netflix import) was rendering every filtered/sorted entry in one go -- added a PAGE_SIZE=30 slice with a "Load more (N more)" button, resetting to page 1 whenever the tab/status/sort filter changes.</div>
+        <div class="bug-ref">W3 · New components/wardrobe/BulkImportFlow.tsx, full-screen overlay matching MediaWidget's CatalogueModal pattern (not the small BottomSheet, since a review grid needs real space). Pick screen offers two file inputs: a plain multi-select (mobile-friendly, accept="image/*" multiple) and a second webkitdirectory-attributed input for a desktop folder import -- same underlying processFiles() pipeline either way, no separate CLI/script path needed. Photos process sequentially with a progress bar; each photo's failure (network error, processing error) still produces a card in the review grid with every field flagged needs_review rather than silently vanishing. Review grid: each card shows the cutout thumbnail, inline name/type/colours/brand/season-chips/tags with an amber border on any AI-flagged needs_review field, a "More fields" accordion for size/condition/price/acquired-date/notes, and a per-card "Remove from batch" (discards locally, nothing persisted yet). Selecting 1+ cards surfaces a sticky bulk-action bar (set type/brand, add a season/tag to every selected card at once) styled like the FoodClient selection bar from an earlier session. Duplicate detection: fetches the full unfiltered existing wardrobe once at batch start, keys on type+brand+first-colour, checks both against existing items AND earlier items already in the same batch, and renders a "Possible duplicate of X" warning rather than silently creating a second entry.</div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S2" data-time-est="30" data-time-actual="25" data-credit-est="35000" data-credit-actual="32000">
+      <div class="bug-row" data-status="waiting" data-id="W4" data-time-est="25" data-credit-est="30000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">S2 — Wardrobe: server initialData for default view + lazy-loaded/sized images.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">W4 — Wire into Wardrobe module; verify with a real small batch (evidence).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S2 · wardrobe/page.tsx now calls getWardrobeItems server-side and filters to the current season (via the same currentSeason() helper the client uses), passing both initialItems and the server-computed initialSeason so the client's first render's filter state and its very first TanStack query key exactly match what the server already fetched -- WardrobeClient no longer fetches cold on mount for the default (no-filter) view. ItemCard's photo &lt;img&gt; now has loading="lazy" + decoding="async" + explicit width/height. NOT done: true compressed thumbnails would need a server-side resize pipeline at upload time (sharp is only a transitive dependency here, not a first-class one I should silently add) -- flagged as a bigger feature, not built.</div>
+        <div class="bug-ref"></div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S3" data-time-est="20" data-time-actual="15" data-credit-est="25000" data-credit-actual="20000">
+      <div class="bug-row" data-status="waiting" data-id="M1" data-time-est="15" data-credit-est="15000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">S3 — Journal: server initialData for the notes list (JournalWidget's client-only fetch).</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">M1 — Migration: add genres column to media_log (live + verified).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S3 · journal/page.tsx already fetched today's stats/workouts/history server-side but JournalWidget's actual notes list (the thing you scroll through) was a pure client fetch to /api/journal on mount. Added getJournalNotes(user.id, 90) to the page's server-side Promise.all, built the same note_date-&gt;note map the client's queryFn builds, passed it as initialNotes into JournalWidget's notesQuery initialData.</div>
+        <div class="bug-ref"></div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S4" data-time-est="20" data-time-actual="10" data-credit-est="20000" data-credit-actual="12000">
+      <div class="bug-row" data-status="waiting" data-id="M2" data-time-est="20" data-credit-est="25000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">S4 — staleTime/keepPreviousData sweep across module queries so revisits are instant.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">M2 — One-time batched AI genre-tagging pass over all existing media_log titles.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S4 · QueryProvider already sets a sensible global default (staleTime 60s, gcTime 5min, refetchOnWindowFocus true) that every query inherits unless it overrides -- confirmed only 2 explicit overrides exist anywhere (gym-session's staleTime:Infinity, correct since a session shouldn't go stale on its own) and grepped every queryKey in the app for dynamic (variable-dependent) keys that change while the user interacts with the SAME page: gym-exercises search and wardrobe's filter key already have placeholderData:keepPreviousData (search from the earlier polish pass, wardrobe added this session alongside its initialData). gym-exercise-detail deliberately does NOT use keepPreviousData -- switching exercises should show a real loading skeleton for the new exercise, not stale data from the previous one, which was an intentional earlier decision, not a gap. No further query needed keepPreviousData; the sweep found nothing else to fix.</div>
+        <div class="bug-ref"></div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S5" data-time-est="20" data-time-actual="20" data-credit-est="20000" data-credit-actual="22000">
+      <div class="bug-row" data-status="waiting" data-id="M3" data-time-est="30" data-credit-est="35000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">S5 — Skeletons (not spinners/blanks) on genuine first-load, remaining gaps.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">M3 — Favourites shelf: top 3 films/shows (auto + pin override), placeholder book/song slots.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S5 · Grepped every plain "Loading…" text string left in the app and replaced the ones inside this session's 8 named modules with pulsing skeletons shaped like the eventual content: Wardrobe's item grid (8 placeholder cards), Food's day-timeline (2 day-card skeletons), Body's measurement cards (2), Gym's PR tracker list (3 bars), Health's mood-correlations block (2 bars), Media's learning-tracker list (3 rows), and Wardrobe's item-detail page (image + text placeholders matching the real layout). Left a few shared/lower-traffic spots as plain text (WidgetDetailSheets' generic sheet loader, Settings' RoutineSection) since they're outside this session's named module list.</div>
+        <div class="bug-ref"></div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S6" data-time-est="20" data-time-actual="25" data-credit-est="25000" data-credit-actual="28000">
+      <div class="bug-row" data-status="waiting" data-id="M4" data-time-est="35" data-credit-est="40000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">S6 — Lazy/dynamic-import heavy components (globe/3D/charts) so they don't block first paint.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">M4 — Genre-taste radar (You vs Average, FIFA-style, themed).</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S6 · GlobeGL was already lazy() from an earlier session. The bigger unaddressed cost was recharts: statically imported at the top of MainClient.tsx (6 chart instances in the Trends section) and LiveLogger.tsx (1 trend chart), meaning that JS parses/executes as part of the SAME bundle as the above-the-fold content on Main and Gym even though the charts render below the fold / conditionally. Extracted Main's whole Trends block into a new components/os/MainTrends.tsx and Gym's trend chart into components/os/GymTrendChart.tsx, both loaded via next/dynamic({ssr:false}) with a skeleton fallback matching their real layout -- recharts now streams in as its own chunk after the initial paint instead of blocking it. Did not extend this to Body's measurement trend lines or Finances' net-worth chart given time budget -- flagged as an available follow-up, not done.</div>
+        <div class="bug-ref"></div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S7" data-time-est="20" data-time-actual="15" data-credit-est="25000" data-credit-actual="18000">
+      <div class="bug-row" data-status="waiting" data-id="M5" data-time-est="25" data-credit-est="30000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">S7 — Prefetch a module's data on nav hover/tap-intent (Sidebar).</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">M5 — "What I watch" breakdown: stat cards + chart.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S7 · Every module page is force-dynamic, which means Next's default &lt;Link&gt; prefetch (on-viewport, on by default) only warms the shared layout shell, not the actual server-rendered data -- confirmed this is a documented Next.js App Router limitation for dynamic routes, not a bug. Added router.prefetch(href) to Sidebar's module links, fired on mouseenter (desktop rail) and touchstart (both the desktop rail, for touchscreen laptops, and the mobile bottom tab bar) -- this forces Next to eagerly fetch the real RSC payload, including each page's server-computed initialData, ahead of the actual navigation. Left Main's own quick-nav tiles unchanged since Sidebar is the persistent, always-present navigation surface and already covers every module.</div>
+        <div class="bug-ref"></div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="S8" data-time-est="20" data-time-actual="12" data-credit-est="20000" data-credit-actual="14000">
+      <div class="bug-row" data-status="waiting" data-id="M6" data-time-est="20" data-credit-est="20000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">S8 — Build clean; verify production serves latest commit; board.html + PROGRESS.md final state.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">M6 — Wire into Media module page; verify genres/favourites/radar with real data.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">S8 · Final npm run build clean. git rev-parse HEAD == origin/main (a979564). www.parma.ink returns 200. Hit all 8 named module routes in production (/media, /wardrobe, /journal, /main, /health, /gym, /body, /food) -- all return 200 after following the unauthenticated redirect to /login, confirming none of this session's changes broke server-side rendering on any of them. 7 commits this session, each built clean before pushing: Netflix import, server-initialData for Media/Wardrobe/Journal, skeleton sweep, chart lazy-loading + nav prefetch.</div>
+        <div class="bug-ref"></div>
       </div>
 
-      <div class="bug-row" data-status="done" data-id="N3" data-time-est="20" data-time-actual="15" data-credit-est="25000" data-credit-actual="22000">
+      <div class="bug-row" data-status="waiting" data-id="F1" data-time-est="15" data-credit-est="15000">
         <div class="status-chip"></div>
-        <div class="bug-main"><div class="bug-text">N3 — CORRECTION: the 86 imported rows were invisible not from a shape mismatch but a wrong Supabase account; moved to the real account.</div><div class="bug-reason"></div></div>
+        <div class="bug-main"><div class="bug-text">F1 — Build clean; verify production serves latest commit; board.html + PROGRESS.md final state.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref">N3 · Root cause was NOT a column-shape mismatch (the user's working hypothesis) -- it was that N1/N2's import script resolved "the user" by matching email hardwickars@gmail.com, which is a SEPARATE, nearly-empty Supabase auth account (user_id 0a044e43..., signed in once at creation, 0 food_log rows) from the one actually used day-to-day: a_hard_wick@icloud.com (user_id 142d1666..., signed in today, 16 food_log rows, 42 workout_sessions, and the one manually-added "Kung Fu Panda" media_log row). All 86 imported rows landed on the wrong account and were never visible because the Media module correctly scopes to whichever account is signed in. Confirmed via a full column dump of the one manually-added row vs 3 imported rows, plus a whole-table distinct-user_id check and cross-table row counts (food_log/workout_sessions/daily_stats) to identify which account was real before touching anything. Presented the finding and got explicit confirmation before mutating data across two different accounts. Fix: UPDATE media_log SET user_id = (real account), note = null WHERE user_id = (wrong account) AND note = 'netflix' -- checked for title+category collisions against the real account's existing row first (none), moved all 86, verified 0 rows remain on the wrong account, 87 now on the real one, and every row's column shape (including note now null, matching the manual row exactly) is identical. Corrected project memory so no future session repeats the wrong-account lookup.</div>
+        <div class="bug-ref"></div>
       </div>
 
     </div>
@@ -219,7 +219,7 @@
 </div>
 
 <script>
-  var SESSION_TOKEN_BUDGET = 3000000;
+  var SESSION_TOKEN_BUDGET = 3500000;
 </script>
 <script>
 (function () {

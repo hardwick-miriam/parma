@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { AddItemFlow } from './AddItemFlow'
+import { BulkImportFlow } from './BulkImportFlow'
 import { currentSeason, type Season, type WardrobeItemWithStats, type WardrobeType } from '@/lib/wardrobeTypes'
 
 type SortKey = 'newest' | 'most-worn' | 'least-worn' | 'cost-per-wear'
@@ -66,6 +67,7 @@ export function WardrobeClient({ initialItems, initialSeason }: { initialItems?:
   const [sort, setSort] = useState<SortKey>('newest')
   const [neverWorn, setNeverWorn] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
+  const [bulkOpen, setBulkOpen] = useState(false)
   const [wearText, setWearText] = useState('')
   const [wearResult, setWearResult] = useState<string | null>(null)
   const [gridRef] = useAutoAnimate<HTMLDivElement>()
@@ -127,13 +129,21 @@ export function WardrobeClient({ initialItems, initialSeason }: { initialItems?:
     <div className="flex flex-col gap-5 pb-24">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-text">Wardrobe</h1>
-        <button
-          onClick={() => setAddOpen(true)}
-          className="px-4 py-2 rounded-xl text-sm font-semibold text-white hover:opacity-90"
-          style={{ background: 'var(--accent)' }}
-        >
-          + Add item
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setBulkOpen(true)}
+            className="px-3 py-2 rounded-xl text-xs font-medium text-text-muted border border-border hover:bg-surface-hover whitespace-nowrap"
+          >
+            Bulk import
+          </button>
+          <button
+            onClick={() => setAddOpen(true)}
+            className="px-4 py-2 rounded-xl text-sm font-semibold text-white hover:opacity-90"
+            style={{ background: 'var(--accent)' }}
+          >
+            + Add item
+          </button>
+        </div>
       </div>
 
       <form onSubmit={submitWear} className="flex flex-col gap-2">
@@ -235,6 +245,12 @@ export function WardrobeClient({ initialItems, initialSeason }: { initialItems?:
       <AddItemFlow
         open={addOpen}
         onOpenChange={setAddOpen}
+        onSaved={() => queryClient.invalidateQueries({ queryKey: ['wardrobe'] })}
+      />
+
+      <BulkImportFlow
+        open={bulkOpen}
+        onClose={() => setBulkOpen(false)}
         onSaved={() => queryClient.invalidateQueries({ queryKey: ['wardrobe'] })}
       />
     </div>

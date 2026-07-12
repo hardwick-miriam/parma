@@ -28,6 +28,11 @@ const PROPOSE_TOOL: Anthropic.Tool = {
         items: { type: 'string' },
         description: 'Short descriptive tags, e.g. "casual", "gym", "formal", "waterproof"',
       },
+      needs_review: {
+        type: 'array',
+        items: { type: 'string', enum: ['name', 'type', 'colours', 'brand', 'seasons', 'tags'] },
+        description: 'Field names you are NOT confident about — e.g. brand logo partially obscured/unreadable, colour ambiguous under this lighting, type unclear. Omit fields you are confident about. Empty array if confident about everything.',
+      },
     },
     required: ['name', 'type'],
     additionalProperties: false,
@@ -41,6 +46,7 @@ export interface ProposedWardrobeItem {
   brand?: string
   seasons?: string[]
   tags?: string[]
+  needs_review?: string[]
 }
 
 export async function proposeWardrobeItemFromPhoto(
@@ -57,7 +63,7 @@ export async function proposeWardrobeItemFromPhoto(
         role: 'user',
         content: [
           { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Image } },
-          { type: 'text', text: 'Identify this clothing item and propose catalog fields for it.' },
+          { type: 'text', text: 'Identify this clothing item and propose catalog fields for it. Flag any field you are genuinely unsure about in needs_review rather than guessing confidently.' },
         ],
       },
     ],
