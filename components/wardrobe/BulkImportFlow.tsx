@@ -8,6 +8,18 @@ import type { WardrobeItemWithStats, WardrobeType, Season } from '@/lib/wardrobe
 const TYPES: WardrobeType[] = ['top', 'bottom', 'dress', 'outerwear', 'footwear', 'accessory', 'underwear', 'activewear', 'other']
 const SEASONS: Season[] = ['spring', 'summer', 'autumn', 'winter']
 
+// A folder-import pulls in every file in the directory, not just images (no
+// `accept` filtering applies to webkitdirectory), so this needs its own
+// filter — but HEIC/HEIF files picked via a folder input frequently report
+// an empty or generic MIME type (same issue documented in wardrobeImage.ts),
+// so a plain `file.type.startsWith('image/')` check silently drops exactly
+// the photos the HEIC-conversion path was built to handle. Fall back to the
+// file extension when the MIME type is inconclusive.
+function isLikelyImageFile(file: File): boolean {
+  if (file.type.startsWith('image/')) return true
+  return /\.(heic|heif|jpe?g|png|webp|gif|bmp|tiff?)$/i.test(file.name)
+}
+
 interface BulkFields {
   name: string
   type: WardrobeType
@@ -281,7 +293,7 @@ export function BulkImportFlow({ open, onClose, onSaved }: {
             // @ts-expect-error webkitdirectory isn't in React's HTML attribute types but is a real, well-supported desktop-browser attribute
             webkitdirectory=""
             className="hidden"
-            onChange={(e) => e.target.files && processFiles(Array.from(e.target.files).filter((f) => f.type.startsWith('image/')))}
+            onChange={(e) => e.target.files && processFiles(Array.from(e.target.files).filter(isLikelyImageFile))}
           />
           <button
             onClick={() => fileInputRef.current?.click()}
@@ -316,6 +328,12 @@ export function BulkImportFlow({ open, onClose, onSaved }: {
 
       {mode === 'review' && (
         <div className="flex-1 overflow-y-auto flex flex-col">
+          {/* Locks every per-item control (inputs, checkboxes, remove buttons) while a
+              save is in flight — confirmAll()'s partial-failure reconciliation matches
+              failed items back to the array by index, which a concurrent edit/removal
+              could otherwise desync. `display: contents` keeps the fieldset out of the
+              grid/flex layout entirely, so it's purely a disable boundary, not a box. */}
+          <fieldset disabled={saving} style={{ display: 'contents' }}>
           {selectedCount > 0 && (
             <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 bg-surface-elevated border-b border-accent/40 px-4 sm:px-6 py-2.5">
               <span className="text-sm font-semibold text-text">{selectedCount} selected</span>
@@ -433,6 +451,7 @@ export function BulkImportFlow({ open, onClose, onSaved }: {
               )
             })}
           </div>
+          </fieldset>
 
           {items.length === 0 ? (
             <p className="text-sm text-text-subtle text-center py-10">Every photo was removed from the batch.</p>

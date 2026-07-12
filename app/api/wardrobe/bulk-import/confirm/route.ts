@@ -48,7 +48,8 @@ export async function POST(request: NextRequest) {
       const item = await insertWardrobeItem(user.id, { ...fields, photo_path: photoPath }, supabase)
       let photoUrl: string | null = null
       if (photoPath) {
-        const { data } = await supabase.storage.from('wardrobe').createSignedUrl(photoPath, 3600)
+        const { data, error: signError } = await supabase.storage.from('wardrobe').createSignedUrl(photoPath, 3600)
+        if (signError) console.error(`[wardrobe/bulk-import/confirm] signed URL failed for ${photoPath}:`, signError.message)
         photoUrl = data?.signedUrl ?? null
       }
       saved.push({ index: i, item: { ...item, photo_url: photoUrl, wear_count: 0, last_worn: null, cost_per_wear: null } })
