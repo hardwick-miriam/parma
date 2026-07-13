@@ -1725,6 +1725,40 @@ against current code rather than assuming it still needed doing:
   (28px, unlabeled, blast radius ~10 detail sheets) plus 5 more modal-close buttons with the same
   pattern, added `aria-label` to Settings' 3 toggles, bumped ~12 small text-link tap targets.
 
-**Still to do:** T10 (lazy-load Body/Finances charts), T11 (full bug sweep, safe-class fixes +
-`BUGS.md` for anything ambiguous), then final build/production verification and a plain-English
-summary. If resuming this from a fresh session, the next step is T10.
+- **T10 (lazy-load remaining charts):** extracted Body's measurement trend and Finances' net-worth
+  chart into `next/dynamic`-loaded components, matching Main/Gym/Media. Went further than the two
+  named targets: found `TappableWidget` (used across Main/Health/Gym for every WHOOP/sleep-debt/
+  heatmap/PR-tracker/training-load widget) was statically importing `WidgetDetailSheets` (pulls in
+  recharts) even though the detail sheet only renders after a tap — every page paid that cost on
+  first paint regardless of use. Fixed with `next/dynamic` + a `hasOpened` flag so the chunk isn't
+  requested until the first tap, while keeping the component mounted after that so its exit
+  animation still plays.
+- **T11 (bug sweep):** ran 4 parallel background research audits. **Only 2 of 4 completed** — the
+  other 2 (UTC date bugs bypassing `getLocalDate`, parser/schema-vs-column mismatches + dead-end UI)
+  were terminated mid-run when the session hit its usage limit, before producing any findings. This
+  is genuinely unaudited, not confirmed clean — documented honestly in `BUGS.md` with a recommended
+  follow-up rather than glossed over. The 2 that did complete found real bugs, both fixed: (1)
+  `food_cache` (the shared OpenFoodFacts cache) had **zero RLS policies at all** — any session-
+  holding client could read/write/delete the shared cache directly; fixed live via migration 032
+  matching the app's existing anon-client cache-write behaviour, verified via `pg_class`/
+  `pg_policies`. (2) 3 silent-failure bugs: `app/api/insights/route.ts`'s cache delete+insert could
+  leave duplicate stale+fresh rows served as current if the delete failed but the insert succeeded;
+  `app/api/review/route.ts` misreported a genuine `daily_stats` query failure as "not enough data
+  for this period"; `lib/db/whoop.ts`'s unused `updateLastSync` discarded its error (dead code today,
+  fixed so it can't silently reintroduce the bug if reused).
+
+### Evidence trail
+10 commits this session, each built clean before pushing: `3f47f95` (T1), `d8def92` (T2), `24f32cc`
+(T3), `5d5493b` (T4), `a7cbad0` (T5), `abdc5de` (T6), `069b3e7` (T7), `4b98703` (T8), `7f43035` (T9),
+`ac03ac2` (T10), `b101dc8` (T11), plus board/progress-only checkpoint commits. Migration 032 applied
+live and verified via direct Postgres queries (`pg_class.relrowsecurity`, `pg_policies`), not assumed
+from a clean exit code. Final `npm run build` clean. `git rev-parse HEAD` matches `origin/main`
+(`b101dc8`). `www.parma.ink` returns 200, confirmed after every single task's push, not just at the
+end.
+
+**Needs your eyes (flagged per the original ask):** tasks 2, 3, 6, 9 all involve visual/UX judgment
+(loading states, error toasts, theme correctness across all 7 themes, tap targets) — what's verified
+above is code-level correctness, not pixels. Also genuinely incomplete, not just "needs your eyes":
+**T11's other 2 audit areas never ran** — worth a dedicated follow-up session to actually check UTC
+date bugs and parser/schema mismatches, since this session only got through half of what T11 asked
+for before running out of budget.
