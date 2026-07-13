@@ -20,13 +20,17 @@ export async function POST(request: NextRequest) {
     ? new Date(year, month, 0).toISOString().split('T')[0]
     : `${year}-12-31`
 
-  const { data: stats } = await supabase
+  const { data: stats, error: statsError } = await supabase
     .from('daily_stats')
     .select('*')
     .eq('user_id', user.id)
     .gte('date', startDate)
     .lte('date', endDate)
     .order('date', { ascending: true })
+  if (statsError) {
+    console.error('[review] daily_stats query failed:', statsError.message)
+    return NextResponse.json({ error: 'Failed to load your data for this period' }, { status: 500 })
+  }
 
   const rows = stats ?? []
   if (rows.length < 3) {

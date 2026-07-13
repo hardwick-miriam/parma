@@ -58,10 +58,11 @@ export async function deleteWhoopConnection(userId: string): Promise<void> {
 
 export async function updateLastSync(userId: string): Promise<void> {
   const supabase = await createClient()
-  await supabase
+  const { error } = await supabase
     .from('whoop_connections')
     .update({ last_sync_at: new Date().toISOString() })
     .eq('user_id', userId)
+  if (error) throw error
 }
 
 export async function upsertWhoopMetrics(

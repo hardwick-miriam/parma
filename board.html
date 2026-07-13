@@ -202,11 +202,11 @@
         <div class="bug-ref">T10 · Extracted Body's per-site measurement trend line into a new BodyMeasurementTrendChart.tsx and Finances' net-worth line into FinanceNetWorthChart.tsx, both next/dynamic({ssr:false}) with a skeleton fallback, matching the pattern already used for Main/Gym/Media's charts. Went further than the two named targets: grepped every remaining recharts import in the repo and found TappableWidget.tsx -- used across Main/Health/Gym for WHOOP/sleep-debt/heatmap/PR-tracker/training-load -- was STATICALLY importing WidgetDetailSheets.tsx (which pulls in MetricAreaChart/recharts) even though the detail sheet only ever renders after a tap. Every page using any TappableWidget was paying that cost on first paint regardless of whether the user ever opened a sheet. Fixed with a two-part change: next/dynamic for the import, AND a hasOpened flag so the component isn't even mounted until the first tap (a naive dynamic-import-but-always-render approach would've loaded the chunk immediately anyway) -- while keeping WidgetDetailRouter mounted (fed null, not unmounted) after that first open so its AnimatePresence exit animation still plays correctly on every close after the first.</div>
       </div>
 
-      <div class="bug-row" data-status="waiting" data-id="T11" data-time-est="50" data-credit-est="60000">
+      <div class="bug-row" data-status="working" data-id="T11" data-time-est="50" data-credit-est="60000">
         <div class="status-chip"></div>
         <div class="bug-main"><div class="bug-text">T11 — Full bug sweep: fix safe classes only, log everything ambiguous to BUGS.md for triage.</div><div class="bug-reason"></div></div>
         <div class="metrics"></div>
-        <div class="bug-ref"></div>
+        <div class="bug-ref">In progress: 4 parallel research audits running (silent Supabase failures in lib/db+api routes, UTC date bugs bypassing getLocalDate, RLS coverage across all 31 migrations, parser/schema mismatches + dead-end UI). Will apply safe-class fixes as each comes back, log everything ambiguous to BUGS.md.</div>
       </div>
 
     </div>
